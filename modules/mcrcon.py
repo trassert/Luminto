@@ -26,62 +26,71 @@ class MinecraftClient:
         self._auth = False
         self._reader = None
         self._writer = None
+
         self._connected = False
 
         self._lock = asyncio.Lock()
 
-    async def __aenter__(self):
+        self._users = 0
 
+    async def __aenter__(self):
         async with self._lock:
-            if not self._connected:
-                self._reader, self._writer = await asyncio.open_connection(
-                    self.host,
-                    self.port,
-                )
-                self._connected = True
-                await self._authenticate()
+            self._users += 1
+
+            if not self._writer or self._writer.is_closing():
+                try:
+                    self._reader, self._writer = await asyncio.open_connection(
+                        self.host,
+                        self.port,
+                    )
+                    self._connected = True
+                    self._auth = False
+                    await self._authenticate()
+                except Exception:
+                    self._users -= 1
+                    raise
         return self
 
     async def __aexit__(self, exc_type, exc, tb):
-        await self.close()
-
-    async def close(self) -> None:
-
         async with self._lock:
-            if self._writer and not self._writer.is_closing():
-                self._writer.close()
-                with contextlib.suppress(Exception):
-                    await self._writer.wait_closed()
-            self._connected = False
-            self._auth = False
-            self._reader = None
-            self._writer = None
+            self._users -= 1
+
+            if self._users == 0:
+                if self._writer and not self._writer.is_closing():
+                    self._writer.close()
+                    with contextlib.suppress(Exception):
+                        await self._writer.wait_closed()
+                self._connected = False
+                self._auth = False
+                self._reader = None
+                self._writer = None
 
     async def _authenticate(self) -> None:
-
-        if not self._auth:
+        if not self._auth and self._writer:
             await self._send_internal(3, self.password)
             self._auth = True
 
     async def _read_data(self, length):
         data = b""
         while len(data) < length:
+            if not self._reader:
+                msg = "Соединение разорвано (reader is None)"
+                raise ClientError(msg)
             try:
                 packet = await self._reader.read(length - len(data))
             except Exception as e:
-                msg = f"Соединение разорвано: {e}"
+                msg = f"Connection error: {e}"
                 raise ClientError(msg)
 
             if not packet:
-                msg = "Соединение разорвано (пустой пакет)"
+                msg = "Connection closed by server (empty packet)"
                 raise ClientError(msg)
             data += packet
         return data
 
     async def _send_internal(self, message_type, message):
-        """Внутренняя отправка без проверки лока (вызывается только под локом)."""
         if not self._writer or self._writer.is_closing():
-            msg = "Не подключён."
+            msg = "Writer is not available or connection is closed."
             raise ClientError(msg)
 
         packet_id = 0
@@ -97,11 +106,10 @@ class MinecraftClient:
 
         in_length_data = await self._read_data(4)
         in_length = struct.unpack("<i", in_length_data)[0]
-
         in_payload = await self._read_data(in_length)
 
         if len(in_payload) < 8:
-            msg = "Некорректный пакет ответа (слишком короткий)"
+            msg = "Uncorrect response from server: payload too short."
             raise ClientError(msg)
 
         in_id, _in_type = struct.unpack("<ii", in_payload[:8])
@@ -109,20 +117,20 @@ class MinecraftClient:
         in_padding = in_payload[-2:]
 
         if in_padding != b"\x00\x00":
-            msg = "Неправильное заполнение."
+            msg = "Uncorrect response from server: padding is incorrect."
             raise ClientError(msg)
 
         if in_id == -1:
-            msg = "Неверный пароль."
+            msg = "Authentication failed: invalid password."
             raise InvalidPassword(msg)
 
         return in_data.decode("utf8")
 
     async def _send(self, message_type, message):
-        """Публичный метод отправки, оборачивающий операцию в блокировку."""
+
         async with self._lock:
-            if not self._connected:
-                msg = "Соединение не установлено. Используйте async with."
+            if not self._writer or self._writer.is_closing():
+                msg = "Writer is not available or connection is closed."
                 raise ClientError(msg)
 
             return await self._send_internal(message_type, message)

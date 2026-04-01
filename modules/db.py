@@ -129,6 +129,52 @@ async def add_money(id: int, count: int):
         return new_val
 
 
+async def check_and_update_withdraw_limit(id: int, amount: int) -> tuple[bool, int]:
+    """
+    Атомарная проверка и обновление day-limit.
+    Должна вызываться внутри async with await get_user_lock(id).
+    """
+    id_str = str(id)
+    today = datetime.now().date()
+
+    data = await _load_json_async(pathes.wdraw)
+
+    already_withdrawn = 0
+    record_date = None
+
+    if id_str in data:
+        try:
+            record_date = datetime.strptime(data[id_str]["date"], "%Y-%m-%d").date()
+            already_withdrawn = data[id_str].get("withdrawn", 0)
+        except KeyError, ValueError:
+            record_date = None
+
+    if record_date != today:
+        data[id_str] = {"date": today.isoformat(), "withdrawn": amount}
+        await _save_json_async(pathes.wdraw, data, indent=True)
+        return True, 64 - amount
+
+    remaining = 64 - already_withdrawn
+    if amount > remaining:
+        return False, remaining
+
+    data[id_str]["withdrawn"] = already_withdrawn + amount
+    await _save_json_async(pathes.wdraw, data, indent=True)
+    return True, remaining
+
+
+async def rollback_withdraw_limit(id: int, amount: int):
+    """Откатывает лимит назад. Публичная версия с блокировкой."""
+    async with await get_user_lock(id):
+        id_str = str(id)
+        data = await _load_json_async(pathes.wdraw)
+
+        if id_str in data:
+            current = data[id_str].get("withdrawn", 0)
+            data[id_str]["withdrawn"] = max(0, current - amount)
+            await _save_json_async(pathes.wdraw, data, indent=True)
+
+
 async def update_shop():
     """Обновляет магазин, возвращая новую тему."""
     last_theme = (await _load_json_async(pathes.shopc)).get("theme")
@@ -638,40 +684,6 @@ class Notes:
         if not self.storage_dir.exists():
             return []
         return [f.stem for f in self.storage_dir.iterdir() if f.is_file()]
-
-
-async def check_and_update_withdraw_limit(id: int, amount: int) -> tuple[bool, int]:
-    """
-    Атомарная проверка и обновление day-limit.
-    Должна вызываться внутри async with await get_user_lock(id).
-    """
-    id_str = str(id)
-    today = datetime.now().date()
-
-    data = await _load_json_async(pathes.wdraw)
-
-    already_withdrawn = 0
-    record_date = None
-
-    if id_str in data:
-        try:
-            record_date = datetime.strptime(data[id_str]["date"], "%Y-%m-%d").date()
-            already_withdrawn = data[id_str].get("withdrawn", 0)
-        except KeyError, ValueError:
-            record_date = None
-
-    if record_date != today:
-        data[id_str] = {"date": today.isoformat(), "withdrawn": amount}
-        await _save_json_async(pathes.wdraw, data, indent=True)
-        return True, 64 - amount
-
-    remaining = 64 - already_withdrawn
-    if amount > remaining:
-        return False, remaining
-
-    data[id_str]["withdrawn"] = already_withdrawn + amount
-    await _save_json_async(pathes.wdraw, data, indent=True)
-    return True, remaining
 
 
 class RefCodes:
