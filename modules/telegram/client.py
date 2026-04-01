@@ -1,8 +1,7 @@
-import socks
 from aiogram import Bot, Dispatcher
 from aiogram.client.session.aiohttp import AiohttpSession
 from loguru import logger
-from telethon import TelegramClient, types
+from telethon import TelegramClient, connection, types
 from telethon.extensions import markdown
 
 from .. import config, pathes
@@ -94,32 +93,7 @@ class CustomMarkdown:
         return markdown.unparse(text, filtered)
 
 
-def get_proxy(aiogram=False) -> tuple:
-    """
-    Выдаёт формат прокси.
-    1. Тип (SOCKS5 по умолчанию)
-    2. Айпишник прокси (str)
-    3. Порт прокси (int)
-    4. Авторизация (bool)
-    5. Логин (str)
-    6. Пароль (str)
-    В TelegramClient формат прокси неверный,
-        если ставить как там - будет ошибка.
-    """
-    if config.tokens.proxy.enabled is False:
-        return None
-    if aiogram:
-        return f"socks5://{config.tokens.proxy.login}:{config.tokens.proxy.password}@{config.tokens.proxy.host}:{config.tokens.proxy.port}"
-    return (
-        socks.SOCKS5,
-        config.tokens.proxy.host,
-        config.tokens.proxy.port,
-        config.tokens.proxy.auth,
-        config.tokens.proxy.login,
-        config.tokens.proxy.password,
-    )
-
-
+logger.info(config.tokens.mtproxy.enable)
 client = TelegramClient(
     session=pathes.bot,
     api_id=config.tokens.bot.id,
@@ -131,12 +105,26 @@ client = TelegramClient(
     use_ipv6=config.cfg.UseIPv6,
     connection_retries=-1,
     retry_delay=2,
-    proxy=get_proxy(),
+    proxy=(
+        config.tokens.mtproxy.server,
+        config.tokens.mtproxy.port,
+        config.tokens.mtproxy.secret,
+    )
+    if config.tokens.mtproxy.enable
+    else None,
+    connection=connection.ConnectionTcpMTProxyRandomizedIntermediate
+    if config.tokens.mtproxy.enable
+    else None,
 )
 client.parse_mode = CustomMarkdown()
 
 aio = Bot(
-    token=config.tokens.bot.token, session=AiohttpSession(proxy=get_proxy(aiogram=True))
+    token=config.tokens.bot.token,
+    session=AiohttpSession(
+        proxy=f"socks5://{config.tokens.proxy.login}:{config.tokens.proxy.password}@{config.tokens.proxy.host}:{config.tokens.proxy.port}"
+        if config.tokens.proxy.enabled
+        else None
+    ),
 )
 dp = Dispatcher()
 

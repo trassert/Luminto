@@ -7,6 +7,7 @@ from time import time
 from typing import TypedDict
 
 import aiofiles
+import anyio
 import asyncmy
 import orjson
 from loguru import logger
@@ -52,11 +53,23 @@ _locks_lock = asyncio.Lock()
 
 
 async def get_lock(filepath: Path) -> asyncio.Lock:
-    path_str = str(filepath.resolve())
+    path_str = str(await anyio.Path(filepath).resolve())
     async with _locks_lock:
         if path_str not in _file_locks:
             _file_locks[path_str] = asyncio.Lock()
         return _file_locks[path_str]
+
+
+_user_locks: dict[int, asyncio.Lock] = {}
+_global_lock = asyncio.Lock()
+
+
+async def get_user_lock(user_id: int) -> asyncio.Lock:
+    """Получает или создает уникальный замок для пользователя."""
+    async with _global_lock:
+        if user_id not in _user_locks:
+            _user_locks[user_id] = asyncio.Lock()
+        return _user_locks[user_id]
 
 
 async def _save_json_async(
@@ -78,10 +91,14 @@ async def _save_json_async(
             return await f.write(orjson.dumps(data, option=options))
 
 
-async def get_money(id) -> int:
-    id = str(id)
-    data = await _load_json_async(pathes.money)
-    return data.get(id, 0)
+async def get_money(id: int) -> int:
+    """Получение баланса с защитой от чтения во время записи."""
+    id_str = str(id)
+    user_lock = await get_user_lock(id)
+
+    async with user_lock:
+        data = await _load_json_async(pathes.money)
+        return data.get(id_str, 0)
 
 
 async def get_all_money():
@@ -90,14 +107,26 @@ async def get_all_money():
     return sum(data.values())
 
 
-async def add_money(id, count):
-    id = str(id)
-    data = await _load_json_async(pathes.money)
-    old = data.get(id, 0)
-    data[id] = max(old + count, 0)
-    await _save_json_async(pathes.money, data, indent=True)
-    logger.info(f"Изменён баланс {id} ({old} -> {data[id]})")
-    return data[id]
+async def add_money(id: int, count: int):
+    """
+    Атомарное изменение баланса.
+    Использует пользовательский лок, чтобы исключить гонки для одного юзера.
+    """
+    id_str = str(id)
+
+    user_lock = await get_user_lock(id)
+
+    async with user_lock:
+        data = await _load_json_async(pathes.money)
+
+        old = data.get(id_str, 0)
+        new_val = max(old + count, 0)
+        data[id_str] = new_val
+
+        await _save_json_async(pathes.money, data, indent=True)
+
+        logger.info(f"Изменён баланс {id} ({old} -> {new_val})")
+        return new_val
 
 
 async def update_shop():
@@ -580,21 +609,21 @@ class Notes:
         self.storage_dir = Path(storage_dir)
         self.storage_dir.mkdir(parents=True, exist_ok=True)
 
-    def _get_file_path(self, name):
+    def _get_file_path(self, name: str) -> Path:
         return self.storage_dir / f"{name}.txt"
 
     def get(self, name: str):
         file_path = self._get_file_path(name.lower())
         if not file_path.exists():
             return None
-        with open(file_path, encoding="utf8") as f:
+        with file_path.open() as f:
             return f.read()
 
     def create(self, name: str, text: str):
         file_path = self._get_file_path(name.lower())
         if file_path.exists():
             return False
-        with open(file_path, "w", encoding="utf8") as f:
+        with file_path.open("w") as f:
             f.write(text)
         return True
 
@@ -611,28 +640,38 @@ class Notes:
         return [f.stem for f in self.storage_dir.iterdir() if f.is_file()]
 
 
-def check_withdraw_limit(id: int, amount: int) -> int | bool:
-    if amount > 64:
-        return 64
-    today = datetime.now().date()
-    data = _load_json_sync(pathes.wdraw)
-
+async def check_and_update_withdraw_limit(id: int, amount: int) -> tuple[bool, int]:
+    """
+    Атомарная проверка и обновление day-limit.
+    Должна вызываться внутри async with await get_user_lock(id).
+    """
     id_str = str(id)
-    if id_str in data:
-        record_date = datetime.strptime(data[id_str]["date"], "%Y-%m-%d").date()
-        if record_date == today:
-            already_withdrawn = data[id_str]["withdrawn"]
-            remaining = 64 - already_withdrawn
-            if amount > remaining:
-                return remaining
-            data[id_str]["withdrawn"] = already_withdrawn + amount
-        else:
-            data[id_str] = {"date": today.isoformat(), "withdrawn": amount}
-    else:
-        data[id_str] = {"date": today.isoformat(), "withdrawn": amount}
+    today = datetime.now().date()
 
-    _save_json_sync(pathes.wdraw, data, indent=True)
-    return True
+    data = await _load_json_async(pathes.wdraw)
+
+    already_withdrawn = 0
+    record_date = None
+
+    if id_str in data:
+        try:
+            record_date = datetime.strptime(data[id_str]["date"], "%Y-%m-%d").date()
+            already_withdrawn = data[id_str].get("withdrawn", 0)
+        except KeyError, ValueError:
+            record_date = None
+
+    if record_date != today:
+        data[id_str] = {"date": today.isoformat(), "withdrawn": amount}
+        await _save_json_async(pathes.wdraw, data, indent=True)
+        return True, 64 - amount
+
+    remaining = 64 - already_withdrawn
+    if amount > remaining:
+        return False, remaining
+
+    data[id_str]["withdrawn"] = already_withdrawn + amount
+    await _save_json_async(pathes.wdraw, data, indent=True)
+    return True, remaining
 
 
 class RefCodes:

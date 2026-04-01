@@ -1,5 +1,5 @@
 AiModel: "groq/compound"
-AIHistoryLimit: 20
+AIHistoryLimit: 15
 
 UseIPv6: false
 EthernetChannel: 60 #Mbit/s

@@ -31,9 +31,13 @@ class AI:
         self.history = self.get_history()
 
     def add_to_history(self, role: str, content: str):
-        self.history.append({"role": "user", "content": f"{role}: {content}"})
+        if role == "assistant":
+            self.history.append({"role": "assistant", "content": content})
+        else:
+            self.history.append({"role": "user", "content": f"{role}: {content}"})
         if len(self.history) > self.max_history:
             self.history.pop(1)
+            self.history.pop(2)
 
     async def save_history(self):
         async with aiofiles.open(self.history_file, "wb") as f:
@@ -45,7 +49,7 @@ class AI:
             model=config.cfg.AiModel,
             messages=self.history,
             temperature=1,
-            max_completion_tokens=1024,
+            max_completion_tokens=8192,
             top_p=1,
             stream=True,
             stop=None,

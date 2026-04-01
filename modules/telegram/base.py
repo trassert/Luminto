@@ -248,37 +248,17 @@ async def swap_money(event: Message) -> Message:
         return await event.reply(phrase.money.no_count + phrase.money.swap_balance_use)
 
     sender_id: int = event.sender_id
-    sender_balance: int = await db.get_money(sender_id)
 
-    if args[0].lower() in {"все", "всё", "all", "весь"}:
-        amount = sender_balance
-    else:
-        try:
-            amount = int(args[0])
-        except ValueError:
-            return await event.reply(
-                phrase.money.nan_count + phrase.money.swap_balance_use,
-            )
-
-    if amount <= 0:
-        return await event.reply(phrase.money.negative_count)
-    if sender_balance < amount:
-        return await event.reply(
-            phrase.money.not_enough.format(
-                formatter.value_to_str(sender_balance, phrase.currency),
-            ),
-        )
     try:
         recipient_id: int = await func.swap_resolve_recipient(event, args)
     except ValueError, TypeError, tgerrors.rpcerrorlist.UsernameInvalidError:
-        "ValueError - when no recipient found"
-        "TypeError - when invalid recipient format"
-        "UsernameInvalidError - nobody is using this username, or user is unacceptable..."
         return await event.reply(
             phrase.money.no_such_people + phrase.money.swap_balance_use,
         )
+
     if recipient_id is None:
         return await event.reply(phrase.money.no_people + phrase.money.swap_balance_use)
+
     if sender_id == recipient_id:
         return await event.reply(phrase.money.selfbyself)
 
@@ -289,8 +269,43 @@ async def swap_money(event: Message) -> Message:
     except Exception:
         return await event.reply(phrase.money.no_people + phrase.money.swap_balance_use)
 
-    await db.add_money(sender_id, -amount)
-    await db.add_money(recipient_id, amount)
+    if args[0].lower() in {"все", "всё", "all", "весь"}:
+        sender_balance = await db.get_money(sender_id)
+        amount = sender_balance
+    else:
+        try:
+            amount = int(args[0])
+        except ValueError:
+            return await event.reply(
+                phrase.money.nan_count + phrase.money.swap_balance_use
+            )
+
+    if amount <= 0:
+        return await event.reply(phrase.money.negative_count)
+
+    ids = sorted([sender_id, recipient_id])
+    lock1 = await db.get_user_lock(ids[0])
+    lock2 = await db.get_user_lock(ids[1])
+
+    async with lock1:
+        async with lock2:
+            current_balance = await db.get_money(sender_id)
+
+            if args[0].lower() in {"все", "всё", "all", "весь"}:
+                amount = current_balance
+
+            if amount <= 0:
+                return await event.reply(phrase.money.negative_count)
+
+            if current_balance < amount:
+                return await event.reply(
+                    phrase.money.not_enough.format(
+                        formatter.value_to_str(current_balance, phrase.currency),
+                    ),
+                )
+
+            await db.add_money(sender_id, -amount)
+            await db.add_money(recipient_id, amount)
 
     return await event.reply(
         phrase.money.swap_money.format(formatter.value_to_str(amount, phrase.currency)),
@@ -305,7 +320,6 @@ async def swap_money(event: Message) -> Message:
 @func.new_command(r"/в маин (.+)")
 @func.new_command(r"вывести (.+)")
 async def money_to_server(event: Message) -> Message:
-    """Выводит валюту из бота на игровой сервер (выдача предметами)."""
     user_id: int = event.sender_id
     nick: str = await db.Nicks(id=user_id).get()
 
@@ -319,34 +333,45 @@ async def money_to_server(event: Message) -> Message:
 
     if amount < 1:
         return await event.reply(phrase.money.negative_count)
-    if amount > config.cfg.WithdrawDailyLimit:
+
+    daily_limit = 64
+    if amount > daily_limit:
         return await event.reply(phrase.bank.daily_limit)
 
-    if not db.check_withdraw_limit(user_id, amount):
-        current_limit: int = db.check_withdraw_limit(user_id, 0)
-        return await event.reply(
-            phrase.bank.limit.format(
-                formatter.value_to_str(current_limit, phrase.currency),
-            ),
-        )
+    user_lock = await db.get_user_lock(user_id)
 
-    balance: int = await db.get_money(user_id)
-    if balance < amount:
-        return await event.reply(
-            phrase.money.not_enough.format(
-                formatter.value_to_str(balance, phrase.currency),
-            ),
-        )
+    async with user_lock:
+        success, remaining = await db.check_and_update_withdraw_limit(user_id, amount)
 
-    await db.add_money(user_id, -amount)
+        if not success:
+            return await event.reply(
+                phrase.bank.limit.format(
+                    formatter.value_to_str(remaining, phrase.currency)
+                ),
+            )
+
+        balance = await db.get_money(user_id)
+
+        if balance < amount:
+            await db.rollback_withdraw_limit(user_id, amount)
+            return await event.reply(
+                phrase.money.not_enough.format(
+                    formatter.value_to_str(balance, phrase.currency)
+                ),
+            )
+
+        await db.add_money(user_id, -amount)
 
     try:
         async with mcrcon.Vanilla as rcon:
             await rcon.send(f"invgive {nick} amethyst_shard {amount}")
     except Exception as e:
         logger.error(f"RCON Error during withdraw: {e}")
-        await db.add_money(user_id, amount)
-        db.check_withdraw_limit(user_id, -amount)
+
+        async with user_lock:
+            await db.add_money(user_id, amount)
+            await db.rollback_withdraw_limit(user_id, amount)
+
         return await event.reply(phrase.bank.error)
 
     return await event.reply(
@@ -387,8 +412,6 @@ async def get_balance(event: Message) -> Message:
 @func.new_command(r"/линкник (\S+)\s*(\S*)$")
 async def link_nick(event: Message) -> Message:
     """Привязывает Minecraft ник к Telegram аккаунту и добавляет в WhiteList."""
-    # if event.chat_id != config.chats.chat:
-    #    return await event.reply(phrase.nick.chat)
 
     nick: str = event.pattern_match.group(1).strip()
     ref_code: str = event.pattern_match.group(2).strip()
