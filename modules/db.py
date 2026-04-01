@@ -18,10 +18,10 @@ logger.info(f"Загружен модуль {__name__}!")
 
 
 def _load_json_sync(filepath: Path) -> dict:
-    """Загружает JSON файл синхронно. Возвращает {} при ошибке."""
+    """Загружает JSON файл синхронно."""
     with filepath.open("rb") as f:
         raw = f.read()
-    return orjson.loads(raw) if raw else {}
+    return orjson.loads(raw)
 
 
 def _save_json_sync(
@@ -42,10 +42,10 @@ def _save_json_sync(
 
 
 async def _load_json_async(filepath: Path) -> dict:
-    """Загружает JSON файл асинхронно. Возвращает {} при ошибке."""
+    """Загружает JSON файл асинхронно."""
     async with aiofiles.open(filepath, "rb") as f:
         raw = await f.read()
-    return orjson.loads(raw) if raw else {}
+    return orjson.loads(raw)
 
 
 _file_locks: dict[str, asyncio.Lock] = {}
