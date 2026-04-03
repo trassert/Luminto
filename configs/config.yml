@@ -85,18 +85,18 @@ ShopThemeWeights:
   armorer: 9
   blacksmith: 9
   desert: 3
-  end: 7
+  end: 8
   flower: 1
-  heads: 7
+  heads: 4
   mine: 9
   music: 2
   nether: 5
   raiders: 10
   redstone: 5
   remains: 5
-  sculk: 2
+  sculk: 3
   water: 6
   witch: 8
   potions: 5
-  books: 5
+  books: 6
   decorations: 2
