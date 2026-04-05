@@ -459,6 +459,8 @@ async def link_nick(event: Message) -> Message:
     if ref_msg:
         await event.reply(ref_msg)
     logger.success(f"Юзер {sender_id} привязал свой ник!")
+    if current_linked_nick is None:
+        await event.reply(phrase.nick.referrals, link_preview=False)
     try:
         return await aio.approve_chat_join_request(
             chat_id=config.chats.chat, user_id=sender_id
