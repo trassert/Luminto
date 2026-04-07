@@ -2,7 +2,7 @@ from aiogram import Router, types
 from loguru import logger
 from telethon import events
 
-from .. import config, db, formatter, phrase
+from .. import config, db, formatter, mcrcon, phrase
 from . import func
 from .client import client, dp
 
@@ -19,9 +19,29 @@ async def chat_action(event: events.ChatAction.Event):
         return None
 
     if event.user_left:
+        nick = await db.Nicks(id=event.user_id).get()
+        if nick is None:
+            messages = "0"
+            time_played = "0 секунд"
+        else:
+            try:
+                async with mcrcon.Vanilla as rcon:
+                    raw_time: str = await rcon.send(
+                        f"papi parse --null %PTM_playtime_{nick}:luminto%",
+                    )
+                    time_played: str = raw_time.replace("\n", "").strip()
+                    if time_played == "":
+                        time_played = "Менее минуты"
+                messages: int = await db.Statistic().get(nick, all_days=True)
+            except Exception as e:
+                logger.error(f"Ошибка при получении данных для {nick}: {e}")
+                time_played = "0 секунд"
+                messages = "0"
         return await client.send_message(
             config.chats.chat,
-            phrase.chataction.leave.format(user_name),
+            phrase.chataction.leave.format(
+                nick=user_name, time=time_played, messages=messages
+            ),
         )
 
     if event.user_joined or event.user_added:

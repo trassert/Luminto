@@ -134,6 +134,8 @@ async def profile(event: Message) -> Message:
                     f"papi parse --null %PTM_playtime_{nick}:luminto%",
                 )
                 time_played: str = raw_time.replace("\n", "").strip()
+                if time_played == "":
+                    time_played = "Менее минуты"
         except Exception:
             time_played = "Неизвестно"
     else:
