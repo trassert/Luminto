@@ -1,4 +1,4 @@
-from aiogram import Router, types
+from aiogram import Router, exceptions, types
 from loguru import logger
 from telethon import events
 
@@ -73,17 +73,24 @@ async def handle_join_request(request: types.ChatJoinRequest):
     user_id = request.from_user.id
 
     if await db.Nicks(id=user_id).get() is not None:
-        logger.info(f"Пользователь {user_id} одобрен (ник привязан)")
-        return await request.approve()
+        try:
+            return await request.approve()
+            logger.info(f"Пользователь {user_id} одобрен (ник привязан)")
+        except exceptions.TelegramBadRequest:
+            logger.info("Пользователь уже в чате или удалён.")
 
-    await request.bot.send_message(
-        chat_id=user_id,
-        text=phrase.chataction.need_link,
-        parse_mode="HTML",
-        link_preview_options=types.LinkPreviewOptions(is_disabled=True),
-    )
-    logger.info(f"Пользователю {user_id} отправлена инструкция")
-    return None
+    try:
+        await request.bot.send_message(
+            chat_id=user_id,
+            text=phrase.chataction.need_link,
+            parse_mode="HTML",
+            link_preview_options=types.LinkPreviewOptions(is_disabled=True),
+        )
+        logger.info(f"Пользователю {user_id} отправлена инструкция")
+    except exceptions.TelegramForbiddenError:
+        logger.info("Пользователь подал заявку, но отправить сообщение не удалось.")
+    else:
+        return None
 
 
 dp.include_router(router)

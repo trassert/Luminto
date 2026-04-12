@@ -21,6 +21,7 @@ async def main():
     await task_gen.BackupDBTask.create(tasks.backup_db, "1:00")
     await games.crocodile_onboot()
     await dp.start_polling(aio)
+    # await client.run_until_disconnected() Unused if dp is here
 
 
 if __name__ == "__main__":
