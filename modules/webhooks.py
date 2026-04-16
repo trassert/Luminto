@@ -1,5 +1,6 @@
 import asyncio
-from hashlib import md5, sha1
+import hmac
+from hashlib import md5, sha1, sha256
 from typing import cast
 
 import aiohttp
@@ -124,6 +125,19 @@ async def server():
         return aiohttp.web.Response(text="ok")
 
     async def github(request: aiohttp.web.Request):
+        signature_header = request.headers.get("X-Hub-Signature-256")
+        if not signature_header:
+            return False
+        try:
+            _, github_signature = signature_header.split("=", 1)
+        except ValueError:
+            return aiohttp.web.Response(text="Не авторизован", status=401)
+        body = await request.read()
+        if not hmac.compare_digest(
+            hmac.new(config.tokens.gh.encode("utf-8"), msg=body, digestmod=sha256).hexdigest(),
+            github_signature,
+        ):
+            return aiohttp.web.Response(text="Не авторизован", status=401)
         load: dict[str] = cast(dict[str], await request.json())
         commits = load.get("commits", None)
         if commits is not None:
