@@ -93,7 +93,8 @@ class CustomMarkdown:
         return markdown.unparse(text, filtered)
 
 
-logger.info(config.tokens.mtproxy.enable)
+logger.info(f"MTProxy enabled: {config.tokens.mtproxy.enable}")
+
 client = TelegramClient(
     session=pathes.bot,
     api_id=config.tokens.bot.id,
@@ -114,9 +115,11 @@ client = TelegramClient(
     else None,
     connection=connection.ConnectionTcpMTProxyRandomizedIntermediate
     if config.tokens.mtproxy.enable
-    else None,
+    else connection.ConnectionTcpFull,
 )
 client.parse_mode = CustomMarkdown()
+
+logger.info(f"Aiogram proxy state: {config.tokens.proxy.enabled}")
 
 aio = Bot(
     token=config.tokens.bot.token,
