@@ -19,7 +19,7 @@ class AI:
         max_history: int = config.cfg.AIHistoryLimit,
         history_file: Path = pathes.ai,
         system_prompt: str = phrase.ai.prompt,
-        proxy_str: str = config.tokens.ai_proxy,
+        proxy_str: str = "",
     ):
         self.client = AsyncGroq(
             api_key=api_key,
@@ -77,4 +77,4 @@ class AI:
                 return [{"role": "system", "content": self.system_prompt}]
 
 
-Ai = AI()
+Ai = AI(proxy_str=config.tokens.ai.proxy.string if config.tokens.ai.proxy.enabled else None)
