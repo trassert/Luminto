@@ -15,7 +15,7 @@ logger.info(f"Загружен модуль {__name__}!")
 class AI:
     def __init__(
         self,
-        api_key: str = config.tokens.ai_token,
+        api_key: str = config.tokens.ai.token,
         max_history: int = config.cfg.AIHistoryLimit,
         history_file: Path = pathes.ai,
         system_prompt: str = phrase.ai.prompt,
