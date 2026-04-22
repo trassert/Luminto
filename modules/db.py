@@ -378,13 +378,25 @@ class Statistic:
 
     async def add(self, date=None):
         now = date or datetime.now().strftime("%Y.%m.%d")
-        filepath = pathes.stats / f"{self}.json"
+        raw_name = str(self)
+        safe_name = Path(raw_name).name
+        if safe_name != raw_name or not safe_name:
+            logger.warning(f"Некорректное имя статистики: {raw_name!r}")
+            return
+        filepath = pathes.stats / f"{safe_name}.json"
+        base_stats = pathes.stats.resolve()
+        resolved_filepath = filepath.resolve()
         try:
-            stats = await _load_json_async(filepath)
+            resolved_filepath.relative_to(base_stats)
+        except ValueError:
+            logger.warning(f"Заблокирован выход за пределы каталога статистики: {raw_name!r}")
+            return
+        try:
+            stats = await _load_json_async(resolved_filepath)
         except FileNotFoundError:
             stats = {}
         stats[now] = stats.get(now, 0) + 1
-        await _save_json_async(filepath, stats, sort_keys=True)
+        await _save_json_async(resolved_filepath, stats, sort_keys=True)
 
     async def get_raw(self) -> dict[str, int]:
         totals = defaultdict(int)
