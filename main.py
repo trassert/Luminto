@@ -12,33 +12,29 @@ async def main():
     from modules.telegram import games
     from modules.telegram.client import aio, client, dp
 
+    await db.Users.initialize()
+    await client.start(bot_token=config.tokens.bot.token)
+
+    await task_gen.UpdateShopTask.create(tasks.update_shop, 2)
+    await task_gen.RewardsTask.create(tasks.rewards, "19:00")
+    await task_gen.RemoveStatesTask.create(tasks.remove_states, "17:00")
+    await task_gen.BackupDBTask.create(tasks.backup_db, "1:00")
+    await games.crocodile_onboot()
+
+    logger.info("Бот запущен.")
+
     try:
-        await db.Users.initialize()
-
-        await client.start(bot_token=config.tokens.bot.token)
-
-        # await webhooks.server()
-
-        await task_gen.UpdateShopTask.create(tasks.update_shop, 2)
-        await task_gen.RewardsTask.create(tasks.rewards, "19:00")
-        await task_gen.RemoveStatesTask.create(tasks.remove_states, "17:00")
-        await task_gen.BackupDBTask.create(tasks.backup_db, "1:00")
-        await games.crocodile_onboot()
-
-        logger.info("Бот запущен.")
-
-        await dp.start_polling(aio)
-
-    except Exception as e:
-        logger.exception(f"Критическая ошибка в главном цикле: {e}")
-
+        # handle_signals=True = SIGINT/SIGTERM
+        await dp.start_polling(aio, handle_signals=True)
+    except KeyboardInterrupt, asyncio.CancelledError:
+        logger.warning("Получен сигнал остановки.")
     finally:
         logger.warning("Начало процедуры остановки...")
         try:
+            await dp.stop_polling()
             await client.disconnect()
         except Exception as e:
-            logger.error(f"Ошибка при отключении клиента: {e}")
-
+            logger.error(f"Ошибка при остановке: {e}")
         logger.success("Бот остановлен.")
 
 
