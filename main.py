@@ -27,8 +27,7 @@ async def main():
 
     try:
         # handle_signals=True = SIGINT/SIGTERM
-        pass
-        # await dp.start_polling(aio, handle_signals=True)
+        await dp.start_polling(aio, handle_signals=True)
     except KeyboardInterrupt, asyncio.CancelledError:
         logger.warning("Получен сигнал остановки.")
     finally:

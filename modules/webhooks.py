@@ -212,9 +212,7 @@ async def server():
         await ipv4.start()
         await ipv6.start()
         logger.info("Веб-сервер запущен на порту 5000")
-    except Exception as e:
-        logger.error(f"Ошибка веб-сервера: {e}")
-    finally:
+    except KeyboardInterrupt, asyncio.CancelledError:
         logger.info("Остановка веб-сервера...")
         await ipv4.stop()
         await ipv6.stop()
