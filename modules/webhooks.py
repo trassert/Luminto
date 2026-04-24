@@ -1,5 +1,6 @@
 import asyncio
 import hmac
+import signal
 from hashlib import md5, sha1, sha256
 from typing import cast
 
@@ -12,8 +13,6 @@ from .telegram import func
 from .telegram.client import client
 
 logger.info(f"Загружен модуль {__name__}!")
-
-
 repos = {
     "LumintoGold": {"chat": -1003408993511, "topic": 72},
     "TrassertTools": {"chat": -1003408993511, "topic": 72},
@@ -25,7 +24,6 @@ async def server():
         return aiohttp.web.Response(text="ok")
 
     async def hotmc(request: aiohttp.web.Request):
-        #! Важно - HotMC не работает с HTTPS! Используйте http, если берёте этот модуль.
         load = await request.post()
         nick = load["nick"]
         sign = load["sign"]
@@ -96,7 +94,6 @@ async def server():
         nick = request.query.get("nick")
         if formatter.is_valid_mc_nick(nick) is False:
             return aiohttp.web.Response(text="Nick is not valid", status=406)
-        # message = request.query.get('message') Для будущих нужд
         await db.Statistic.add(nick)
         logger.debug(f"+ соо. от {nick}")
         return aiohttp.web.Response(text="ok")
@@ -134,7 +131,9 @@ async def server():
             return aiohttp.web.Response(text="Не авторизован", status=401)
         body = await request.read()
         if not hmac.compare_digest(
-            hmac.new(config.tokens.gh.encode("utf-8"), msg=body, digestmod=sha256).hexdigest(),
+            hmac.new(
+                config.tokens.gh.encode("utf-8"), msg=body, digestmod=sha256
+            ).hexdigest(),
             github_signature,
         ):
             return aiohttp.web.Response(text="Не авторизован", status=401)
@@ -206,11 +205,21 @@ async def server():
         ],
     )
     runner = aiohttp.web.AppRunner(app, access_log_class=log.AccessLogger)
+    await runner.setup()
+    ipv4 = aiohttp.web.TCPSite(runner, "127.0.0.1", 5000)
+    ipv6 = aiohttp.web.TCPSite(runner, "::1", 5000)
     try:
-        await runner.setup()
-        ipv4 = aiohttp.web.TCPSite(runner, "127.0.0.1", 5000)
-        ipv6 = aiohttp.web.TCPSite(runner, "::1", 5000)
         await ipv4.start()
         await ipv6.start()
-    except asyncio.CancelledError:
-        return logger.warning("Вебхуки остановлены")
+        logger.info("Веб-сервер запущен на порту 5000")
+        stop_event = asyncio.Event()
+        loop = asyncio.get_running_loop()
+        for sig in (signal.SIGTERM, signal.SIGINT):
+            loop.add_signal_handler(sig, stop_event.set)
+        await stop_event.wait()
+    except Exception as e:
+        logger.error(f"Ошибка веб-сервера: {e}")
+    finally:
+        logger.info("Остановка веб-сервера...")
+        await runner.cleanup()
+        logger.info("Веб-сервер остановлен, порт освобожден.")
