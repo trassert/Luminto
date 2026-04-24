@@ -17,7 +17,7 @@ async def main():
 
         await client.start(bot_token=config.tokens.bot.token)
 
-        await webhooks.server()
+        # await webhooks.server()
 
         await task_gen.UpdateShopTask.create(tasks.update_shop, 2)
         await task_gen.RewardsTask.create(tasks.rewards, "19:00")
