@@ -212,14 +212,11 @@ async def server():
         await ipv4.start()
         await ipv6.start()
         logger.info("Веб-сервер запущен на порту 5000")
-        stop_event = asyncio.Event()
-        loop = asyncio.get_running_loop()
-        for sig in (signal.SIGTERM, signal.SIGINT):
-            loop.add_signal_handler(sig, stop_event.set)
-        await stop_event.wait()
     except Exception as e:
         logger.error(f"Ошибка веб-сервера: {e}")
     finally:
         logger.info("Остановка веб-сервера...")
+        await ipv4.stop()
+        await ipv6.stop()
         await runner.cleanup()
         logger.info("Веб-сервер остановлен, порт освобожден.")

@@ -23,7 +23,7 @@ async def main():
 
     logger.info("Бот запущен.")
 
-    # await webhooks.server()
+    await webhooks.server()
 
     try:
         # handle_signals=True = SIGINT/SIGTERM
