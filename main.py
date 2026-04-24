@@ -23,9 +23,12 @@ async def main():
 
     logger.info("Бот запущен.")
 
+    await webhooks.server()
+
     try:
         # handle_signals=True = SIGINT/SIGTERM
-        await dp.start_polling(aio, handle_signals=True)
+        pass
+        # await dp.start_polling(aio, handle_signals=True)
     except KeyboardInterrupt, asyncio.CancelledError:
         logger.warning("Получен сигнал остановки.")
     finally:
