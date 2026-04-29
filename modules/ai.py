@@ -77,4 +77,6 @@ class AI:
                 return [{"role": "system", "content": self.system_prompt}]
 
 
-Ai = AI(proxy_str=config.tokens.ai.proxy.string if config.tokens.ai.proxy.enabled else None)
+Ai = AI(
+    proxy_str=config.tokens.ai.proxy.string if config.tokens.ai.proxy.enabled else None
+)

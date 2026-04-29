@@ -389,7 +389,9 @@ class Statistic:
         try:
             resolved_filepath.relative_to(base_stats)
         except ValueError:
-            logger.warning(f"Заблокирован выход за пределы каталога статистики: {raw_name!r}")
+            logger.warning(
+                f"Заблокирован выход за пределы каталога статистики: {raw_name!r}"
+            )
             return
         try:
             stats = await _load_json_async(resolved_filepath)

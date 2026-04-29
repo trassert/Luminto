@@ -57,8 +57,9 @@ async def buy(nick: str, item: str, value: str):
 
 class AccessLogger(AbstractAccessLogger):
     def log(self, request, response, time):
+        ip = request.headers.get("X-Forwarded-For", request.remote)
         self.logger.info(
-            f"{request.remote} - "
+            f"{ip} - "
             f'{request.method} "{request.path}": '
             f"{response.status} | {round(time, 1)}s",
         )
