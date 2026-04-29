@@ -61,7 +61,7 @@ class AccessLogger(AbstractAccessLogger):
         self.logger.info(
             f"{ip} - "
             f'{request.method} "{request.path}": '
-            f"{response.status} | {round(time, 1)}s",
+            f"{response.status} | {round(time*1000)}ms",
         )
 
     @property
