@@ -1,6 +1,5 @@
 import asyncio
 import hmac
-import signal
 from hashlib import md5, sha1, sha256
 from typing import cast
 
