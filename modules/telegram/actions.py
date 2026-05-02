@@ -1,8 +1,8 @@
 import asyncio
+
 from aiogram import Router, exceptions, types
 from loguru import logger
 from telethon import events
-from telethon.errors import UserNotParticipantError
 
 from .. import config, db, formatter, mcrcon, phrase
 from . import func
@@ -19,7 +19,7 @@ WELCOME_DELAY = 5
 @client.on(events.ChatAction(chats=config.chats.chat))
 async def chat_action(event: events.ChatAction.Event):
     if not event.user_id:
-        return
+        return None
 
     try:
         user_name = await func.get_name(event.user_id)
@@ -47,7 +47,8 @@ async def chat_action(event: events.ChatAction.Event):
                 messages = "0"
         return await client.send_message(
             config.chats.chat,
-            phrase.chataction.leave.format(                nick=user_name, time=time_played, messages=messages
+            phrase.chataction.leave.format(
+                nick=user_name, time=time_played, messages=messages
             ),
         )
 
@@ -72,9 +73,7 @@ async def chat_action(event: events.ChatAction.Event):
 
         await asyncio.sleep(WELCOME_DELAY)
 
-        try:
-            await client.get_participants(config.chats.chat, ids=event.user_id)
-        except (UserNotParticipantError, ValueError):
+        if await func.is_user_in_chat(config.chats.chat, event.user_id) is False:
             logger.info(f"Пользователь {event.user_id} удален до приветствия.")
             return None
 

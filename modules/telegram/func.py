@@ -3,6 +3,8 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 from telethon import events
+from telethon.errors import UserNotParticipantError
+from telethon.tl.functions.channels import GetParticipantRequest
 from telethon.tl.functions.users import GetFullUserRequest
 
 from .. import db, phrase
@@ -12,6 +14,15 @@ if TYPE_CHECKING:
     from telethon.tl.custom import Message
 
 logger.info(f"Загружен модуль {__name__}!")
+
+
+async def is_user_in_chat(chat, user_id: int) -> bool:
+    try:
+        await client(GetParticipantRequest(chat, user_id))
+    except UserNotParticipantError, ValueError:
+        return False
+    else:
+        return True
 
 
 async def get_simple_push(id) -> str | None:
