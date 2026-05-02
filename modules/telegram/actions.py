@@ -1,6 +1,8 @@
+import asyncio
 from aiogram import Router, exceptions, types
 from loguru import logger
 from telethon import events
+from telethon.errors import UserNotParticipantError
 
 from .. import config, db, formatter, mcrcon, phrase
 from . import func
@@ -10,9 +12,15 @@ logger.info(f"Загружен модуль {__name__}!")
 
 router = Router(name="actions")
 
+# Задержка перед приветствием для фильтрации спам-ботов (сек)
+WELCOME_DELAY = 5
+
 
 @client.on(events.ChatAction(chats=config.chats.chat))
 async def chat_action(event: events.ChatAction.Event):
+    if not event.user_id:
+        return
+
     try:
         user_name = await func.get_name(event.user_id)
     except TypeError:
@@ -39,45 +47,56 @@ async def chat_action(event: events.ChatAction.Event):
                 messages = "0"
         return await client.send_message(
             config.chats.chat,
-            phrase.chataction.leave.format(
-                nick=user_name, time=time_played, messages=messages
+            phrase.chataction.leave.format(                nick=user_name, time=time_played, messages=messages
             ),
         )
 
     if event.user_joined or event.user_added:
         if formatter.check_zalgo(user_name) > 50:
-            await client.edit_permissions(
-                config.chats.chat,
-                event.user_id,
-                send_messages=False,
-            )
+            try:
+                await client.edit_permissions(
+                    config.chats.chat,
+                    event.user_id,
+                    send_messages=False,
+                )
+            except Exception:
+                pass
             return await client.send_message(
                 config.chats.chat,
                 phrase.chataction.zalgo.format(user_name),
                 silent=False,
             )
+
         if not db.hellomsg_check(event.user_id):
-            return logger.info(f"{event.user_id} вступил, но приветствие уже было.")
+            return None
+
+        await asyncio.sleep(WELCOME_DELAY)
+
+        try:
+            await client.get_participants(config.chats.chat, ids=event.user_id)
+        except (UserNotParticipantError, ValueError):
+            logger.info(f"Пользователь {event.user_id} удален до приветствия.")
+            return None
+
         return await client.send_message(
             config.chats.chat,
-            phrase.chataction.hello.format(await func.get_name(event.user_id)),
+            phrase.chataction.hello.format(user_name),
             link_preview=False,
         )
-        logger.info(f"Новый участник в чате - {event.user_id}")
+
     return None
 
 
 @router.chat_join_request()
 async def handle_join_request(request: types.ChatJoinRequest):
-    """Обработка запроса на вступление в чат."""
+    """Обработка запроса на вступление."""
     user_id = request.from_user.id
 
     if await db.Nicks(id=user_id).get() is not None:
         try:
-            return await request.approve()
-            logger.info(f"Пользователь {user_id} одобрен (ник привязан)")
+            await request.approve()
         except exceptions.TelegramBadRequest:
-            logger.info("Пользователь уже в чате или удалён.")
+            pass        return
 
     try:
         await request.bot.send_message(
@@ -86,11 +105,10 @@ async def handle_join_request(request: types.ChatJoinRequest):
             parse_mode="HTML",
             link_preview_options=types.LinkPreviewOptions(is_disabled=True),
         )
-        logger.info(f"Пользователю {user_id} отправлена инструкция")
     except exceptions.TelegramForbiddenError:
-        logger.info("Пользователь подал заявку, но отправить сообщение не удалось.")
-    else:
-        return None
+        logger.info(f"ЛС закрыты у пользователя {user_id}")
+    except Exception as e:
+        logger.error(f"Ошибка отправки инструкции {user_id}: {e}")
 
 
 dp.include_router(router)
