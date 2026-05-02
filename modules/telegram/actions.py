@@ -96,7 +96,7 @@ async def handle_join_request(request: types.ChatJoinRequest):
         try:
             await request.approve()
         except exceptions.TelegramBadRequest:
-            pass        return
+            return
 
     try:
         await request.bot.send_message(
