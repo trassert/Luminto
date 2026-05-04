@@ -1,8 +1,7 @@
-AiModel: "groq/compound"
-AIHistoryLimit: 15
+AiModel: "openai/gpt-oss-120b"
 
 UseIPv6: false
-EthernetChannel: 60 #Mbit/s
+EthernetChannel: 1000 #Mbit/s
 
 TopLowerBets: 5
 TopBets: 1.5
