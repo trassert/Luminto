@@ -108,7 +108,7 @@ class AI:
                 model=self.model,
                 messages=self.history,
                 temperature=1,
-                max_completion_tokens=8192,
+                max_completion_tokens=2048,
                 top_p=1,
                 stream=True,
                 stop=None,
@@ -131,6 +131,5 @@ class AI:
 
 
 Ai = AI(
-    proxy_str=config.tokens.ai.proxy.string if config.tokens.ai.proxy.enabled else None,
-    model="openai/gpt-oss-120b"
+    proxy_str=config.tokens.ai.proxy.string if config.tokens.ai.proxy.enabled else None
 )
