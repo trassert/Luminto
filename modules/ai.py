@@ -112,7 +112,7 @@ class AI:
                 top_p=1,
                 stream=True,
                 stop=None,
-                compound_custom={"tools":{"enabled_tools":["web_search","visit_website"]}}
+                tools=[{"type":"browser_search"}]
             )
             async for chunk in response:
                 delta = chunk.choices[0].delta
@@ -132,4 +132,5 @@ class AI:
 
 Ai = AI(
     proxy_str=config.tokens.ai.proxy.string if config.tokens.ai.proxy.enabled else None,
+    model="openai/gpt-oss-120b"
 )
