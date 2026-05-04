@@ -477,8 +477,6 @@ async def link_nick(event: Message) -> Message:
 @func.new_command(r"/новый ник$")
 @func.new_command(r"/линкник$")
 async def link_nick_empty(event: Message) -> Message:
-    if event.chat_id != config.chats.chat:
-        return await event.reply(phrase.nick.chat)
     return await event.reply(phrase.nick.not_select)
 
 
