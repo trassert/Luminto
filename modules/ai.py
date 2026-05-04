@@ -10,73 +10,115 @@ from loguru import logger
 from . import config, pathes, phrase
 
 logger.info(f"Загружен модуль {__name__}!")
+CHARS_PER_TOKEN = 3
 
 
 class AI:
     def __init__(
         self,
         api_key: str = config.tokens.ai.token,
-        max_history: int = config.cfg.AIHistoryLimit,
+        max_history_tokens: int = 5000,
         history_file: Path = pathes.ai,
         system_prompt: str = phrase.ai.prompt,
         proxy_str: str = "",
+        model: str = config.cfg.AiModel,
     ):
+        self.model = model
         self.client = AsyncGroq(
             api_key=api_key,
             http_client=httpx.AsyncClient(proxy=proxy_str) if proxy_str else None,
         )
         self.system_prompt = system_prompt
-        self.max_history = max_history
+        self.max_history_tokens = max_history_tokens
         self.history_file = history_file
-        self.history = self.get_history()
+        self.history = self._load_history()
 
-    def add_to_history(self, role: str, content: str):
-        if role == "assistant":
-            self.history.append({"role": "assistant", "content": content})
-        else:
-            self.history.append({"role": "user", "content": f"{role}: {content}"})
-        if len(self.history) > self.max_history:
-            self.history.pop(1)
-            self.history.pop(2)
+    def _estimate_tokens(self, text: str) -> int:
+        return len(text) // CHARS_PER_TOKEN if text else 0
+
+    def _trim_history(self):
+        """Стираем историю, если она превышает лимит токенов,
+        но сохраняем системный промпт, если он есть."""
+        start_idx = 0
+        if self.history and self.history[0].get("role") == "system":
+            start_idx = 1
+        current_tokens = sum(
+            self._estimate_tokens(msg.get("content", "")) for msg in self.history
+        )
+        while (
+            current_tokens > self.max_history_tokens
+            and len(self.history) > start_idx + 1
+        ):
+            removed_msg = self.history.pop(start_idx)
+            current_tokens -= self._estimate_tokens(removed_msg.get("content", ""))
+        if current_tokens > self.max_history_tokens:
+            logger.warning("История слишком большая. Очищаю до системного промпта.")
+            if start_idx > 0:
+                self.history = [self.history[0]]
+            else:
+                self.history = []
+
+    def add_to_history(self, role: str, content: str, tool_calls=None):
+        msg = {"role": role, "content": content}
+        if tool_calls:
+            msg["tool_calls"] = tool_calls
+        self.history.append(msg)
+        self._trim_history()
 
     async def save_history(self):
-        async with aiofiles.open(self.history_file, "wb") as f:
-            await f.write(orjson.dumps(self.history))
+        try:
+            async with aiofiles.open(self.history_file, "wb") as f:
+                await f.write(orjson.dumps(self.history))
+        except Exception as e:
+            logger.error(f"Ошибка сохранения истории: {e}")
+
+    def _load_history(self) -> list:
+        self.history_file.parent.mkdir(parents=True, exist_ok=True)
+        if not self.history_file.exists():
+            return [{"role": "system", "content": self.system_prompt}]
+        try:
+            with self.history_file.open("rb") as f:
+                data = orjson.loads(f.read())
+                if isinstance(data, list):
+                    return data
+                return [{"role": "system", "content": self.system_prompt}]
+        except Exception:
+            return [{"role": "system", "content": self.system_prompt}]
 
     async def generate_response(self, user: str, prompt: str) -> AsyncGenerator[str]:
         self.add_to_history(user, prompt)
-        response = await self.client.chat.completions.create(
-            model=config.cfg.AiModel,
-            messages=self.history,
-            temperature=1,
-            max_completion_tokens=8192,
-            top_p=1,
-            stream=True,
-            stop=None,
-            compound_custom={
-                "tools": {
-                    "enabled_tools": ["web_search", "code_interpreter", "visit_website"]
-                }
-            },
-        )
+        if not self.history or self.history[0].get("role") != "system":
+            self.history.insert(0, {"role": "system", "content": self.system_prompt})
         full_response = ""
-        async for chunk in response:
-            if chunk.choices[0].delta.content:
-                full_response += chunk.choices[0].delta.content
-                yield chunk.choices[0].delta.content
-        self.add_to_history("assistant", full_response)
-        await self.save_history()
-
-    def get_history(self):
-        self.history_file.parent.mkdir(parents=True, exist_ok=True)
-        self.history_file.touch(exist_ok=True)
-        with self.history_file.open("rb") as f:
-            try:
-                return orjson.loads(f.read())
-            except Exception:
-                return [{"role": "system", "content": self.system_prompt}]
+        try:
+            tools = [
+                {"type": "browser_search"},
+            ]
+            response = await self.client.chat.completions.create(
+                model=self.model,
+                messages=self.history,
+                temperature=1,
+                max_completion_tokens=8192,
+                top_p=1,
+                stream=True,
+                stop=None,
+                tools=tools,
+            )
+            async for chunk in response:
+                delta = chunk.choices[0].delta
+                if delta.content:
+                    full_response += delta.content
+                    yield delta.content
+        except Exception as e:
+            logger.error(f"Ошибка генерации ответа от Groq: {e}")
+            raise
+        finally:
+            if full_response:
+                self.add_to_history("assistant", full_response)
+                await self.save_history()
 
 
 Ai = AI(
-    proxy_str=config.tokens.ai.proxy.string if config.tokens.ai.proxy.enabled else None
+    proxy_str=config.tokens.ai.proxy.string if config.tokens.ai.proxy.enabled else None,
+    model="groq/compound-mini",
 )
