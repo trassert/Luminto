@@ -1,10 +1,12 @@
 from collections.abc import AsyncGenerator
 from pathlib import Path
+
 import aiofiles
 import httpx
 import orjson
 from groq import AsyncGroq
 from loguru import logger
+
 from . import config, pathes, phrase
 
 logger.info(f"Загружен модуль {__name__}!")
@@ -102,7 +104,6 @@ class AI:
         self.history = [msg for msg in self.history if msg.get("role") in VALID_ROLES]
         full_response = ""
         try:
-            tools = [{"type": "browser_search"}]
             response = await self.client.chat.completions.create(
                 model=self.model,
                 messages=self.history,
@@ -111,7 +112,7 @@ class AI:
                 top_p=1,
                 stream=True,
                 stop=None,
-                tools=tools,
+                compound_custom={"tools":{"enabled_tools":["web_search","visit_website"]}}
             )
             async for chunk in response:
                 delta = chunk.choices[0].delta
@@ -122,7 +123,7 @@ class AI:
             logger.error(f"Ошибка генерации ответа от Groq: {e}")
             if self.history and self.history[-1].get("role") == "user":
                 self.history.pop()
-            raise e
+            raise
         finally:
             if full_response:
                 self.add_to_history("assistant", full_response)
@@ -131,5 +132,4 @@ class AI:
 
 Ai = AI(
     proxy_str=config.tokens.ai.proxy.string if config.tokens.ai.proxy.enabled else None,
-    model="groq/compound-mini",
 )
