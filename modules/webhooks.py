@@ -123,7 +123,7 @@ async def server():
     async def github(request: aiohttp.web.Request):
         signature_header = request.headers.get("X-Hub-Signature-256")
         if not signature_header:
-            return False
+            return aiohttp.web.Response(text="Не авторизован", status=401)
         try:
             _, github_signature = signature_header.split("=", 1)
         except ValueError:
