@@ -112,7 +112,7 @@ class AI:
                 top_p=1,
                 stream=True,
                 stop=None,
-                tools=[{"type":"browser_search"}]
+                tools=[{"type": "browser_search"}],
             )
             async for chunk in response:
                 delta = chunk.choices[0].delta

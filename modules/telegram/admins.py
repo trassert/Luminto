@@ -1,9 +1,10 @@
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 from loguru import logger
 from telethon.tl.functions.users import GetFullUserRequest
 
-from .. import db, formatter, mcrcon, phrase
+from .. import db, formatter, mcrcon, pathes, phrase
 from . import func
 from .client import client
 
@@ -206,3 +207,44 @@ async def give_money(event: Message):
     return await event.reply(
         phrase.money.give_money.format(formatter.value_to_str(count, phrase.currency)),
     )
+
+
+@func.new_command(r"\+pic(.*)")
+async def save_pic(event: Message):
+    roles = db.Roles()
+    if await roles.get(event.sender_id) < roles.ADMIN:
+        return await event.reply(
+            phrase.roles.no_perms.format(
+                level=roles.ADMIN,
+                name=phrase.roles.admin,
+            ),
+        )
+
+    # Проверяем есть ли картинка в самом сообщении
+    if event.photo:
+        try:
+            filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}.png"
+            filepath = pathes.pic / filename
+            await event.download_media(file=filepath)
+            logger.info(f"Картинка сохранена: {filepath}")
+            return await event.reply(phrase.pic.save)
+        except Exception as e:
+            logger.error(f"Ошибка при сохранении картинки: {e}")
+            return await event.reply(phrase.pic.error)
+
+    # Проверяем есть ли картинка в реплае
+    reply_to_msg_id = func.get_reply_message_id(event)
+    if reply_to_msg_id:
+        try:
+            reply_message = await event.get_reply_message()
+            if reply_message.photo:
+                filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}.png"
+                filepath = pathes.pic / filename
+                await reply_message.download_media(file=filepath)
+                logger.info(f"Картинка сохранена из реплая: {filepath}")
+                return await event.reply(phrase.pic.save)
+        except Exception as e:
+            logger.error(f"Ошибка при сохранении картинки из реплая: {e}")
+            return await event.reply(phrase.pic.error)
+
+    return await event.reply(phrase.pic.no_pic)
