@@ -41,13 +41,6 @@ def _save_json_sync(
         f.write(orjson.dumps(data, option=options))
 
 
-async def _load_json_async(filepath: Path) -> dict:
-    """Загружает JSON файл асинхронно."""
-    async with aiofiles.open(filepath, "rb") as f:
-        raw = await f.read()
-    return orjson.loads(raw)
-
-
 _file_locks: dict[str, asyncio.Lock] = {}
 _locks_lock = asyncio.Lock()
 
@@ -60,16 +53,13 @@ async def get_lock(filepath: Path) -> asyncio.Lock:
         return _file_locks[path_str]
 
 
-_user_locks: dict[int, asyncio.Lock] = {}
-_global_lock = asyncio.Lock()
-
-
-async def get_user_lock(user_id: int) -> asyncio.Lock:
-    """Получает или создает уникальный замок для пользователя."""
-    async with _global_lock:
-        if user_id not in _user_locks:
-            _user_locks[user_id] = asyncio.Lock()
-        return _user_locks[user_id]
+async def _load_json_async(filepath: Path) -> dict:
+    """Загружает JSON файл асинхронно."""
+    lock = await get_lock(filepath)
+    async with lock:
+        async with aiofiles.open(filepath, "rb") as f:
+            raw = await f.read()
+    return orjson.loads(raw)
 
 
 async def _save_json_async(
@@ -94,11 +84,8 @@ async def _save_json_async(
 async def get_money(id: int) -> int:
     """Получение баланса с защитой от чтения во время записи."""
     id_str = str(id)
-    user_lock = await get_user_lock(id)
-
-    async with user_lock:
-        data = await _load_json_async(pathes.money)
-        return data.get(id_str, 0)
+    data = await _load_json_async(pathes.money)
+    return data.get(id_str, 0)
 
 
 async def get_all_money():
@@ -110,23 +97,18 @@ async def get_all_money():
 async def add_money(id: int, count: int):
     """
     Атомарное изменение баланса.
-    Использует пользовательский лок, чтобы исключить гонки для одного юзера.
     """
     id_str = str(id)
+    data = await _load_json_async(pathes.money)
 
-    user_lock = await get_user_lock(id)
+    old = data.get(id_str, 0)
+    new_val = max(old + count, 0)
+    data[id_str] = new_val
 
-    async with user_lock:
-        data = await _load_json_async(pathes.money)
+    await _save_json_async(pathes.money, data, indent=True)
 
-        old = data.get(id_str, 0)
-        new_val = max(old + count, 0)
-        data[id_str] = new_val
-
-        await _save_json_async(pathes.money, data, indent=True)
-
-        logger.info(f"Изменён баланс {id} ({old} -> {new_val})")
-        return new_val
+    logger.info(f"Изменён баланс {id} ({old} -> {new_val})")
+    return new_val
 
 
 async def check_and_update_withdraw_limit(id: int, amount: int) -> tuple[bool, int]:
@@ -164,15 +146,14 @@ async def check_and_update_withdraw_limit(id: int, amount: int) -> tuple[bool, i
 
 
 async def rollback_withdraw_limit(id: int, amount: int):
-    """Откатывает лимит назад. Публичная версия с блокировкой."""
-    async with await get_user_lock(id):
-        id_str = str(id)
-        data = await _load_json_async(pathes.wdraw)
+    """Откатывает лимит назад."""
+    id_str = str(id)
+    data = await _load_json_async(pathes.wdraw)
 
-        if id_str in data:
-            current = data[id_str].get("withdrawn", 0)
-            data[id_str]["withdrawn"] = max(0, current - amount)
-            await _save_json_async(pathes.wdraw, data, indent=True)
+    if id_str in data:
+        current = data[id_str].get("withdrawn", 0)
+        data[id_str]["withdrawn"] = max(0, current - amount)
+        await _save_json_async(pathes.wdraw, data, indent=True)
 
 
 async def update_shop():

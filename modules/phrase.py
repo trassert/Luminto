@@ -166,9 +166,11 @@ class server:
     stopped = "❌ : Сервер выключен!"
     overload = "❌ : Сервер перегружен, попробуйте позже"
     host = (
-        "🌐 **: IP сервера:** `lumintomc.ru`\n"
-        "💨 **: IPv6:** `v6.lumintomc.ru`\n\n"
-        "•  **[Что за IPv6?](https://lumintomc.ru/wiki/info/ipv6)**"
+        "🇷🇺 **:** `lumintomc.ru`\n"
+        "🐥 **:** `luminto.duckdns.org`\n\n"
+        "> 🇷🇺 работает на Cloudflare, 🐥 на Amazon.\n"
+        "> Для игрока это не имеет значения. Просто подключайтесь к любому из них!\n"
+        "> Bedrock порт стандартный - 19132."
     )
 
 
