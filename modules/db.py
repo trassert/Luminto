@@ -352,9 +352,14 @@ class Statistic:
             if file.suffix != ".json":
                 continue
             nick = file.stem
-            nick_stat = await self.get(nick, all_days=all_days)
-            if nick_stat > 1:
-                data[nick] = nick_stat
+            try:
+                nick_stat = await self.get(nick, all_days=all_days)
+            except Exception:
+                logger.warning(f"Ошибка при получении статистики для игрока {nick}")
+                continue
+            else:
+                if nick_stat > 1:
+                    data[nick] = nick_stat
         return sorted(data.items(), key=lambda item: item[1], reverse=True)
 
     async def add(self, date=None):
