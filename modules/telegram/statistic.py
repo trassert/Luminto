@@ -30,7 +30,7 @@ async def active_check(event: Message):
             days = 1
 
     stat = db.Statistic(days=days)
-    all_data = await stat.get_all(all_days=(days == 0))
+    all_data = await stat.get_all()
 
     if not all_data:
         return await event.reply(phrase.stat.empty)
