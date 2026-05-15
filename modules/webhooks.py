@@ -148,7 +148,9 @@ async def server():
                         config.chats.chat,
                     ),
                     phrase.github.update.format(
-                        branch=f" ({branch})" if branch not in ["master", "main"] else "",
+                        branch=f" ({branch})"
+                        if branch not in ["master", "main"]
+                        else "",
                         author=f"[{head['author']['name']}](https://github.com/{head['author']['name']})",
                         message=head["message"],
                         changes=f"**[Что изменилось?]({head['url']})**"

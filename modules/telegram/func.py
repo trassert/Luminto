@@ -155,14 +155,30 @@ async def checks(event: Message | events.CallbackQuery.Event) -> bool:
     return False
 
 
-def new_command(command: str, checks=checks, chats=None):
-    pattern = rf"(?i)^{command}"
+def new_command(command: str | list[str], checks=checks, chats=None):
+    if isinstance(command, str):
 
-    def decorator(func):
-        client.add_event_handler(
-            func,
-            events.NewMessage(pattern=pattern, func=checks, chats=chats),
-        )
-        return func
+        def decorator(func):
+            client.add_event_handler(
+                func,
+                events.NewMessage(pattern=rf"(?i)^{command}", func=checks, chats=chats),
+            )
+            return func
 
-    return decorator
+        return decorator
+
+    if isinstance(command, list):
+
+        def decorator(func):
+            for pattern in command:
+                client.add_event_handler(
+                    func,
+                    events.NewMessage(
+                        pattern=rf"(?i)^{pattern}", func=checks, chats=chats
+                    ),
+                )
+            return func
+
+        return decorator
+    msg = "Expected str | list[str], got " + type(command).__name__
+    raise ValueError(msg)
