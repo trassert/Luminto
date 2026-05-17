@@ -151,7 +151,7 @@ async def server():
                         branch=f" ({branch})"
                         if branch not in ["master", "main"]
                         else "",
-                        author=f"[{head['author']['name']}](https://github.com/{head['author']['name']})",
+                        author=f"[{head['author']['name'].replace('[', ' ').replace(']', ' ')}](https://github.com/{head['author']['name']})",
                         message=head["message"],
                         changes=f"**[Что изменилось?]({head['url']})**"
                         if load["repository"]["private"] is False
