@@ -4,8 +4,8 @@ icon: versions
 order: -1
 ---
 ### Мы поддерживаем:
-- Java - с `1.21` по `26.1`
-- Bedrock - c `1.21.130` по `26.10`
+- Java - `26.1` и выше
+- Bedrock - c `1.21.130` по `26.20`
 
 Настоятельно рекомендуем использовать новейшие версии для лучшей поддержки и более комфортной игры!
 
@@ -20,8 +20,5 @@ order: -1
 - Игроков с лаунчеров, предоставляющих Java на Android
 
 ### Поддержка при столкновении с ошибками НЕ оказывается:
-- Игрокам с TLauncher, KLauncher и других подобных лаунчерах. Используйте:
-    - PrismLauncher
-    - LegacyLauncher
-    - XMCL
-- Игрокам с OptiFine (https://forum.quiltmc.org/t/why-you-shouldnt-use-optifine/78)
+- Игрокам с TLauncher, KLauncher - []()
+- Игрокам с OptiFine - [причина](https://forum.quiltmc.org/t/why-you-shouldnt-use-optifine/78)
