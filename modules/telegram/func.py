@@ -70,7 +70,9 @@ async def get_id(str: str) -> int:
         str = str[1:]
         check = await get_name(str)
         if check in ["Без имени", "Неопознанный персонаж"]:
-            return None
+            msg = "Пользователь с таким ID не найден."
+            logger.warning(msg + f" ID: {str}")
+            raise ValueError(msg)
         return int(str)
     user = await client(GetFullUserRequest(str))
     return user.full_user.id
@@ -130,7 +132,10 @@ async def get_author_by_msgid(chat_id: int, msg_id: int) -> int | None:
 async def swap_resolve_recipient(event: Message, args: list[str]) -> int | None:
     """Возвращает ID получателя или None."""
     if len(args) > 1:
-        return await get_id(args[1])
+        try:
+            return await get_id(args[1])
+        except Exception:
+            pass
     msg_id = get_reply_message_id(event)
     if msg_id:
         return await get_author_by_msgid(event.chat_id, msg_id)
