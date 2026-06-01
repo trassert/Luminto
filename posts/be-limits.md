@@ -4,7 +4,7 @@ icon: bug
 order: 1
 ---
 
-# ❌ Что сейчас недоступно в Minecraft Bedrock Edition
+## ❌ Что сейчас недоступно в Minecraft Bedrock Edition
 
 На данный момент в Bedrock **невозможно** следующее:
 
