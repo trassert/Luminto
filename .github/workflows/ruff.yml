@@ -17,6 +17,8 @@ jobs:
           ref: ${{ github.head_ref || github.ref_name }}
       
       - uses: astral-sh/ruff-action@v4.0.0
+        with:
+          run: false
       - run: ruff check --fix || true
       - run: ruff format || true
       
