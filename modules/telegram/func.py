@@ -3,8 +3,6 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 from telethon import events
-from telethon.errors import UserNotParticipantError
-from telethon.tl.functions.channels import GetParticipantRequest
 from telethon.tl.functions.users import GetFullUserRequest
 
 from .. import db, phrase

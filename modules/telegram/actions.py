@@ -22,8 +22,8 @@ async def chat_action(event: events.ChatAction.Event):
 
     try:
         entity = await client.get_entity(event.user_id)
-        is_user = hasattr(entity, 'bot')
-        is_bot = getattr(entity, 'bot', False)
+        is_user = hasattr(entity, "bot")
+        is_bot = getattr(entity, "bot", False)
         if not is_user or is_bot:
             return None
     except Exception as e:
@@ -85,10 +85,14 @@ async def chat_action(event: events.ChatAction.Event):
         try:
             perms = await client.get_permissions(config.chats.chat, event.user_id)
             if not perms.is_member or perms.is_banned:
-                logger.info(f"Пользователь {event.user_id} не в чате или забанен до приветствия.")
+                logger.info(
+                    f"Пользователь {event.user_id} не в чате или забанен до приветствия."
+                )
                 return None
         except Exception as e:
-            logger.info(f"Пользователь {event.user_id} отсутствует в чате или ошибка проверки: {e}")
+            logger.info(
+                f"Пользователь {event.user_id} отсутствует в чате или ошибка проверки: {e}"
+            )
             return None
 
         return await client.send_message(
