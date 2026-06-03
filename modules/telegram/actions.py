@@ -12,15 +12,22 @@ logger.info(f"Загружен модуль {__name__}!")
 
 router = Router(name="actions")
 
-# Задержка перед приветствием для фильтрации спам-ботов (сек)
 WELCOME_DELAY = 5
 
 
 @client.on(events.ChatAction(chats=config.chats.chat))
 async def chat_action(event: events.ChatAction.Event):
-    print(f"Chat action: {event}")
-
     if not event.user_id:
+        return None
+
+    try:
+        entity = await client.get_entity(event.user_id)
+        is_user = hasattr(entity, 'bot')
+        is_bot = getattr(entity, 'bot', False)
+        if not is_user or is_bot:
+            return None
+    except Exception as e:
+        logger.error(f"Не удалось получить сущность {event.user_id}: {e}")
         return None
 
     try:
@@ -75,8 +82,13 @@ async def chat_action(event: events.ChatAction.Event):
 
         await asyncio.sleep(WELCOME_DELAY)
 
-        if await func.is_user_in_chat(config.chats.chat, event.user_id) is False:
-            logger.info(f"Пользователь {event.user_id} удален до приветствия.")
+        try:
+            perms = await client.get_permissions(config.chats.chat, event.user_id)
+            if not perms.is_member or perms.is_banned:
+                logger.info(f"Пользователь {event.user_id} не в чате или забанен до приветствия.")
+                return None
+        except Exception as e:
+            logger.info(f"Пользователь {event.user_id} отсутствует в чате или ошибка проверки: {e}")
             return None
 
         return await client.send_message(

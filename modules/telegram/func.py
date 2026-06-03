@@ -16,15 +16,6 @@ if TYPE_CHECKING:
 logger.info(f"Загружен модуль {__name__}!")
 
 
-async def is_user_in_chat(chat, user_id: int) -> bool:
-    try:
-        await client(GetParticipantRequest(chat, user_id))
-    except UserNotParticipantError, ValueError:
-        return False
-    else:
-        return True
-
-
 async def get_simple_push(id) -> str | None:
     try:
         user = await client.get_entity(id)
