@@ -1,6 +1,8 @@
+from loguru import logger
+
 from typing import TYPE_CHECKING
 
-from loguru import logger
+
 
 from .. import phrase
 from . import func
