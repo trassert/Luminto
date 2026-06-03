@@ -9,7 +9,6 @@ from loguru import logger
 from telethon import Button
 from telethon import errors as tgerrors
 from telethon.tl import types
-from telethon.tl.functions.users import GetFullUserRequest
 from telethon.tl.types import (
     KeyboardButtonCallback,
 )
