@@ -1,10 +1,9 @@
 from aiogram import Bot, Dispatcher
 from aiogram.client.session.aiohttp import AiohttpSession
 from loguru import logger
-from telethon import TelegramClient, connection, types
+from telethon import TelegramClient, connection
 
-
-from .. import config, pathes, formatter
+from .. import config, formatter, pathes
 
 logger.info(f"Загружен модуль {__name__}!")
 

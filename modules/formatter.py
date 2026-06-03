@@ -2,8 +2,8 @@ import re
 
 from loguru import logger
 from pymorphy3 import MorphAnalyzer
-from telethon.extensions import markdown
 from telethon import types
+from telethon.extensions import markdown
 
 logger.info(f"Загружен модуль {__name__}!")
 
