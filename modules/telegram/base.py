@@ -5,7 +5,6 @@ from time import time
 from typing import TYPE_CHECKING, Any
 
 import aiofiles
-import aioping
 from loguru import logger
 from telethon import Button
 from telethon import errors as tgerrors
@@ -78,7 +77,9 @@ async def ping(event: Message) -> Message:
     ]:
         try:
             async with mcrcon.Vanilla as rcon:
-                pings = formatter.parse_pings_strict(formatter.rm_colors(await rcon.send("ping @a")))
+                pings = formatter.parse_pings_strict(
+                    formatter.rm_colors(await rcon.send("ping @a"))
+                )
             if pings == []:
                 extra_pings.append("🧍 : Игроков не найдено")
             else:
