@@ -18,7 +18,7 @@ WELCOME_DELAY = 5
 
 @client.on(events.ChatAction(chats=config.chats.chat))
 async def chat_action(event: events.ChatAction.Event):
-    logger.info(f"Chat action: {event}")
+    print(f"Chat action: {event}")
 
     if not event.user_id:
         return None
@@ -95,9 +95,9 @@ async def handle_join_request(request: types.ChatJoinRequest):
 
     if await db.Nicks(id=user_id).get() is not None:
         try:
-            await request.approve()
+            return await request.approve()
         except exceptions.TelegramBadRequest:
-            return
+            return None
 
     try:
         await request.bot.send_message(
