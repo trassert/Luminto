@@ -18,6 +18,8 @@ WELCOME_DELAY = 5
 
 @client.on(events.ChatAction(chats=config.chats.chat))
 async def chat_action(event: events.ChatAction.Event):
+    logger.info(f"Chat action: {event}")
+
     if not event.user_id:
         return None
 
