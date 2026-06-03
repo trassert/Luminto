@@ -18,9 +18,10 @@ jobs:
       
       - uses: astral-sh/ruff-action@v4.0.0
         with:
-          run: false
-      - run: ruff check --fix || true
-      - run: ruff format || true
+          args: "check --fix"
+        continue-on-error: true
+
+      - run: ruff format
       
       - name: Commit and push if changes
         run: |
