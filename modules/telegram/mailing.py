@@ -36,22 +36,13 @@ async def send_to_subscribers(message_text):
     return successful_sends
 
 
-@func.new_command(r"\+обновление ([\s\S]+)")
+@func.new_command(r"\+обновление ([\s\S]+)", min_role=4)
 async def admin_broadcast(event: Message):
-    roles = db.Roles()
-    if await roles.get(event.sender_id) < roles.ADMIN:
-        return await event.reply(
-            phrase.roles.no_perms.format(
-                level=roles.ADMIN,
-                name=phrase.roles.admin,
-            ),
-        )
     await event.reply(
         phrase.mailing.done.format(
             await send_to_subscribers(event.pattern_match.group(1).strip()),
         ),
     )
-    return None
 
 
 @func.new_command(r"\+обновления")

@@ -131,8 +131,10 @@ async def swap_resolve_recipient(event: Message, args: list[str]) -> int | None:
     return None
 
 
-async def checks(event: Message | events.CallbackQuery.Event) -> bool:
-    roles = db.Roles()
+async def checks(
+    event: Message | events.CallbackQuery.Event, min_role: int = 0
+) -> bool:
+    "Логгирование ЛС"
     if event.is_private and not isinstance(event, events.CallbackQuery.Event):
         name = await get_name(event.sender_id, log=True)
         (
@@ -140,22 +142,48 @@ async def checks(event: Message | events.CallbackQuery.Event) -> bool:
             if len(event.text) < 100
             else logger.info(f"ЛС - {name} > {event.text[:100]}...")
         )
-    if await roles.get(event.sender_id) != roles.BLACKLIST:
-        return True
-    if isinstance(event, events.CallbackQuery.Event):
-        await event.answer(phrase.blacklisted, alert=True)
+
+    "Проверка на ЧСБ и ур. доступа"
+    roles = db.Roles()
+    u_role = await roles.get(event.sender_id)
+    if u_role == roles.BLACKLIST:
+        if isinstance(event, events.CallbackQuery.Event):
+            await event.answer(phrase.blacklisted, alert=True)
+        else:
+            await event.reply(phrase.blacklisted)
         return False
-    await event.reply(phrase.blacklisted)
-    return False
+    if u_role < min_role:
+        if isinstance(event, events.CallbackQuery.Event):
+            await event.answer(
+                phrase.roles.no_perms_buttons.format(
+                    name=phrase.roles.types[min_role]
+                ),
+                alert=True,
+            )
+        else:
+            await event.reply(
+                phrase.roles.no_perms.format(
+                    level=min_role, name=phrase.roles.types[min_role]
+                )
+            )
+        return False
+    return True
 
 
-def new_command(command: str | list[str], checks=checks, chats=None):
+def new_command(
+    command: str | list[str], checks=checks, chats=None, min_role: int = 0
+):
+    async def check_wrapper(event):
+        return await checks(event, min_role=min_role)
+
     if isinstance(command, str):
 
         def decorator(func):
             client.add_event_handler(
                 func,
-                events.NewMessage(pattern=rf"(?i)^{command}", func=checks, chats=chats),
+                events.NewMessage(
+                    pattern=rf"(?i)^{command}", func=check_wrapper, chats=chats
+                ),
             )
             return func
 

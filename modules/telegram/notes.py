@@ -12,14 +12,8 @@ if TYPE_CHECKING:
 logger.info(f"Загружен модуль {__name__}!")
 
 
-@func.new_command(r"\+нот (.+)\n([\s\S]+)")
-@func.new_command(r"\+note (.+)\n([\s\S]+)")
+@func.new_command([r"\+note (.+)\n([\s\S]+)",r"\+нот (.+)\n([\s\S]+)"], min_role=1)
 async def add_note(event: Message):
-    roles = db.Roles()
-    if await roles.get(event.sender_id) < roles.VIP:
-        return await event.reply(
-            phrase.roles.no_perms.format(level=roles.VIP, name=phrase.roles.vip),
-        )
     if (
         db.Notes().create(
             event.pattern_match.group(1).strip(),
@@ -33,25 +27,13 @@ async def add_note(event: Message):
     return await event.reply(phrase.notes.already_added)
 
 
-@func.new_command(r"\+нот (.+)$")
-@func.new_command(r"\+note (.+)$")
+@func.new_command([r"\+note (.+)$",r"\+нот (.+)$"], min_role=1)
 async def add_note_notext(event: Message):
-    roles = db.Roles()
-    if await roles.get(event.sender_id) < roles.VIP:
-        return await event.reply(
-            phrase.roles.no_perms.format(level=roles.VIP, name=phrase.roles.vip),
-        )
     return await event.reply(phrase.notes.notext)
 
 
-@func.new_command(r"\+нот\n([\s\S]+)")
-@func.new_command(r"\+note\n([\s\S]+)")
+@func.new_command([r"\+нот\n([\s\S]+)",r"\+note\n([\s\S]+)"], min_role=1)
 async def add_note_noname(event: Message):
-    roles = db.Roles()
-    if await roles.get(event.sender_id) < roles.VIP:
-        return await event.reply(
-            phrase.roles.no_perms.format(level=roles.VIP, name=phrase.roles.vip),
-        )
     return await event.reply(phrase.notes.noname)
 
 
@@ -89,22 +71,13 @@ async def get_all_notes(event: Message):
     return await event.reply(phrase.notes.alltext.format(text))
 
 
-@func.new_command(r"\-нот (.+)$")
-@func.new_command(r"\-note (.+)$")
-@func.new_command(r"\-text (.+)$")
+@func.new_command([r"\-нот (.+)$", r"\-note (.+)$", r"\-text (.+)$"], min_role=1)
 async def del_note(event: Message):
-    roles = db.Roles()
-    if await roles.get(event.sender_id) < roles.VIP:
-        return await event.reply(
-            phrase.roles.no_perms.format(level=roles.VIP, name=phrase.roles.vip),
-        )
     if not db.Notes().remove(event.pattern_match.group(1).strip()):
         return await event.reply(phrase.notes.not_found)
     return await event.reply(phrase.notes.deleted)
 
 
-@func.new_command(r"\-нот$")
-@func.new_command(r"\-note$")
-@func.new_command(r"\-text$")
+@func.new_command([r"\-text$", r"\-нот$", r"\-note$"], min_role=1)
 async def del_note_notext(event: Message):
     return await event.reply(phrase.note.noname)

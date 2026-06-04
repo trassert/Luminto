@@ -521,6 +521,7 @@ class roles:
     no_perms = (
         "⭐️ : Для использования этой команды необходим доступ {level} - **{name}**"
     )
+    no_perms_buttons = "⭐️ : Для использования необходим уровень «{name}»"
 
 
 class chataction:

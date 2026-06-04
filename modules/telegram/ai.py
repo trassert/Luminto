@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from loguru import logger
 from telethon.errors.rpcerrorlist import MessageNotModifiedError
 
-from .. import ai, config, db, floodwait, phrase
+from .. import ai, config, floodwait, phrase
 from . import func
 from .client import client
 
@@ -14,19 +14,10 @@ if TYPE_CHECKING:
 logger.info(f"Загружен модуль {__name__}!")
 
 
-@func.new_command(r"/ии ([\s\S]+)")
-@func.new_command(r"/ai ([\s\S]+)")
+@func.new_command([r"/ai ([\s\S]+)", r"/ии ([\s\S]+)"], min_role=1)
 async def ai_handler(event: Message):
     if event.chat_id != config.chats.chat:
         return await event.reply(phrase.ai.not_in_chat)
-    roles = db.Roles()
-    if await roles.get(event.sender_id) < roles.VIP:
-        return await event.reply(
-            phrase.roles.no_perms.format(
-                level=roles.VIP,
-                name=phrase.roles.vip,
-            ),
-        )
     fw_request = floodwait.WaitAI.request()
     if fw_request is False:
         return await event.reply(phrase.wait.ai)

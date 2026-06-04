@@ -14,17 +14,8 @@ if TYPE_CHECKING:
 logger.info(f"Загружен модуль {__name__}!")
 
 
-@func.new_command(r"/изменить баланс(.*)")
-@func.new_command(r"/change balance(.*)")
+@func.new_command([r"/change balance(.*)", r"/изменить баланс(.*)"], min_role=4)
 async def add_balance(event: Message):
-    roles = db.Roles()
-    if await roles.get(event.sender_id) < roles.ADMIN:
-        return await event.reply(
-            phrase.roles.no_perms.format(
-                level=roles.ADMIN,
-                name=phrase.roles.admin,
-            ),
-        )
     args = event.pattern_match.group(1).strip().split()
     try:
         tag = args[1]
@@ -55,17 +46,8 @@ async def add_balance(event: Message):
     return None
 
 
-@func.new_command(r"\+стафф(.*)")
-@func.new_command(r"\+staff(.*)")
+@func.new_command([r"\+staff(.*)", r"\+стафф(.*)"], min_role=5)
 async def add_staff(event: Message):
-    roles = db.Roles()
-    if await roles.get(event.sender_id) < roles.OWNER:
-        return await event.reply(
-            phrase.roles.no_perms.format(
-                level=roles.OWNER,
-                name=phrase.roles.owner,
-            ),
-        )
     arg = event.pattern_match.group(1).strip()
     try:
         user = await client(GetFullUserRequest(arg))
@@ -79,6 +61,7 @@ async def add_staff(event: Message):
             tag = await func.get_name(user)
         else:
             return await event.reply(phrase.money.no_people)
+    roles = db.Roles()
     new_role = await roles.get(user) + 1
     await roles.set(user, new_role)
     return await event.reply(
@@ -86,17 +69,9 @@ async def add_staff(event: Message):
     )
 
 
-@func.new_command(r"\-staff(.*)")
-@func.new_command(r"\-стафф(.*)")
+@func.new_command([r"\-staff(.*)", r"\-стафф(.*)"], min_role=5)
 async def del_staff(event: Message):
     roles = db.Roles()
-    if await roles.get(event.sender_id) < roles.OWNER:
-        return await event.reply(
-            phrase.roles.no_perms.format(
-                level=roles.OWNER,
-                name=phrase.roles.owner,
-            ),
-        )
     arg = event.pattern_match.group(1).strip()
     try:
         user = await client(GetFullUserRequest(arg))
@@ -117,16 +92,8 @@ async def del_staff(event: Message):
     )
 
 
-@func.new_command(r"//(.+)")
+@func.new_command(r"//(.+)", min_role=4)
 async def vanilla_mcrcon(event: Message):
-    roles = db.Roles()
-    if await roles.get(event.sender_id) < roles.ADMIN:
-        return await event.reply(
-            phrase.roles.no_perms.format(
-                level=roles.ADMIN,
-                name=phrase.roles.admin,
-            ),
-        )
     command = event.pattern_match.group(1).strip()
     try:
         async with mcrcon.Vanilla as rcon:
@@ -144,16 +111,8 @@ async def vanilla_mcrcon(event: Message):
         return await event.reply(phrase.server.stopped)
 
 
-@func.new_command(r"\+вт\s(.+)")
-@func.new_command(r"\-вт\s(.+)")
-@func.new_command(r"\+wl\s(.+)")
-@func.new_command(r"\-wl\s(.+)")
+@func.new_command([r"\+wl\s(.+)", r"\-wl\s(.+)", r"\-wl\s(.+)", r"\-вт\s(.+)",], min_role=1)
 async def whitelist(event: Message):
-    roles = db.Roles()
-    if await roles.get(event.sender_id) < roles.VIP:
-        return await event.reply(
-            phrase.roles.no_perms.format(level=roles.VIP, name=phrase.roles.vip),
-        )
     if event.text[0] == "-":
         command = f"nwl remove name {event.pattern_match.group(1).strip()}"
     else:
@@ -170,16 +129,8 @@ async def whitelist(event: Message):
         return await event.reply(phrase.server.stopped)
 
 
-@func.new_command(r"/выдать(.*)")
+@func.new_command(r"/выдать(.*)", min_role=4)
 async def give_money(event: Message):
-    roles = db.Roles()
-    if await roles.get(event.sender_id) < roles.ADMIN:
-        return await event.reply(
-            phrase.roles.no_perms.format(
-                level=roles.ADMIN,
-                name=phrase.roles.admin,
-            ),
-        )
     args = event.pattern_match.group(1).strip().split()
     if not args:
         return await event.reply(phrase.money.no_count + phrase.money.give_money_use)
@@ -209,17 +160,8 @@ async def give_money(event: Message):
     )
 
 
-@func.new_command(r"\+pic(.*)")
+@func.new_command(r"\+pic(.*)", min_role=4)
 async def save_pic(event: Message):
-    roles = db.Roles()
-    if await roles.get(event.sender_id) < roles.ADMIN:
-        return await event.reply(
-            phrase.roles.no_perms.format(
-                level=roles.ADMIN,
-                name=phrase.roles.admin,
-            ),
-        )
-
     # Проверяем есть ли картинка в самом сообщении
     if event.photo:
         try:
