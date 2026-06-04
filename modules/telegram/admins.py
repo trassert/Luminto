@@ -111,7 +111,15 @@ async def vanilla_mcrcon(event: Message):
         return await event.reply(phrase.server.stopped)
 
 
-@func.new_command([r"\+wl\s(.+)", r"\-wl\s(.+)", r"\-wl\s(.+)", r"\-вт\s(.+)",], min_role=1)
+@func.new_command(
+    [
+        r"\+wl\s(.+)",
+        r"\-wl\s(.+)",
+        r"\-wl\s(.+)",
+        r"\-вт\s(.+)",
+    ],
+    min_role=1,
+)
 async def whitelist(event: Message):
     if event.text[0] == "-":
         command = f"nwl remove name {event.pattern_match.group(1).strip()}"

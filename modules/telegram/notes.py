@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 logger.info(f"Загружен модуль {__name__}!")
 
 
-@func.new_command([r"\+note (.+)\n([\s\S]+)",r"\+нот (.+)\n([\s\S]+)"], min_role=1)
+@func.new_command([r"\+note (.+)\n([\s\S]+)", r"\+нот (.+)\n([\s\S]+)"], min_role=1)
 async def add_note(event: Message):
     if (
         db.Notes().create(
@@ -27,12 +27,12 @@ async def add_note(event: Message):
     return await event.reply(phrase.notes.already_added)
 
 
-@func.new_command([r"\+note (.+)$",r"\+нот (.+)$"], min_role=1)
+@func.new_command([r"\+note (.+)$", r"\+нот (.+)$"], min_role=1)
 async def add_note_notext(event: Message):
     return await event.reply(phrase.notes.notext)
 
 
-@func.new_command([r"\+нот\n([\s\S]+)",r"\+note\n([\s\S]+)"], min_role=1)
+@func.new_command([r"\+нот\n([\s\S]+)", r"\+note\n([\s\S]+)"], min_role=1)
 async def add_note_noname(event: Message):
     return await event.reply(phrase.notes.noname)
 
