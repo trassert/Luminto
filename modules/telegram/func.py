@@ -192,7 +192,7 @@ def new_command(command: str | list[str], checks=checks, chats=None, min_role: i
                 client.add_event_handler(
                     func,
                     events.NewMessage(
-                        pattern=rf"(?i)^{pattern}", func=checks, chats=chats
+                        pattern=rf"(?i)^{pattern}", func=check_wrapper, chats=chats
                     ),
                 )
             return func
