@@ -33,6 +33,8 @@ async def qrgen(event: Message) -> Message:
     data = event.pattern_match.group(1).strip()
     if not data:
         return await event.reply(phrase.qr.no_data)
+    if len(data) > 1000: #TODO: configurable max length
+        return await event.reply(phrase.qr.too_long)
     try:
         with qr.QR(data) as qrcode:
             path = qrcode.get()
