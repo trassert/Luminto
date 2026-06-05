@@ -544,7 +544,7 @@ class chataction:
         "\n"
         "Возможно, тебе понадобится:\n"
         "    Айпи - **/ip**\n"
-        "    Онлайн - **/list**\n"
+        "    Онлайн - **/online**\n"
         "    Карта сервера - **/map**\n"
         "    **[Остальные команды](https://github.com/trassert/Luminto/wiki)**\n"
         "    **[Правила](https://lumintomc.ru/wiki/rules/list)**\n"

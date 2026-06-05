@@ -84,9 +84,9 @@ async def chat_action(event: events.ChatAction.Event):
 
         try:
             perms = await client.get_permissions(config.chats.chat, event.user_id)
-            if not perms.is_member or perms.is_banned:
+            if perms.is_banned or perms.has_left:
                 logger.info(
-                    f"Пользователь {event.user_id} не в чате или забанен до приветствия."
+                    f"Пользователь {event.user_id} забанен или вышел до приветствия."
                 )
                 return None
         except Exception as e:
