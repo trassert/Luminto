@@ -1,6 +1,6 @@
 import tempfile
 from pathlib import Path
-import uuid
+
 import qrcode
 from qrcode.image.styledpil import StyledPilImage
 from qrcode.image.styles.moduledrawers.pil import CircleModuleDrawer
@@ -14,10 +14,10 @@ class QR:
         self._path = None
 
     def __enter__(self):
-        self._temp = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
+        self._temp = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
         self._path = Path(self._temp.name)
         self._temp.close()
-        
+
         qr = qrcode.QRCode(
             version=1,
             error_correction=qrcode.constants.ERROR_CORRECT_H,
@@ -26,7 +26,7 @@ class QR:
         )
         qr.add_data(self.data)
         qr.make(fit=True)
-        
+
         img = qr.make_image(
             image_factory=StyledPilImage,
             module_drawer=CircleModuleDrawer(),
