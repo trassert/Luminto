@@ -21,9 +21,7 @@ if TYPE_CHECKING:
 logger.info(f"Загружен модуль {__name__}!")
 
 
-async def _check_and_update_tier(
-    state, players_len: int, name_cap: str
-) -> None:
+async def _check_and_update_tier(state, players_len: int, name_cap: str) -> None:
     """Обновляет статус (Княжество/Государство/Империя) при изменении состава."""
     new_type = None
     label = ""
@@ -39,9 +37,7 @@ async def _check_and_update_tier(
 
     if new_type is not None:
         state.change("type", new_type)
-        msg_template = (
-            phrase.state.up if new_type > state.type else phrase.state.down
-        )
+        msg_template = phrase.state.up if new_type > state.type else phrase.state.down
         await client.send_message(
             entity=config.chats.chat,
             message=msg_template.format(name=name_cap, type=label),
@@ -122,9 +118,7 @@ async def state_make(event: Message) -> Message:
                 data=f"state.m.{event.sender_id}.{arg}".encode(),
             ),
         ]
-        return await event.reply(
-            phrase.state.warn_make.format(arg), buttons=[button]
-        )
+        return await event.reply(phrase.state.warn_make.format(arg), buttons=[button])
     except tgerrors.ButtonDataInvalidError:
         return await event.reply(phrase.state.too_long)
 
@@ -152,9 +146,7 @@ async def state_enter(event: Message) -> Message:
     if not nick:
         return await event.reply(phrase.state.not_connected)
 
-    if db.States.if_player(event.sender_id) or db.States.if_author(
-        event.sender_id
-    ):
+    if db.States.if_player(event.sender_id) or db.States.if_author(event.sender_id):
         return await event.reply(phrase.state.already_player)
 
     state = db.State(arg)
@@ -198,9 +190,7 @@ async def state_get(event: Message):
         arg = ""
 
     if not arg:
-        state_name = db.States.if_player(
-            event.sender_id
-        ) or db.States.if_author(
+        state_name = db.States.if_player(event.sender_id) or db.States.if_author(
             event.sender_id,
         )
         if not state_name:
@@ -487,9 +477,7 @@ async def state_kick_user(event: Message) -> Message:
         reply_to=config.chats.topics.rp,
     )
 
-    await _check_and_update_tier(
-        state, len(state.players), state.name.capitalize()
-    )
+    await _check_and_update_tier(state, len(state.players), state.name.capitalize())
     return await event.reply(phrase.state.kicked.format(target_name))
 
 
@@ -601,9 +589,7 @@ async def state_status(event: Message) -> Message:
     else:
         status = phrase.state.status_not_recognized
 
-    voters = (
-        ", ".join(state.recognition_votes) if state.recognition_votes else "Нет"
-    )
+    voters = ", ".join(state.recognition_votes) if state.recognition_votes else "Нет"
 
     return await event.reply(
         phrase.state.status_info.format(
