@@ -42,6 +42,7 @@ async def qrgen(event: Message) -> Message:
         return await event.reply(phrase.qr.error)
 
 
+@func.new_command(r"/qr@luminto_chatbot$")
 @func.new_command(r"/qr$")
 async def qrhelp(event: Message) -> Message:
     return await event.reply(phrase.qr.help)
