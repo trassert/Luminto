@@ -48,7 +48,7 @@ async def delete_topic(event: Message):
     ):
         return await event.reply(phrase.forum.not_author)
     result = await client(
-        functions.channels.EditForumTopicRequest(
+        functions.messages.EditForumTopicRequest(
             channel=config.chats.forum, topic_id=topic_id, closed=True
         )
     )
