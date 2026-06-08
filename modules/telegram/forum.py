@@ -42,8 +42,10 @@ async def delete_topic(event: Message):
     if not topic_id:
         return await event.reply(phrase.forum.topic_no_id)
     author_topics = await db.Topics().get_byid(event.sender_id)
+    print(author_topics)
+    print(topic_id)
     if (
-        topic_id not in author_topics
+        str(topic_id) not in author_topics
         and await db.Roles().get(event.sender_id) < db.Roles.ADMIN
     ):
         return await event.reply(phrase.forum.not_author)
