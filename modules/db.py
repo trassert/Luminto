@@ -1175,7 +1175,7 @@ class Topics:
     def __init__(self):
         self.data_file = pathes.topics
         if not self.data_file.exists():
-            self.data = {}
+            _save_json_sync(self.data_file, {})
 
     def idconv(self, id):
         try:
