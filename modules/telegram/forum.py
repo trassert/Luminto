@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 from telethon.tl import functions
+from telethon.errors.rpcbaseerrors import BadRequestError
 
 from .. import config, db, phrase
 from . import func
@@ -47,12 +48,12 @@ async def delete_topic(event: Message):
         and await db.Roles().get(event.sender_id) < db.Roles.ADMIN
     ):
         return await event.reply(phrase.forum.not_author)
-    await client(
-        functions.messages.EditForumTopicRequest(
-            peer=config.chats.forum,
-            topic_id=topic_id,
-            closed=True,
-            icon_emoji_id=phrase.forum.done_id,
+    try:
+        await client(
+            functions.messages.EditForumTopicRequest(
+                peer=config.chats.forum, topic_id=topic_id, closed=True, icon_emoji_id=phrase.forum.done_id
+            )
         )
-    )
+    except BadRequestError:
+        return await event.reply(phrase.forum.already_closed)
     return await event.reply(phrase.forum.closed.format(reason=reason or "Без причины"))
