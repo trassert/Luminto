@@ -37,7 +37,7 @@ async def create_topic(event: Message):
 
 @func.new_command(r"\-топик(.*)", chats=config.chats.forum)
 async def delete_topic(event: Message):
-    await event.reply(event)
+    await event.reply(str(event))
     reason: str = event.pattern_match.group(1).strip()
     topic_id = event.reply_to_msg_id
     if not topic_id:
