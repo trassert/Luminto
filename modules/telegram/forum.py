@@ -29,22 +29,24 @@ async def create_topic(event: Message):
         )
         topic_id = result.updates[0].id
         link = f"https://t.me/c/{str(config.chats.forum)[4:]}/{topic_id}"
-        db.Topics().add(event.sender_id, topic_id)
-        await event.reply(phrase.forum.topic_created.format(link=link, title=title))
+        await db.Topics().add(event.sender_id, topic_id)
+        await event.reply(
+            phrase.forum.topic_created.format(link=link, title=title)
+        )
     except Exception:
         logger.exception("Ошибка создания топика")
 
 
 @func.new_command(r"\-топик(.*)", chats=config.chats.forum)
 async def delete_topic(event: Message):
-    event.pattern_match.group(1).strip()
+    reason: str = event.pattern_match.group(1).strip()
     topic_id = event.reply_to_msg_id
     if not topic_id:
         return await event.reply(phrase.forum.topic_no_id)
     author_topics = await db.Topics().get_byid(event.sender_id)
     if (
         topic_id not in author_topics
-        or await db.Roles().get(event.sender_id) < db.Roles.ADMIN
+        and await db.Roles().get(event.sender_id) < db.Roles.ADMIN
     ):
         return await event.reply(phrase.forum.not_author)
     result = await client(
@@ -54,4 +56,6 @@ async def delete_topic(event: Message):
         ),
     )
     print(result)
-    return event.reply("✅ : Тема закрыта.")
+    return await event.reply(
+        phrase.forum.closed.format(reason=reason or "Без причины")
+    )
