@@ -30,16 +30,16 @@ async def create_topic(event: Message):
         topic_id = result.updates[0].id
         link = f"https://t.me/c/{str(config.chats.forum)[4:]}/{topic_id}"
         await db.Topics().add(event.sender_id, topic_id)
-        await event.reply(phrase.forum.topic_created.format(link=link, title=title))
+        await event.reply(
+            phrase.forum.topic_created.format(link=link, title=title)
+        )
     except Exception:
         logger.exception("Ошибка создания топика")
 
 
 @func.new_command(r"\-топик(.*)", chats=config.chats.forum)
 async def delete_topic(event: Message):
-    await event.reply(
-        await client(functions.messages.GetForumTopicDefaultIconsRequest())
-    )
+    await event.reply(event)
     reason: str = event.pattern_match.group(1).strip()
     topic_id = event.reply_to_msg_id
     if not topic_id:
@@ -55,4 +55,6 @@ async def delete_topic(event: Message):
             peer=config.chats.forum, topic_id=topic_id, closed=True
         )
     )
-    return await event.reply(phrase.forum.closed.format(reason=reason or "Без причины"))
+    return await event.reply(
+        phrase.forum.closed.format(reason=reason or "Без причины")
+    )
