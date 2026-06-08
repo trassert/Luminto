@@ -37,7 +37,6 @@ async def create_topic(event: Message):
 
 @func.new_command(r"\-топик(.*)", chats=config.chats.forum)
 async def delete_topic(event: Message):
-    await event.reply(str(event))
     reason: str = event.pattern_match.group(1).strip()
     topic_id = event.reply_to_msg_id
     if not topic_id:
@@ -50,7 +49,7 @@ async def delete_topic(event: Message):
         return await event.reply(phrase.forum.not_author)
     await client(
         functions.messages.EditForumTopicRequest(
-            peer=config.chats.forum, topic_id=topic_id, closed=True
+            peer=config.chats.forum, topic_id=topic_id, closed=True, icon_emoji_id=phrase.forum.done_id
         )
     )
     return await event.reply(phrase.forum.closed.format(reason=reason or "Без причины"))
