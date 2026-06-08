@@ -37,22 +37,20 @@ async def create_topic(event: Message):
 
 @func.new_command(r"\-топик(.*)", chats=config.chats.forum)
 async def delete_topic(event: Message):
+    await event.reply(await client(functions.messages.GetForumTopicDefaultIconsRequest()))
     reason: str = event.pattern_match.group(1).strip()
     topic_id = event.reply_to_msg_id
     if not topic_id:
         return await event.reply(phrase.forum.topic_no_id)
     author_topics = await db.Topics().get_byid(event.sender_id)
-    print(author_topics)
-    print(topic_id)
     if (
         str(topic_id) not in author_topics
         and await db.Roles().get(event.sender_id) < db.Roles.ADMIN
     ):
         return await event.reply(phrase.forum.not_author)
-    result = await client(
+    await client(
         functions.messages.EditForumTopicRequest(
             peer=config.chats.forum, topic_id=topic_id, closed=True
         )
     )
-    print(result)
     return await event.reply(phrase.forum.closed.format(reason=reason or "Без причины"))
