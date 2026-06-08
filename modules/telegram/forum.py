@@ -57,6 +57,7 @@ async def delete_topic(event: Message):
                 icon_emoji_id=phrase.forum.done_id,
             )
         )
-    except BadRequestError:
+    except BadRequestError as e:
+        logger.error(f"Ошибка закрытия топика: {e}")
         return await event.reply(phrase.forum.already_closed)
     return await event.reply(phrase.forum.closed.format(reason=reason or "Без причины"))
