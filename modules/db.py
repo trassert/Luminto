@@ -1191,14 +1191,18 @@ class Topics:
 
     async def add(self, id: str, topic_id: str) -> None:
         id = self.idconv(id)
-        topic_id = str(topic_id)
+        topic_id = self.idconv(topic_id)
         self.data = await _load_json_async(self.data_file)
-        self.data.get(id, []).append(topic_id)
+
+        if id not in self.data:
+            self.data[id] = []
+        self.data[id].append(topic_id)
+
         return await _save_json_async(self.data_file, self.data, indent=True)
 
     async def remove(self, id: str, topic_id: str) -> bool:
         id = self.idconv(id)
-        topic_id = str(topic_id)
+        topic_id = self.idconv(topic_id)
         self.data = await _load_json_async(self.data_file)
         if topic_id in self.data.get(id, []):
             self.data[id].remove(topic_id)
