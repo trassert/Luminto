@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from loguru import logger
 from telethon.tl import functions
 
-from .. import config, phrase
+from .. import config, phrase, db
 from . import func
 from .client import client
 
@@ -29,14 +29,31 @@ async def create_topic(event: Message):
         )
         topic_id = result.updates[0].id
         link = f"https://t.me/c/{str(config.chats.forum)[4:]}/{topic_id}"
-        await event.reply(phrase.forum.topic_created.format(link=link, title=title))
+        db.Topics().add(event.sender_id, topic_id)
+        await event.reply(
+            phrase.forum.topic_created.format(link=link, title=title)
+        )
     except Exception:
         logger.exception("Ошибка создания топика")
 
 
-@func.new_command(r"\-топик", chats=config.chats.forum)
+@func.new_command(r"\-топик(.*)", chats=config.chats.forum)
 async def delete_topic(event: Message):
-    await event.reply(f"event.reply_to_msg_id {event.reply_to_msg_id}")
-    await event.reply(
-        f"getattr(event.reply_to, 'reply_to_top_id', None) {getattr(event.reply_to, 'reply_to_top_id', None)}"
+    reason: str = event.pattern_match.group(1).strip()
+    topic_id = event.reply_to_msg_id
+    if not topic_id:
+        return await event.reply(phrase.forum.topic_no_id)
+    author_topics = db.Topics().get_byid(event.sender_id)
+    if (
+        topic_id not in author_topics
+        or db.Roles().get(event.sender_id) < db.Roles.ADMIN
+    ):
+        return await event.reply(phrase.forum.not_author)
+    result = await client(
+        functions.messages.CloseForumTopic(
+            chat_id=config.chats.forum,
+            message_thread_id=event.id,
+        ),
     )
+    print(result)
+    return event.reply("✅ : Тема закрыта.")
