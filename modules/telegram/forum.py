@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from loguru import logger
 from telethon.tl import functions
 
-from .. import config, phrase, db
+from .. import config, db, phrase
 from . import func
 from .client import client
 
@@ -30,16 +30,14 @@ async def create_topic(event: Message):
         topic_id = result.updates[0].id
         link = f"https://t.me/c/{str(config.chats.forum)[4:]}/{topic_id}"
         db.Topics().add(event.sender_id, topic_id)
-        await event.reply(
-            phrase.forum.topic_created.format(link=link, title=title)
-        )
+        await event.reply(phrase.forum.topic_created.format(link=link, title=title))
     except Exception:
         logger.exception("Ошибка создания топика")
 
 
 @func.new_command(r"\-топик(.*)", chats=config.chats.forum)
 async def delete_topic(event: Message):
-    reason: str = event.pattern_match.group(1).strip()
+    event.pattern_match.group(1).strip()
     topic_id = event.reply_to_msg_id
     if not topic_id:
         return await event.reply(phrase.forum.topic_no_id)
