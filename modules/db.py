@@ -1174,6 +1174,8 @@ class CrocodileGame:
 class Topics:
     def __init__(self):
         self.data_file = pathes.topics
+        if not self.data_file.exists():
+            self.data = {}
 
     def idconv(self, id):
         try:

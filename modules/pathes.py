@@ -25,7 +25,7 @@ crocostat = Path("db") / "users" / "crocodile_stat.json"
 hellomsg = Path("db") / "users" / "hellomsg.json"
 votes = Path("db") / "users" / "votes.json"
 mine_stat = Path("db") / "users" / "mine.json"
-authors = Path("db") / "users" / "authors.json"
+topics = Path("db") / "users" / "topics.json"
 
 # Корневые файлы в db/
 items = Path("db") / "items.json"
