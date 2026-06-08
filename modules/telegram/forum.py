@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING
 
 from loguru import logger
-from telethon.tl import functions
 from telethon.errors.rpcbaseerrors import BadRequestError
+from telethon.tl import functions
 
 from .. import config, db, phrase
 from . import func
@@ -51,7 +51,10 @@ async def delete_topic(event: Message):
     try:
         await client(
             functions.messages.EditForumTopicRequest(
-                peer=config.chats.forum, topic_id=topic_id, closed=True, icon_emoji_id=phrase.forum.done_id
+                peer=config.chats.forum,
+                topic_id=topic_id,
+                closed=True,
+                icon_emoji_id=phrase.forum.done_id,
             )
         )
     except BadRequestError:
