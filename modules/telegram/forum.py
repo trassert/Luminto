@@ -48,10 +48,9 @@ async def delete_topic(event: Message):
     ):
         return await event.reply(phrase.forum.not_author)
     result = await client(
-        functions.messages.CloseForumTopic(
-            chat_id=config.chats.forum,
-            message_thread_id=event.id,
-        ),
+        functions.channels.EditForumTopicRequest(
+            channel=config.chats.forum, topic_id=topic_id, closed=True
+        )
     )
     print(result)
     return await event.reply(phrase.forum.closed.format(reason=reason or "Без причины"))
