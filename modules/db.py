@@ -1193,7 +1193,7 @@ class Topics:
         id = self.idconv(id)
         topic_id = str(topic_id)
         self.data = await _load_json_async(self.data_file)
-        self.data[id] = self.data.get(id, []).append(topic_id)
+        self.data.get(id, []).append(topic_id)
         return await _save_json_async(self.data_file, self.data, indent=True)
 
     async def remove(self, id: str, topic_id: str) -> bool:
