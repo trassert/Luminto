@@ -1169,3 +1169,35 @@ class CrocodileGame:
         if "crocodile_last_hint" in self.data:
             del self.data["crocodile_last_hint"]
             await self._save_data(self.data)
+
+
+class Topics:
+    def __init__(self):
+        self.data_file = pathes.topics
+
+    def idconv(self, id):
+        try:
+            return str(id)
+        except Exception:
+            msg = f"Невозможно конвертировать ID {id} в строку"
+            raise ValueError(msg)
+
+    async def get_byid(self, id: str) -> dict:
+        id = self.idconv(id)
+        self.data = await _load_json_async(self.data_file)
+        return self.data.get(id)
+
+    async def add(self, id: str, topic_id: str) -> None:
+        id = self.idconv(id)
+        self.data = await _load_json_async(self.data_file)
+        self.data[id] = self.data.get(id, []).append(topic_id)
+        await _save_json_async(self.data_file, self.data, indent=True)
+
+    async def remove(self, id: str, topic_id: str) -> bool:
+        id = self.idconv(id)
+        self.data = await _load_json_async(self.data_file)
+        if self.data.get(id) == topic_id:
+            del self.data[id]
+            await _save_json_async(self.data_file, self.data, indent=True)
+            return True
+        return False
