@@ -30,9 +30,7 @@ async def create_topic(event: Message):
         topic_id = result.updates[0].id
         link = f"https://t.me/c/{str(config.chats.forum)[4:]}/{topic_id}"
         await db.Topics().add(event.sender_id, topic_id)
-        await event.reply(
-            phrase.forum.topic_created.format(link=link, title=title)
-        )
+        await event.reply(phrase.forum.topic_created.format(link=link, title=title))
     except Exception:
         logger.exception("Ошибка создания топика")
 
@@ -56,6 +54,4 @@ async def delete_topic(event: Message):
         ),
     )
     print(result)
-    return await event.reply(
-        phrase.forum.closed.format(reason=reason or "Без причины")
-    )
+    return await event.reply(phrase.forum.closed.format(reason=reason or "Без причины"))
