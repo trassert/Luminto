@@ -137,6 +137,7 @@ async def server():
         ):
             return aiohttp.web.Response(text="Не авторизован", status=401)
         load: dict[str] = cast(dict[str], await request.json())
+        logger.info(f"debug: {load}")
         commits = load.get("commits", None)
         if commits is not None:
             for head in commits:
