@@ -685,6 +685,10 @@ class cities:
 
 
 class github:
+    star = (
+        "**⭐️ : [{repo}]({repo_url}) получил новую звезду!**\n"
+        "Спасибо, **[{author}]({author_url})**!"
+    )
     update = (
         "**🎉 : {repo}{branch} получил обновление!**\n"
         "\n"

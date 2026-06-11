@@ -138,6 +138,22 @@ async def server():
             return aiohttp.web.Response(text="Не авторизован", status=401)
         load: dict[str] = cast(dict[str], await request.json())
         logger.info(f"debug: {load}")
+        if request.headers.get("X-Github-Event") == "star":
+            logger.info(f"Звезда! Репо {load['repository']['name']}")
+            await client.send_message(
+                repos.get(load["repository"]["name"], {}).get(
+                    "chat",
+                    config.chats.chat,
+                ),
+                phrase.github.star.format(
+                    repo=load["repository"]["name"],
+                    repo_url=load["repository"]["html_url"],
+                    author=load["sender"]["login"],
+                    author_url=load["sender"]["html_url"],
+                ),
+                link_preview=False,
+            )
+            return aiohttp.web.Response(text="ok")
         commits = load.get("commits", None)
         if commits is not None:
             for head in commits:
