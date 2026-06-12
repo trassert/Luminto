@@ -33,9 +33,8 @@ async def send_to_subscribers(message_text):
             )
             successful_sends += 1
             await asyncio.sleep(0.1)
-        except Exception as e:
+        except Exception:
             error_sends += 1
-            logger.info(f"Ошибка отправки пользователю {user_id}: {e}")
         if i % 10 == 0 or i == total:
             yield {
                 "successful": successful_sends,
@@ -59,7 +58,7 @@ async def admin_broadcast(event: Message):
             )
         else:
             await status_msg.edit(
-                phrase.mailing.done.format(count=data["total"], error=data["error"])
+                phrase.mailing.done.format(count=data["successful"], error=data["error"])
             )
 
 
