@@ -24,7 +24,7 @@ async def send_to_subscribers(message_text):
     total = len(subscribers)
     successful_sends = 0
     error_sends = 0
-    
+
     for i, user_id in enumerate(subscribers, 1):
         try:
             await client.send_message(
@@ -41,7 +41,7 @@ async def send_to_subscribers(message_text):
                 "successful": successful_sends,
                 "total": total,
                 "error": error_sends,
-                "finished": i == total
+                "finished": i == total,
             }
 
 
@@ -52,17 +52,14 @@ async def admin_broadcast(event: Message):
         if not data["finished"]:
             await status_msg.edit(
                 phrase.mailing.process.format(
-                    current=data['successful'],
-                    total=data['total'],
-                    errors=data['error']
+                    current=data["successful"],
+                    total=data["total"],
+                    errors=data["error"],
                 )
             )
         else:
             await status_msg.edit(
-                phrase.mailing.done.format(
-                    count=data["total"],
-                    error=data["error"]
-                )
+                phrase.mailing.done.format(count=data["total"], error=data["error"])
             )
 
 

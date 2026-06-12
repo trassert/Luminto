@@ -920,6 +920,7 @@ async def mailing_addsub(id: int) -> bool:
     await _save_json_async(pathes.mailing, data)
     return True
 
+
 async def mailing_rmsub(id: int) -> bool:
     if not isinstance(id, int):
         msg = f"Int expected, got {type(id).__name__}"
