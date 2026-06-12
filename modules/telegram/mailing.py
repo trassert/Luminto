@@ -15,7 +15,7 @@ logger.info(f"Загружен модуль {__name__}!")
 
 async def send_to_subscribers(message_text):
     """Отправка сообщения всем подписчикам. Генератор, возвращает статусы."""
-    subscribers = db.mailing_get()
+    subscribers = await db.mailing_get()
 
     if not subscribers:
         yield {"total": 0, "successful": 0, "error": 0, "finished": True}
@@ -48,7 +48,7 @@ async def send_to_subscribers(message_text):
 @func.new_command(r"\+обновление ([\s\S]+)", min_role=4)
 async def admin_broadcast(event: Message):
     status_msg = await event.reply(phrase.mailing.wait)
-    async for data in await send_to_subscribers(event.pattern_match.group(1).strip()):
+    async for data in send_to_subscribers(event.pattern_match.group(1).strip()):
         if not data["finished"]:
             await status_msg.edit(
                 phrase.mailing.process.format(
