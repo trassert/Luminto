@@ -903,13 +903,33 @@ def hellomsg_check(input_id):
     return True
 
 
-def mailing_get():
-    data = _load_json_sync(pathes.mailing)
-    return data if isinstance(data, dict) else {"subscribers": []}
+async def mailing_get():
+    users = list((await Nicks().get_all()).values())
+    data = await _load_json_async(pathes.mailing)
+    return [x for x in users if x not in data["unsub"]]
 
 
-def mailing_save(data):
-    _save_json_sync(pathes.mailing, data)
+async def mailing_addsub(id: int) -> bool:
+    if not isinstance(id, int):
+        msg = f"Int expected, got {type(id).__name__}"
+        raise TypeError(msg)
+    data = await _load_json_async(pathes.mailing)
+    if id not in data["unsub"]:
+        return False
+    data["unsub"].remove(id)
+    await _save_json_async(pathes.mailing, data)
+    return True
+
+async def mailing_rmsub(id: int) -> bool:
+    if not isinstance(id, int):
+        msg = f"Int expected, got {type(id).__name__}"
+        raise TypeError(msg)
+    data = await _load_json_async(pathes.mailing)
+    if id in data["unsub"]:
+        return False
+    data["unsub"].append(id)
+    await _save_json_async(pathes.mailing, data)
+    return True
 
 
 async def get_votes(player: str) -> int:
