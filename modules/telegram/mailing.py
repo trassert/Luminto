@@ -67,7 +67,7 @@ async def admin_broadcast(event: Message):
 @func.new_command(r"\+обновления")
 async def subscribe_command(event: Message):
     """Обработчик команды подписки."""
-    if db.mailing_addsub(event.sender_id):
+    if await db.mailing_addsub(event.sender_id):
         return await event.reply(phrase.mailing.subscribe)
     return await event.reply(phrase.mailing.already_subscribe)
 
@@ -75,6 +75,6 @@ async def subscribe_command(event: Message):
 @func.new_command(r"/отписаться$")
 async def unsubscribe_command(event: Message):
     """Обработчик команды отписки."""
-    if db.mailing_rmsub(event.sender_id):
+    if await db.mailing_rmsub(event.sender_id):
         return await event.reply(phrase.mailing.unsub)
     return await event.reply(phrase.mailing.already_unsub)
