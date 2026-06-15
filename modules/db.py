@@ -100,46 +100,41 @@ async def add_money(id: int, count: int):
     """
     id_str = str(id)
     data = await _load_json_async(pathes.money)
-
     old = data.get(id_str, 0)
     new_val = max(old + count, 0)
     data[id_str] = new_val
-
     await _save_json_async(pathes.money, data, indent=True)
-
     logger.info(f"Изменён баланс {id} ({old} -> {new_val})")
     return new_val
 
 
-async def check_and_update_withdraw_limit(id: int, amount: int) -> tuple[bool, int]:
+async def check_and_update_withdraw_limit(
+    id: int, amount: int
+) -> tuple[bool, int]:
     """
     Атомарная проверка и обновление day-limit.
     Должна вызываться внутри async with await get_user_lock(id).
     """
     id_str = str(id)
     today = datetime.now().date()
-
     data = await _load_json_async(pathes.wdraw)
-
     already_withdrawn = 0
     record_date = None
-
     if id_str in data:
         try:
-            record_date = datetime.strptime(data[id_str]["date"], "%Y-%m-%d").date()
+            record_date = datetime.strptime(
+                data[id_str]["date"], "%Y-%m-%d"
+            ).date()
             already_withdrawn = data[id_str].get("withdrawn", 0)
         except KeyError, ValueError:
             record_date = None
-
     if record_date != today:
         data[id_str] = {"date": today.isoformat(), "withdrawn": amount}
         await _save_json_async(pathes.wdraw, data, indent=True)
         return True, 64 - amount
-
     remaining = 64 - already_withdrawn
     if amount > remaining:
         return False, remaining
-
     data[id_str]["withdrawn"] = already_withdrawn + amount
     await _save_json_async(pathes.wdraw, data, indent=True)
     return True, remaining
@@ -149,7 +144,6 @@ async def rollback_withdraw_limit(id: int, amount: int):
     """Откатывает лимит назад."""
     id_str = str(id)
     data = await _load_json_async(pathes.wdraw)
-
     if id_str in data:
         current = data[id_str].get("withdrawn", 0)
         data[id_str]["withdrawn"] = max(0, current - amount)
@@ -160,18 +154,14 @@ async def update_shop():
     """Обновляет магазин, возвращая новую тему."""
     last_theme = (await _load_json_async(pathes.shopc)).get("theme")
     all_themes = await _load_json_async(pathes.shop)
-
     if not isinstance(all_themes, dict) or not all_themes:
         logger.exception("Файл shop_all.json пуст или не содержит тем.")
         return None
-
     theme_names = list(all_themes.keys())
     if last_theme in theme_names and len(theme_names) == 1:
         logger.exception("Нет доступных альтернативных тем в shop_all.json")
         return None
-
     weights = config.cfg.ShopThemeWeights
-
     new_theme = last_theme
     attempts = 0
     while new_theme == last_theme and attempts < 10:
@@ -180,21 +170,19 @@ async def update_shop():
     if new_theme == last_theme:
         others = [t for t in theme_names if t != last_theme]
         new_theme = choice(others) if others else last_theme
-
     theme_items = all_themes.get(new_theme, {})
     if not isinstance(theme_items, dict):
         logger.exception(f"Тема '{new_theme}' не содержит предметов")
         return None
-
     item_names = list(theme_items.keys())
     if len(item_names) < 5:
         logger.exception(
             f"В теме '{new_theme}' недостаточно предметов (минимум 5, найдено {len(item_names)})",
         )
         return None
-
-    selected_items = sample(item_names, 5) if len(item_names) > 5 else item_names[:5]
-
+    selected_items = (
+        sample(item_names, 5) if len(item_names) > 5 else item_names[:5]
+    )
     current_shop = {"theme": new_theme}
     for item in selected_items:
         item_data = theme_items[item].copy()
@@ -206,9 +194,10 @@ async def update_shop():
         ):
             item_data["price"] = randint(price[0], price[1])
         elif not isinstance(price, (int, float)):
-            logger.exception(f"Некорректный формат цены для предмета '{item}': {price}")
+            logger.exception(
+                f"Некорректный формат цены для предмета '{item}': {price}"
+            )
         current_shop[item] = item_data
-
     await _save_json_async(pathes.shopc, current_shop, indent=True)
     return new_theme
 
@@ -285,7 +274,9 @@ class Crorostat:
 
     async def get_all(self=False):
         data = await _load_json_async(pathes.crocostat)
-        return dict(sorted(data.items(), key=lambda item: item[1], reverse=True))
+        return dict(
+            sorted(data.items(), key=lambda item: item[1], reverse=True)
+        )
 
 
 class Nicks:
@@ -324,8 +315,9 @@ class Nicks:
 
 
 class Statistic:
-    def __init__(self, days=1):
+    def __init__(self, days=1, nick=None):
         self.days = days
+        self.nick = nick
 
     async def get(self, nick, all_days=False, data=False):
         filepath = pathes.stats / f"{nick}.json"
@@ -333,11 +325,9 @@ class Statistic:
             stats = {datetime.now().strftime("%Y.%m.%d"): 0}
             await _save_json_async(filepath, stats, sort_keys=True)
             return 0
-
         stats = await _load_json_async(filepath)
         if all_days:
             return sum(stats.values()) or 0
-
         start_date = datetime.now() - timedelta(days=self.days)
         filtered = {
             date: value
@@ -355,28 +345,40 @@ class Statistic:
             try:
                 nick_stat = await self.get(nick, all_days=all_days)
             except Exception:
-                logger.warning(f"Ошибка при получении статистики для игрока {nick}")
+                logger.warning(
+                    f"Ошибка при получении статистики для игрока {nick}"
+                )
                 continue
             else:
                 if nick_stat > 1:
                     data[nick] = nick_stat
         return sorted(data.items(), key=lambda item: item[1], reverse=True)
 
-    async def add(self, date=None):
+    async def add(self, nick: str = None, date=None):
+        """
+        Добавляет единицу статистики для игрока.
+        Args:
+            nick: Имя игрока. Если не указан, используется self.nick
+            date: Дата в формате YYYY.MM.DD (опционально)
+        """
+        target_nick = nick or self.nick
+        if not target_nick:
+            msg = "Nickname must be provided either as argument or via __init__"
+            raise ValueError(
+                msg
+            )
+        if not formatter.is_valid_mc_nick(target_nick):
+            msg = f"Invalid nickname: {target_nick}"
+            raise ValueError(msg)
         now = date or datetime.now().strftime("%Y.%m.%d")
-        raw_name = str(self)
-        safe_name = Path(raw_name).name
-        if safe_name != raw_name or not safe_name:
-            logger.warning(f"Некорректное имя статистики: {raw_name!r}")
-            return
-        filepath = pathes.stats / f"{safe_name}.json"
+        filepath = pathes.stats / f"{target_nick}.json"
         base_stats = pathes.stats.resolve()
         resolved_filepath = filepath.resolve()
         try:
             resolved_filepath.relative_to(base_stats)
         except ValueError:
             logger.warning(
-                f"Заблокирован выход за пределы каталога статистики: {raw_name!r}"
+                f"Заблокирован выход за пределы каталога статистики: {target_nick!r}"
             )
             return
         try:
@@ -399,10 +401,8 @@ class Statistic:
             except Exception:
                 logger.error(f"Ошибка при чтении файла - {json_file.name}")
                 continue
-
         if self.days <= 0:
             return dict(sorted(totals.items(), key=lambda item: item[0]))
-
         start_date = datetime.now() - timedelta(days=self.days)
         return {
             date: value
@@ -473,7 +473,9 @@ class State:
 
     def change(self, key, value):
         self.all[key] = value
-        _save_json_sync(pathes.states / f"{self.name}.json", self.all, indent=True)
+        _save_json_sync(
+            pathes.states / f"{self.name}.json", self.all, indent=True
+        )
 
     def rename(self, new_name: str):
         new_path = pathes.states / f"{new_name}.json"
@@ -794,7 +796,9 @@ class CitiesGame:
 
     def who_answer(self) -> int | None:
         players = self.get_players()
-        return self.data["current_game"]["current_player_id"] if players else None
+        return (
+            self.data["current_game"]["current_player_id"] if players else None
+        )
 
     def next_answer(self):
         players = self.get_players()
@@ -842,10 +846,14 @@ class CitiesGame:
         self.data["id"] = (self.data.get("id", 0) + 1) % 10 or 1
         self.data["status"] = True
         self.data["current_game"]["last_city"] = city
-        self.data["current_game"]["current_player_id"] = choice(self.get_players())
+        self.data["current_game"]["current_player_id"] = choice(
+            self.get_players()
+        )
         self.logger(f"Запущена игра Города. Начинается с города {city}")
         self.logger(f"Игроки: {self.get_players()}")
-        self.logger(f"Отвечает: {self.data['current_game']['current_player_id']}")
+        self.logger(
+            f"Отвечает: {self.data['current_game']['current_player_id']}"
+        )
         self._save_data()
         return self.data
 
@@ -858,7 +866,9 @@ class CitiesGame:
         if str(id) != str(self.data["current_game"]["current_player_id"]):
             self.logger(f"{id} сейчас не должен отвечать")
             return 2
-        valid_cities = set((pathes.chk_city).read_text(encoding="utf8").splitlines())
+        valid_cities = set(
+            (pathes.chk_city).read_text(encoding="utf8").splitlines()
+        )
         if city not in valid_cities:
             self.logger(f"{id} ответил неизвестным городом")
             return 1
@@ -872,7 +882,9 @@ class CitiesGame:
             self.logger(f"{id} ответил городом, который был")
             return 5
         self.data["current_game"]["last_city"] = city
-        self.data["statistics"][str(id)] = self.data["statistics"].get(str(id), 0) + 1
+        self.data["statistics"][str(id)] = (
+            self.data["statistics"].get(str(id), 0) + 1
+        )
         self.data["current_game"]["cities"].append(city)
         self.next_answer()
         self._save_data()
@@ -953,7 +965,9 @@ async def get_crocodile_word() -> str:
     return choice(list(words))
 
 
-async def add_pending_hint(user_id: int | str, hint_string: str, word: str) -> int:
+async def add_pending_hint(
+    user_id: int | str, hint_string: str, word: str
+) -> int:
     data = await _load_json_async(pathes.pending_hints)
     pending_id = max((int(k) for k in data), default=0) + 1
     data[str(pending_id)] = {
@@ -1020,7 +1034,9 @@ class Item(TypedDict):
     price: int
 
 
-async def add_item(id: str, author_id: int, item: str, count: int, price: int) -> None:
+async def add_item(
+    id: str, author_id: int, item: str, count: int, price: int
+) -> None:
     """Добавляет новый товар по ID. Перезаписывает, если уже существует."""
     data = await _load_json_async(pathes.items)
     data[str(id)] = {
@@ -1106,7 +1122,6 @@ class CrocodileGame:
         if isinstance(current, dict):
             word = current.get("word")
         await self.set_current(0)
-
         await self.clear_bets()
         return word
 
@@ -1149,7 +1164,6 @@ class CrocodileGame:
             if i < len(guess) and guess[i] == ch and mask[i] == "_":
                 mask[i] = ch
                 changed = True
-
         new_mask_str = "".join(mask)
         finished = False
         if new_mask_str == word:
@@ -1157,7 +1171,6 @@ class CrocodileGame:
                 mask[randint(0, len(mask) - 1)] = "_"
             new_mask_str = "".join(mask)
             finished = True
-
         current["unsec"] = new_mask_str
         await self.set_current(current)
         return changed, new_mask_str, finished
@@ -1172,7 +1185,6 @@ class CrocodileGame:
         word = current.get("word")
         if str(guess).strip().lower() == str(word).strip().lower():
             bets = self.get_bets()
-
             await self.set_current(0)
             await self.clear_bets()
             return {"win": True, "word": word, "bets": bets}
@@ -1214,11 +1226,9 @@ class Topics:
         id = self.idconv(id)
         topic_id = self.idconv(topic_id)
         self.data = await _load_json_async(self.data_file)
-
         if id not in self.data:
             self.data[id] = []
         self.data[id].append(topic_id)
-
         return await _save_json_async(self.data_file, self.data, indent=True)
 
     async def remove(self, id: str, topic_id: str) -> bool:

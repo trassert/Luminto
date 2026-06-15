@@ -93,7 +93,7 @@ async def server():
         nick = request.query.get("nick")
         if formatter.is_valid_mc_nick(nick) is False:
             return aiohttp.web.Response(text="Nick is not valid", status=406)
-        await db.Statistic.add(nick)
+        await db.Statistic().add(nick)
         logger.debug(f"+ соо. от {nick}")
         return aiohttp.web.Response(text="ok")
 
