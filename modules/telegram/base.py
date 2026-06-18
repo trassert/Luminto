@@ -212,7 +212,7 @@ async def check_nick(event: Message) -> Message:
 
     if arg:
         try:
-            user_id = func.get_id(arg)
+            user_id = await func.get_id(arg)
         except Exception:
             user_id = await func.get_author_by_msgid(
                 event.chat_id,
