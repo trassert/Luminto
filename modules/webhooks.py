@@ -87,11 +87,12 @@ async def server():
         return aiohttp.web.Response(text="ok")
 
     async def minecraft(request: aiohttp.web.Request):
-        if request.query.get("password") != config.tokens.chattohttp:
+        data = await request.post()
+        if data.get("password") != config.tokens.chattohttp:
             logger.info("Неверный пароль (C2HTTP)")
-            return aiohttp.web.Response(text="Неверный пароль.", status=401)
-        nick = request.query.get("nick")
-        if formatter.is_valid_mc_nick(nick) is False:
+            return aiohttp.web.Response(text="Password is not valid", status=401)
+        nick = data.get("nick")
+        if not formatter.is_valid_mc_nick(nick):
             return aiohttp.web.Response(text="Nick is not valid", status=406)
         await db.Statistic().add(nick)
         logger.debug(f"+ соо. от {nick}")
@@ -218,7 +219,7 @@ async def server():
             aiohttp.web.post("/hotmc", hotmc),
             aiohttp.web.post("/servers", mcservers),
             aiohttp.web.post("/github", github),
-            aiohttp.web.get("/minecraft", minecraft),
+            aiohttp.web.post("/minecraft", minecraft),
             aiohttp.web.get("/bank", bank),
             aiohttp.web.get("/", status),
         ],
