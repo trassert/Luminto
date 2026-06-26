@@ -103,7 +103,6 @@ async def _handle_suggestion(
 @client.on(events.CallbackQuery(func=func.checks, pattern=r"^state"))
 async def state_callback(event: events.CallbackQuery.Event):
     data = event.data.decode("utf-8").split(".")
-    logger.info(f"КБ кнопка (States), дата: {data}")
     sender_id = event.sender_id
 
     match data[1]:
@@ -262,8 +261,6 @@ async def casino_callback(event: events.CallbackQuery.Event):
     if request is False:
         return await event.answer(phrase.casino.full_floodwait.format(request))
     await asyncio.sleep(request)
-
-    logger.info(f"КБ кнопка (Casino), дата: {data}")
     sender_id = event.sender_id
 
     if data[1] != "auto":
@@ -318,7 +315,6 @@ async def casino_callback(event: events.CallbackQuery.Event):
 @client.on(events.CallbackQuery(func=func.checks, pattern=r"^nick"))
 async def nick_callback(event: events.CallbackQuery.Event):
     data = event.data.decode("utf-8").split(".")
-    logger.info(f"КБ кнопка (Nick), дата: {data}")
     sender_id = event.sender_id
 
     if not _ensure_owner(sender_id, data[2]):
@@ -359,7 +355,6 @@ async def nick_callback(event: events.CallbackQuery.Event):
 @client.on(events.CallbackQuery(func=func.checks, pattern=r"^cityadd"))
 async def cityadd_callback(event: events.CallbackQuery.Event):
     data = event.data.decode("utf-8").split(".")
-    logger.info(f"КБ кнопка (Cityadd), дата: {data}")
     return await _handle_suggestion(
         event,
         word=data[2],
@@ -376,7 +371,6 @@ async def cityadd_callback(event: events.CallbackQuery.Event):
 @client.on(events.CallbackQuery(func=func.checks, pattern=r"^shop"))
 async def shop_callback(event: events.CallbackQuery.Event):
     data = event.data.decode("utf-8").split(".")
-    logger.info(f"КБ кнопка (Shop), дата: {data}")
     sender_id = event.sender_id
 
     if int(data[-1]) != await db.shop_version():
@@ -409,7 +403,6 @@ async def shop_callback(event: events.CallbackQuery.Event):
 @client.on(events.CallbackQuery(func=func.checks, pattern=r"^crocodile"))
 async def crocodile_callback(event: events.CallbackQuery.Event):
     data = event.data.decode("utf-8").split(".")
-    logger.info(f"КБ кнопка (Crocodile), дата: {data}")
     sender_id = event.sender_id
 
     match data[1]:
@@ -471,7 +464,6 @@ async def crocodile_callback(event: events.CallbackQuery.Event):
 @client.on(events.CallbackQuery(func=func.checks, pattern=r"^mine"))
 async def mine_callback(event: events.CallbackQuery.Event):
     data = event.data.decode("utf-8").split(".")
-    logger.info(f"КБ кнопка (Mine), дата: {data}")
     sender_id = event.sender_id
 
     if not _ensure_owner(sender_id, data[2]):
@@ -563,7 +555,6 @@ async def mine_callback(event: events.CallbackQuery.Event):
 @client.on(events.CallbackQuery(func=func.checks, pattern=r"^hint"))
 async def hint_callback(event: events.CallbackQuery.Event):
     data = event.data.decode("utf-8").split(".")
-    logger.info(f"КБ кнопка (Mine), дата: {data}")
     roles = db.Roles()
     if await roles.get(event.sender_id) < roles.ADMIN:
         return None

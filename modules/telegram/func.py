@@ -143,6 +143,11 @@ async def checks(
             else logger.info(f"ЛС - {name} > {event.text[:100]}...")
         )
 
+    "Логгирование кнопок"
+    if isinstance(event, events.CallbackQuery.Event):
+        name = await get_name(event.sender_id, log=True)
+        logger.info(f"Кнопка - {name} > {event.data.decode('utf-8')}")
+
     "Проверка на ЧСБ и ур. доступа"
     roles = db.Roles()
     u_role = await roles.get(event.sender_id)
