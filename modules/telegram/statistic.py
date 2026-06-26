@@ -65,9 +65,11 @@ async def active_check(event: Message):
 async def crocodile_wins(event: Message):
     all_data = await db.Crorostat.get_all()
     text = "\n".join(
-        [f"{i}. **{await func.get_name(pid)}**: {wins} побед"
-        for i, (pid, wins) in enumerate(all_data.items(), 1)
-        if i <= config.cfg.MaxStatPlayers]
+        [
+            f"{i}. **{await func.get_name(pid)}**: {wins} побед"
+            for i, (pid, wins) in enumerate(all_data.items(), 1)
+            if i <= config.cfg.MaxStatPlayers
+        ]
     )
     return await event.reply(phrase.crocodile.stat.format(text), silent=True)
 
