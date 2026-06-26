@@ -260,7 +260,7 @@ async def casino_callback(event: events.CallbackQuery.Event):
     request = floodwait.WaitCasino.request()
     if request is False:
         return await event.answer(phrase.casino.full_floodwait.format(request))
-    await event.answer(phrase.casino.wait_list, alert=False)
+    await event.answer(choice(phrase.casino.wait_list), alert=False)
     await asyncio.sleep(request)
     sender_id = event.sender_id
 
