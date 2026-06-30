@@ -6,7 +6,6 @@
 ![Ruff](https://img.shields.io/badge/Formatter-Ruff-yellow?style=for-the-badge&logo=ruff)
 ![Uv](https://img.shields.io/badge/Used-Uv-yellow?style=for-the-badge&logo=astral)
 ![Python](https://img.shields.io/badge/Language-Python-blue?style=for-the-badge&logo=python)
-![VSC](https://img.shields.io/badge/Made%20in-VSCode-blue?style=for-the-badge&logo=vscodium)
 ![Aiohttp](https://img.shields.io/badge/Used-Aiohttp-blue?style=for-the-badge&logo=aiohttp)
 ![Mysql](https://img.shields.io/badge/Used-Mysql-blue?style=for-the-badge&logo=mysql)
 
@@ -23,8 +22,9 @@
 
 - asyncmy требует `python3.14-dev`
 
-## Использовалось
-- trassert/ChatHTTP
+## Коннекторы и опциональные зависимости
+
+- [ChatHTTP](https://github.com/trassert/ChatHTTP)
 
 При копировании модулей бота или бота целиком, указывайте авторство, см. лицензию.  
 
