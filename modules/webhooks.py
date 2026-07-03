@@ -26,7 +26,7 @@ def is_local_request(request: aiohttp.web.Request) -> bool:
         xff = request.headers.get("X-Forwarded-For")
         if xff:
             real_ip = xff.split(",")[0].strip()
-    
+
     if not real_ip:
         real_ip = request.remote
 
@@ -136,7 +136,9 @@ async def server():
             user = await roles.get(tgid)
             if user > roles.VIP:
                 logger.warning("Игрок уже имеет VIP или выше (vip-action)")
-                return aiohttp.web.Response(text="Player already has VIP or higher", status=401)
+                return aiohttp.web.Response(
+                    text="Player already has VIP or higher", status=401
+                )
             if user == roles.BLACKLIST:
                 logger.warning("Игрок в черном списке (vip-action)")
                 return aiohttp.web.Response(text="Player is blacklisted", status=401)
