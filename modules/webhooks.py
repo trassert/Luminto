@@ -1,5 +1,6 @@
 import asyncio
 import hmac
+import ipaddress
 from hashlib import md5, sha1, sha256
 from typing import cast
 
@@ -16,6 +17,24 @@ repos = {
     "LumintoGold": {"chat": -1003408993511, "topic": 72},
     "TrassertTools": {"chat": -1003408993511, "topic": 72},
 }
+
+
+def is_local_request(request: aiohttp.web.Request) -> bool:
+    "Check if the request is from a local or private IP address, true or false"
+    real_ip = request.headers.get("X-Real-IP")
+    if not real_ip:
+        xff = request.headers.get("X-Forwarded-For")
+        if xff:
+            real_ip = xff.split(",")[0].strip()
+    
+    if not real_ip:
+        real_ip = request.remote
+
+    try:
+        ip = ipaddress.ip_address(real_ip)
+        return ip.is_loopback or ip.is_private
+    except ValueError:
+        return False
 
 
 async def server():
@@ -87,6 +106,8 @@ async def server():
         return aiohttp.web.Response(text="ok")
 
     async def minecraft(request: aiohttp.web.Request):
+        if not is_local_request(request):
+            return aiohttp.web.Response(text="Forbidden", status=403)
         data = await request.post()
         if data.get("password") != config.tokens.chattohttp:
             logger.info("Неверный пароль (C2HTTP)")
@@ -98,18 +119,45 @@ async def server():
         logger.debug(f"+ соо. от {nick}")
         return aiohttp.web.Response(text="ok")
 
+    async def own_actions(request: aiohttp.web.Request):
+        if not is_local_request(request):
+            return aiohttp.web.Response(text="Forbidden", status=403)
+        data = await request.post()
+        action = data.get("action")
+        if action == "vip":
+            if data.get("password") != config.tokens.vipaction:
+                logger.info("Неверный пароль (vip-action)")
+                return aiohttp.web.Response(text="Password is not valid", status=401)
+            tgid = await db.Nicks(nick=data.get("player")).get()
+            if tgid is None:
+                logger.warning("Неверный игрок (vip-action)")
+                return aiohttp.web.Response(text="Uncorrect player", status=401)
+            roles = db.Roles()
+            user = await roles.get(tgid)
+            if user > roles.VIP:
+                logger.warning("Игрок уже имеет VIP или выше (vip-action)")
+                return aiohttp.web.Response(text="Player already has VIP or higher", status=401)
+            if user == roles.BLACKLIST:
+                logger.warning("Игрок в черном списке (vip-action)")
+                return aiohttp.web.Response(text="Player is blacklisted", status=401)
+            await roles.set(tgid, roles.VIP)
+            return aiohttp.web.Response(text="ok")
+        return aiohttp.web.Response(text="Incorrect action", status=400)
+
     async def bank(request: aiohttp.web.Request):
+        if not is_local_request(request):
+            return aiohttp.web.Response(text="Forbidden", status=403)
         if request.query.get("key") != config.tokens.bankplugin:
             logger.warning("Неверный пароль (BankPlugin)")
-            return aiohttp.web.Response(text="Неверный пароль.", status=401)
+            return aiohttp.web.Response(text="Uncorrect key", status=401)
         playerid = await db.Nicks(nick=request.query.get("player")).get()
         if playerid is None:
             logger.warning("Неверный игрок (BankPlugin)")
-            return aiohttp.web.Response(text="Неверный игрок.", status=401)
+            return aiohttp.web.Response(text="Uncorrect player", status=401)
         amount = int(request.query.get("amount"))
-        if not amount > 0 and not amount < 67:
+        if not (0 < amount < 67):
             logger.warning("Неверное количество (BankPlugin)")
-            return aiohttp.web.Response(text="Неверное количество.", status=401)
+            return aiohttp.web.Response(text="Uncorrect amount", status=401)
         await client.send_message(
             config.chats.chat,
             phrase.mcadd_money.format(
@@ -124,11 +172,11 @@ async def server():
     async def github(request: aiohttp.web.Request):
         signature_header = request.headers.get("X-Hub-Signature-256")
         if not signature_header:
-            return aiohttp.web.Response(text="Не авторизован", status=401)
+            return aiohttp.web.Response(text="Non authorized", status=401)
         try:
             _, github_signature = signature_header.split("=", 1)
         except ValueError:
-            return aiohttp.web.Response(text="Не авторизован", status=401)
+            return aiohttp.web.Response(text="Non authorized", status=401)
         body = await request.read()
         if not hmac.compare_digest(
             hmac.new(
@@ -136,7 +184,7 @@ async def server():
             ).hexdigest(),
             github_signature,
         ):
-            return aiohttp.web.Response(text="Не авторизован", status=401)
+            return aiohttp.web.Response(text="Non authorized", status=401)
         load: dict[str] = cast(dict[str], await request.json())
         if request.headers.get("X-Github-Event") == "star":
             if load.get("action") == "deleted":
@@ -211,7 +259,7 @@ async def server():
                     ),
                 )
             return aiohttp.web.Response(text="ok")
-        return aiohttp.web.Response(text="Неверный запрос", status=400)
+        return aiohttp.web.Response(text="Incorrect request", status=400)
 
     app = aiohttp.web.Application()
     app.add_routes(
@@ -220,6 +268,7 @@ async def server():
             aiohttp.web.post("/servers", mcservers),
             aiohttp.web.post("/github", github),
             aiohttp.web.post("/minecraft", minecraft),
+            aiohttp.web.post("/actions", own_actions),
             aiohttp.web.get("/bank", bank),
             aiohttp.web.get("/", status),
         ],
