@@ -122,7 +122,7 @@ async def server():
     async def own_actions(request: aiohttp.web.Request):
         if not is_local_request(request):
             return aiohttp.web.Response(text="Forbidden", status=403)
-        data = await request.post()
+        data = await request.json()
         action = data.get("action")
         if action == "vip":
             if data.get("password") != config.tokens.vipaction:
