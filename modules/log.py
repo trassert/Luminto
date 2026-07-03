@@ -42,7 +42,7 @@ def setup():
         backtrace=False,
         diagnose=False,
     )
-    logger.info("Настроено логирование!")
+    logger.success("Настроено логирование!")
 
     return logging.basicConfig(handlers=[InterceptHandler()], level=0)
 

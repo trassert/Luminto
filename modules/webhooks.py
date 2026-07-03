@@ -46,7 +46,7 @@ async def server():
         nick = load["nick"]
         sign = load["sign"]
         time = load["time"]
-        logger.warning(f"{nick} проголосовал в {time} с хешем {sign}")
+        logger.success(f"{nick} проголосовал в {time} с хешем {sign}")
         hash = sha1(f"{nick}{time}{config.tokens.hotmc}".encode()).hexdigest()
         if sign != hash:
             logger.warning("Хеш не совпал!")
@@ -77,7 +77,7 @@ async def server():
         username = load["username"]
         sign = load["sign"]
         time = load["time"]
-        logger.warning(f"{username} проголосовал в {time} с хешем {sign}")
+        logger.success(f"{username} проголосовал в {time} с хешем {sign}")
         hash = md5(
             f"{username}|{time}|{config.tokens.mcservers}".encode(),
         ).hexdigest()
