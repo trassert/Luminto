@@ -63,7 +63,7 @@ async def pay_state_taxes() -> None:
 
         try:
             tax_period = int(state_info.get("tax_period", 7))
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             tax_period = 7
         if tax_period <= 0:
             tax_period = 7
