@@ -442,6 +442,13 @@ class State:
         self.author = data["author"]
         self.coordinates = data["coordinates"]
         self.money = data["money"]
+        self.tax = data.get("tax", 0)
+        self.tax_period = data.get("tax_period", 7)
+        self.tax_nonpayment = data.get("tax_nonpayment", "nothing")
+        self.tax_last_date = data.get(
+            "tax_last_date",
+            datetime.now().strftime("%Y.%m.%d"),
+        )
         self.recognition_votes = data.get("recognition_votes", [])
         self.recognition_pending = data.get("recognition_pending", False)
 
@@ -459,6 +466,8 @@ class State:
 
     def change(self, key, value):
         self.all[key] = value
+        if hasattr(self, key):
+            setattr(self, key, value)
         _save_json_sync(pathes.states / f"{self.name}.json", self.all, indent=True)
 
     def rename(self, new_name: str):
@@ -486,6 +495,10 @@ class States:
             "money": 0,
             "author": author,
             "coordinates": "Не найдено",
+            "tax": 0,
+            "tax_period": 7,
+            "tax_nonpayment": "nothing",
+            "tax_last_date": datetime.now().strftime("%Y.%m.%d"),
         }
         _save_json_sync(filepath, data, indent=True)
         return True

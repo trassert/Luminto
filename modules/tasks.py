@@ -50,6 +50,66 @@ async def rewards():
     return None
 
 
+async def pay_state_taxes() -> None:
+    logger.info("Проверяем налоги государств..")
+    states = db.States.get_all()
+    today: datetime = datetime.now()
+    today_str = today.strftime("%Y.%m.%d")
+
+    for state_name, state_info in states.items():
+        tax_amount = int(state_info.get("tax", 0))
+        if tax_amount <= 0:
+            continue
+
+        try:
+            tax_period = int(state_info.get("tax_period", 7))
+        except (TypeError, ValueError):
+            tax_period = 7
+        if tax_period <= 0:
+            tax_period = 7
+
+        last_tax_date = state_info.get("tax_last_date") or today_str
+        try:
+            last_date = datetime.strptime(last_tax_date, "%Y.%m.%d")
+        except ValueError:
+            last_date = today
+
+        if (today - last_date).days < tax_period:
+            continue
+
+        state = db.State(state_name)
+        kicked_players = []
+        for player_id in list(state.players):
+            balance = await db.get_money(player_id)
+            if balance < tax_amount:
+                if str(state.tax_nonpayment or "nothing").lower() in (
+                    "kick",
+                    "кик",
+                ):
+                    kicked_players.append(player_id)
+                    continue
+                continue
+
+            await db.add_money(player_id, -tax_amount)
+            state.change("money", state.money + tax_amount)
+
+        if kicked_players:
+            state.players = [p for p in state.players if p not in kicked_players]
+            state.change("players", state.players)
+            for player_id in kicked_players:
+                player_name = await db.Nicks(id=player_id).get() or player_id
+                await client.send_message(
+                    entity=config.chats.chat,
+                    message=phrase.state.tax_kicked.format(
+                        state=state.name,
+                        player=player_name,
+                    ),
+                    reply_to=config.chats.topics.rp,
+                )
+
+        state.change("tax_last_date", today_str)
+
+
 async def remove_states() -> None:
     logger.info("Проверяем пустые государства..")
     states = db.States.get_all()

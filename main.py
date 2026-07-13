@@ -18,6 +18,7 @@ async def main():
     await task_gen.UpdateShopTask.create(tasks.update_shop, 2)
     await task_gen.RewardsTask.create(tasks.rewards, "19:00")
     await task_gen.RemoveStatesTask.create(tasks.remove_states, "17:00")
+    await task_gen.TaxTask.create(tasks.pay_state_taxes, "12:00")
     await task_gen.BackupDBTask.create(tasks.backup_db, "1:00")
     await games.crocodile_onboot()
 

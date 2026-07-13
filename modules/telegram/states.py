@@ -21,7 +21,9 @@ if TYPE_CHECKING:
 logger.info(f"Загружен модуль {__name__}!")
 
 
-async def _check_and_update_tier(state, players_len: int, name_cap: str) -> None:
+async def _check_and_update_tier(
+    state, players_len: int, name_cap: str
+) -> None:
     """Обновляет статус (Княжество/Государство/Империя) при изменении состава."""
     new_type = None
     label = ""
@@ -37,7 +39,9 @@ async def _check_and_update_tier(state, players_len: int, name_cap: str) -> None
 
     if new_type is not None:
         state.change("type", new_type)
-        msg_template = phrase.state.up if new_type > state.type else phrase.state.down
+        msg_template = (
+            phrase.state.up if new_type > state.type else phrase.state.down
+        )
         await client.send_message(
             entity=config.chats.chat,
             message=msg_template.format(name=name_cap, type=label),
@@ -118,7 +122,9 @@ async def state_make(event: Message) -> Message:
                 data=f"state.m.{event.sender_id}.{arg}".encode(),
             ),
         ]
-        return await event.reply(phrase.state.warn_make.format(arg), buttons=[button])
+        return await event.reply(
+            phrase.state.warn_make.format(arg), buttons=[button]
+        )
     except tgerrors.ButtonDataInvalidError:
         return await event.reply(phrase.state.too_long)
 
@@ -128,6 +134,73 @@ async def state_make(event: Message) -> Message:
 @func.new_command(r"\+государство$")
 async def state_make_empty(event: Message) -> Message:
     return await event.reply(phrase.state.no_name)
+
+
+@func.new_command(r"/г налог(.*)")
+async def state_tax(event: Message) -> Message:
+    state_name = db.States.if_author(event.sender_id)
+    if not state_name:
+        return await event.reply(phrase.state.not_a_author)
+
+    arg: str = event.pattern_match.group(1).strip()
+    if not arg:
+        return await event.reply(phrase.state.howto_tax)
+    if not re.fullmatch(r"-?\d+", arg):
+        return await event.reply(phrase.state.howto_tax)
+
+    amount = int(arg)
+    state = db.State(state_name)
+    state.change("tax", max(amount, 0))
+    if amount <= 0:
+        return await event.reply(phrase.state.tax_disabled)
+    return await event.reply(phrase.state.tax_set.format(amount))
+
+
+@func.new_command(r"/г неуплата(.*)")
+async def state_tax_nonpayment(event: Message) -> Message:
+    state_name = db.States.if_author(event.sender_id)
+    if not state_name:
+        return await event.reply(phrase.state.not_a_author)
+
+    arg: str = event.pattern_match.group(1).strip().lower()
+    if not arg:
+        return await event.reply(phrase.state.howto_tax_nonpayment)
+
+    action = {
+        "ничего": "nothing",
+        "nothing": "nothing",
+        "кик": "kick",
+        "kick": "kick",
+    }.get(arg)
+    if action is None:
+        return await event.reply(phrase.state.howto_tax_nonpayment)
+
+    db.State(state_name).change("tax_nonpayment", action)
+    return await event.reply(
+        phrase.state.tax_nonpayment_set.format(
+            "ничего" if action == "nothing" else "кик",
+        ),
+    )
+
+
+@func.new_command(r"/г периодналогов(.*)")
+async def state_tax_period(event: Message) -> Message:
+    state_name = db.States.if_author(event.sender_id)
+    if not state_name:
+        return await event.reply(phrase.state.not_a_author)
+
+    arg: str = event.pattern_match.group(1).strip()
+    if not arg:
+        return await event.reply(phrase.state.howto_tax_period)
+    if not re.fullmatch(r"-?\d+", arg):
+        return await event.reply(phrase.state.howto_tax_period)
+
+    period = int(arg)
+    if period <= 0:
+        period = 7
+
+    db.State(state_name).change("tax_period", period)
+    return await event.reply(phrase.state.tax_period_set.format(period))
 
 
 @func.new_command(r"/вступить(.*)")
@@ -146,7 +219,9 @@ async def state_enter(event: Message) -> Message:
     if not nick:
         return await event.reply(phrase.state.not_connected)
 
-    if db.States.if_player(event.sender_id) or db.States.if_author(event.sender_id):
+    if db.States.if_player(event.sender_id) or db.States.if_author(
+        event.sender_id
+    ):
         return await event.reply(phrase.state.already_player)
 
     state = db.State(arg)
@@ -190,7 +265,9 @@ async def state_get(event: Message):
         arg = ""
 
     if not arg:
-        state_name = db.States.if_player(event.sender_id) or db.States.if_author(
+        state_name = db.States.if_player(
+            event.sender_id
+        ) or db.States.if_author(
             event.sender_id,
         )
         if not state_name:
@@ -213,6 +290,10 @@ async def state_get(event: Message):
     else:
         recognition_val = phrase.state.status_not_recognized
 
+    tax_val = "Отключён" if state.tax <= 0 else f"{state.tax} аметистов"
+    nonpayment_val = "ничего" if state.tax_nonpayment == "nothing" else "кик"
+    period_val = str(state.tax_period if state.tax_period > 0 else 7)
+
     names = await asyncio.gather(
         *[func.get_name(p, minecraft=True) for p in state.players],
     )
@@ -226,6 +307,9 @@ async def state_get(event: Message):
             money=formatter.value_to_str(int(state.money), phrase.currency),
             author=await db.Nicks(id=state.author).get(),
             enter=enter_val,
+            tax=tax_val,
+            period=period_val,
+            nonpayment=nonpayment_val,
             recognition=recognition_val,
             desc=state.desc,
             date=state.date,
@@ -477,7 +561,9 @@ async def state_kick_user(event: Message) -> Message:
         reply_to=config.chats.topics.rp,
     )
 
-    await _check_and_update_tier(state, len(state.players), state.name.capitalize())
+    await _check_and_update_tier(
+        state, len(state.players), state.name.capitalize()
+    )
     return await event.reply(phrase.state.kicked.format(target_name))
 
 
@@ -589,7 +675,9 @@ async def state_status(event: Message) -> Message:
     else:
         status = phrase.state.status_not_recognized
 
-    voters = ", ".join(state.recognition_votes) if state.recognition_votes else "Нет"
+    voters = (
+        ", ".join(state.recognition_votes) if state.recognition_votes else "Нет"
+    )
 
     return await event.reply(
         phrase.state.status_info.format(
