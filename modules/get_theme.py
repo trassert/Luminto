@@ -6,7 +6,9 @@ logger.info(f"Загружен модуль {__name__}!")
 
 
 def weighted_choice(strings, weights):
-    if not isinstance(strings, list) or not all(isinstance(s, str) for s in strings):
+    if not isinstance(strings, list) or not all(
+        isinstance(s, str) for s in strings
+    ):
         logger.error("Все элементы должны быть строками!")
         return None
 
@@ -15,7 +17,9 @@ def weighted_choice(strings, weights):
         return None
 
     valid_weights = {
-        k: v for k, v in weights.items() if k in strings and isinstance(v, (int, float))
+        k: v
+        for k, v in weights.items()
+        if k in strings and isinstance(v, (int, float))
     }
     if not all(v >= 0 for v in valid_weights.values()):
         logger.error("Веса должны быть неотрицательными числами.")

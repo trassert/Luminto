@@ -75,7 +75,9 @@ async def top_ref(event: Message):
     info = await db.RefCodes().get_top_uses()
     n = 1
     for chunk in info:
-        text.append(f"{n}. **{await func.get_name(int(chunk[0]))}** - {chunk[1]}")
+        text.append(
+            f"{n}. **{await func.get_name(int(chunk[0]))}** - {chunk[1]}"
+        )
         n += 1
         if n > config.cfg.MaxStatPlayers:
             break

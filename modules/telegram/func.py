@@ -160,7 +160,9 @@ async def checks(
     if u_role < min_role:
         if isinstance(event, events.CallbackQuery.Event):
             await event.answer(
-                phrase.roles.no_perms_buttons.format(name=phrase.roles.types[min_role]),
+                phrase.roles.no_perms_buttons.format(
+                    name=phrase.roles.types[min_role]
+                ),
                 alert=True,
             )
         else:
@@ -173,7 +175,9 @@ async def checks(
     return True
 
 
-def new_command(command: str | list[str], checks=checks, chats=None, min_role: int = 0):
+def new_command(
+    command: str | list[str], checks=checks, chats=None, min_role: int = 0
+):
     async def check_wrapper(event):
         return await checks(event, min_role=min_role)
 
@@ -197,7 +201,9 @@ def new_command(command: str | list[str], checks=checks, chats=None, min_role: i
                 client.add_event_handler(
                     func,
                     events.NewMessage(
-                        pattern=rf"(?i)^{pattern}", func=check_wrapper, chats=chats
+                        pattern=rf"(?i)^{pattern}",
+                        func=check_wrapper,
+                        chats=chats,
                     ),
                 )
             return func

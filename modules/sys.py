@@ -16,9 +16,7 @@ if platform.system() == "Windows":
 
     def get_temperature() -> str:
         temp = WinTmp.CPU_Temps()
-        return (
-            f"{round(max(temp))} | {round(sum(temp) / len(temp))} | {round(min(temp))}"
-        )
+        return f"{round(max(temp))} | {round(sum(temp) / len(temp))} | {round(min(temp))}"
 else:
     logger.info("Система - Linux, использую psutil")
 

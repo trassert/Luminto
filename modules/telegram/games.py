@@ -71,12 +71,16 @@ async def crocodile(event: Message):
         return await event.reply(phrase.game_topic_warning)
 
     is_running = await CrocodileGame.is_running()
-    stop_btn = KeyboardButtonCallback(text="❌ Остановить игру", data=b"crocodile.stop")
+    stop_btn = KeyboardButtonCallback(
+        text="❌ Остановить игру", data=b"crocodile.stop"
+    )
 
     if not is_running:
         keyboard = [
             [
-                KeyboardButtonCallback(text="✅ Играть", data=b"crocodile.start"),
+                KeyboardButtonCallback(
+                    text="✅ Играть", data=b"crocodile.start"
+                ),
                 stop_btn,
             ],
         ]
@@ -133,7 +137,9 @@ async def crocodile_bet(event: Message):
     await CrocodileGame.set_bets(all_bets)
 
     return await event.reply(
-        phrase.crocodile.bet.format(formatter.value_to_str(bet, phrase.currency)),
+        phrase.crocodile.bet.format(
+            formatter.value_to_str(bet, phrase.currency)
+        ),
     )
 
 
@@ -181,10 +187,14 @@ async def crocodile_handler(event: Message):
         client.remove_event_handler(crocodile_handler)
         await db.Crorostat(event.sender_id).add()
 
-        return await event.reply(phrase.crocodile.win.format(current_word) + win_msg)
+        return await event.reply(
+            phrase.crocodile.win.format(current_word) + win_msg
+        )
 
     if not text.startswith("/"):
-        changed, new_mask_str, finished = await CrocodileGame.reveal_on_guess(text)
+        changed, new_mask_str, finished = await CrocodileGame.reveal_on_guess(
+            text
+        )
         if changed:
             return await event.reply(
                 phrase.crocodile.new.format(new_mask_str.replace("_", "..")),
@@ -211,7 +221,9 @@ async def crocodile_hint(event: Message):
     if random() < config.cfg.PercentForRandomLetter and len(hints_list) > 1:
         for i, letter in enumerate(game["unsec"], 1):
             if letter == "_":
-                return await event.reply(f"{i} буква в слове - **{word[i - 1]}**")
+                return await event.reply(
+                    f"{i} буква в слове - **{word[i - 1]}**"
+                )
 
     try:
         async with aiofiles.open(pathes.crocomap, "rb") as f:
@@ -251,7 +263,9 @@ async def cities_timeout(current_player: int, last_city: str):
                     await db.add_money(winner_id, win_money)
 
                     stats_lines = []
-                    for n, (uid, count) in enumerate(Cities.get_all_stat().items(), 1):
+                    for n, (uid, count) in enumerate(
+                        Cities.get_all_stat().items(), 1
+                    ):
                         prefix = "👑 1" if n == 1 else str(n)
                         stats_lines.append(
                             f"{prefix}. **{await func.get_name(uid)}** назвал {count} городов",
@@ -287,7 +301,9 @@ async def cities_timeout(current_player: int, last_city: str):
                 )
 
             if second % 5 == 0 and second <= config.cfg.CitiesTimeout / 2:
-                text = phrase.cities.timeout.format(player=player_name, time=second)
+                text = phrase.cities.timeout.format(
+                    player=player_name, time=second
+                )
                 if timer_msg:
                     try:
                         await timer_msg.edit(text)
@@ -343,7 +359,9 @@ async def cities_answer(event: Message):
                 await func.get_name(current_player),
             ),
         )
-        CitiesTimerTask = asyncio.create_task(cities_timeout(current_player, last_city))
+        CitiesTimerTask = asyncio.create_task(
+            cities_timeout(current_player, last_city)
+        )
 
     elif result_code == 1:
         await autodelete(phrase.cities.unknown_city)
@@ -378,11 +396,21 @@ async def cities_callback(event: events.CallbackQuery.Event):
 
         names = [await func.get_name(pid) for pid in Cities.get_players()]
         keyboard = [
-            [KeyboardButtonCallback(text="➕ Присоединиться", data="cities.join")],
-            [KeyboardButtonCallback(text="🎮 Начать игру", data="cities.start")],
+            [
+                KeyboardButtonCallback(
+                    text="➕ Присоединиться", data="cities.join"
+                )
+            ],
+            [
+                KeyboardButtonCallback(
+                    text="🎮 Начать игру", data="cities.start"
+                )
+            ],
             [KeyboardButtonCallback(text="❌ Отменить", data="cities.cancel")],
         ]
-        await event.edit(phrase.cities.start.format(", ".join(names)), buttons=keyboard)
+        await event.edit(
+            phrase.cities.start.format(", ".join(names)), buttons=keyboard
+        )
         return await event.answer(phrase.cities.set_ingame)
 
     if action == "start":
@@ -423,7 +451,11 @@ async def cities_start(event: Message):
         return await event.reply(
             phrase.cities.already_started,
             buttons=[
-                [KeyboardButtonCallback(text="❌ Отменить", data="cities.cancel")],
+                [
+                    KeyboardButtonCallback(
+                        text="❌ Отменить", data="cities.cancel"
+                    )
+                ],
             ],
         )
 

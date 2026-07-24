@@ -27,7 +27,9 @@ class FloodWaitBase:
             self.time = now
             return 0
         wait_time = self.timer - elapsed
-        if wait_time > self.timer * self.exit_multiplier:  # Тасккилл если овер запросов
+        if (
+            wait_time > self.timer * self.exit_multiplier
+        ):  # Тасккилл если овер запросов
             return False
         self.time = now + wait_time
         return round(wait_time)  # Возвращаем флудвайт, с уч. будущего

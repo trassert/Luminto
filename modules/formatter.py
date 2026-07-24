@@ -167,5 +167,7 @@ class CustomMarkdown:
                     f"emoji/{e.document_id}",
                 )
             elif isinstance(e, types.MessageEntitySpoiler):
-                filtered[i] = types.MessageEntityTextUrl(e.offset, e.length, "spoiler")
+                filtered[i] = types.MessageEntityTextUrl(
+                    e.offset, e.length, "spoiler"
+                )
         return markdown.unparse(text, filtered)

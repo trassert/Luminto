@@ -49,7 +49,8 @@ def setup():
 
 async def buy(nick: str, item: str, value: str):
     async with aiofiles.open(
-        pathes.shop_log / "{}.log".format(datetime.date.today().strftime("%Y.%m.%d")),
+        pathes.shop_log
+        / "{}.log".format(datetime.date.today().strftime("%Y.%m.%d")),
         "a",
     ) as f:
         await f.write(f"{nick}|{item}-{value}\n")

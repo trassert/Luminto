@@ -111,7 +111,9 @@ async def server():
         data = await request.post()
         if data.get("password") != config.tokens.chattohttp:
             logger.info("Неверный пароль (C2HTTP)")
-            return aiohttp.web.Response(text="Password is not valid", status=401)
+            return aiohttp.web.Response(
+                text="Password is not valid", status=401
+            )
         nick = data.get("nick")
         if not formatter.is_valid_mc_nick(nick):
             return aiohttp.web.Response(text="Nick is not valid", status=406)
@@ -127,7 +129,9 @@ async def server():
         if action == "vip":
             if data.get("password") != config.tokens.vipaction:
                 logger.info("Неверный пароль (vip-action)")
-                return aiohttp.web.Response(text="Password is not valid", status=401)
+                return aiohttp.web.Response(
+                    text="Password is not valid", status=401
+                )
             tgid = await db.Nicks(nick=data.get("player")).get()
             if tgid is None:
                 logger.warning("Неверный игрок (vip-action)")
@@ -141,7 +145,9 @@ async def server():
                 )
             if user == roles.BLACKLIST:
                 logger.warning("Игрок в черном списке (vip-action)")
-                return aiohttp.web.Response(text="Player is blacklisted", status=401)
+                return aiohttp.web.Response(
+                    text="Player is blacklisted", status=401
+                )
             await roles.set(tgid, roles.VIP)
             return aiohttp.web.Response(text="ok")
         return aiohttp.web.Response(text="Incorrect action", status=400)

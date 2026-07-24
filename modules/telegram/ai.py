@@ -25,11 +25,15 @@ async def ai_handler(event: Message):
     if fw_request == 0:
         message: Message = await event.reply(phrase.ai.wait)
     else:
-        message: Message = await event.reply(phrase.ai.wait_until.format(fw_request))
+        message: Message = await event.reply(
+            phrase.ai.wait_until.format(fw_request)
+        )
         await asyncio.sleep(fw_request)
     try:
         user = await client.get_entity(event.sender_id)
-        full_name = f"{(user.first_name or '')} {(user.last_name or '')}".strip()
+        full_name = (
+            f"{(user.first_name or '')} {(user.last_name or '')}".strip()
+        )
     except Exception:
         full_name = "Неопознанный персонаж"
     text = ""

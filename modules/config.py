@@ -21,7 +21,8 @@ class ConfigSection(dict):
                 self[key] = ConfigSection(value)
             elif isinstance(value, list):
                 self[key] = [
-                    ConfigSection(i) if isinstance(i, dict) else i for i in value
+                    ConfigSection(i) if isinstance(i, dict) else i
+                    for i in value
                 ]
 
     def __getattr__(self, key):

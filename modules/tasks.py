@@ -6,8 +6,8 @@ from pathlib import Path
 from loguru import logger
 
 from . import config, db, formatter, pathes, phrase
-from .telegram.client import client
 from .telegram import func
+from .telegram.client import client
 from .telegram.states import _check_and_update_tier
 
 logger.info(f"Загружен модуль {__name__}!")
@@ -56,7 +56,7 @@ async def pay_state_taxes() -> None:
     logger.info("Проверяем налоги государств..")
     states = db.States.get_all()
 
-    for state_name, state_info in states.items():
+    for state_name in states.keys():
         logger.info(f"Проверяем налоги государства {state_name}..")
         state = db.State(state_name)
         if state.tax <= 0:
@@ -68,10 +68,13 @@ async def pay_state_taxes() -> None:
                 entity=config.chats.chat,
                 message=phrase.state.tax_kicked.format(
                     player=func.get_name(kicked_player, minecraft=True),
-                    state=state_name.capitalize()),
+                    state=state_name.capitalize(),
+                ),
                 reply_to=config.chats.topics.rp,
             )
-        await _check_and_update_tier(state_name, len(state.players), state.name.capitalize())
+        await _check_and_update_tier(
+            state_name, len(state.players), state.name.capitalize()
+        )
 
 
 async def remove_states() -> None:

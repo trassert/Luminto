@@ -27,7 +27,9 @@ class AI:
         self.model = model
         self.client = AsyncGroq(
             api_key=api_key,
-            http_client=httpx.AsyncClient(proxy=proxy_str) if proxy_str else None,
+            http_client=httpx.AsyncClient(proxy=proxy_str)
+            if proxy_str
+            else None,
         )
         self.system_prompt = system_prompt
         self.max_history_tokens = max_history_tokens
@@ -42,16 +44,21 @@ class AI:
         if self.history and self.history[0].get("role") == "system":
             start_idx = 1
         current_tokens = sum(
-            self._estimate_tokens(msg.get("content", "")) for msg in self.history
+            self._estimate_tokens(msg.get("content", ""))
+            for msg in self.history
         )
         while (
             current_tokens > self.max_history_tokens
             and len(self.history) > start_idx + 1
         ):
             removed_msg = self.history.pop(start_idx)
-            current_tokens -= self._estimate_tokens(removed_msg.get("content", ""))
+            current_tokens -= self._estimate_tokens(
+                removed_msg.get("content", "")
+            )
         if current_tokens > self.max_history_tokens:
-            logger.warning("История слишком большая. Очищаю до системного промпта.")
+            logger.warning(
+                "История слишком большая. Очищаю до системного промпта."
+            )
             if start_idx > 0:
                 self.history = [self.history[0]]
             else:
@@ -86,7 +93,10 @@ class AI:
                         and msg.get("role") in VALID_ROLES
                         and msg.get("content")
                     ):
-                        clean_msg = {"role": msg["role"], "content": msg["content"]}
+                        clean_msg = {
+                            "role": msg["role"],
+                            "content": msg["content"],
+                        }
                         valid_history.append(clean_msg)
                 if not valid_history:
                     return [{"role": "system", "content": self.system_prompt}]
@@ -99,9 +109,13 @@ class AI:
             logger.error(f"Ошибка загрузки истории: {e}. Создаю новую.")
             return [{"role": "system", "content": self.system_prompt}]
 
-    async def generate_response(self, user: str, prompt: str) -> AsyncGenerator[str]:
+    async def generate_response(
+        self, user: str, prompt: str
+    ) -> AsyncGenerator[str]:
         self.add_to_history(user, prompt)
-        self.history = [msg for msg in self.history if msg.get("role") in VALID_ROLES]
+        self.history = [
+            msg for msg in self.history if msg.get("role") in VALID_ROLES
+        ]
         full_response = ""
         try:
             response = await self.client.chat.completions.create(
@@ -131,5 +145,7 @@ class AI:
 
 
 Ai = AI(
-    proxy_str=config.tokens.ai.proxy.string if config.tokens.ai.proxy.enabled else None
+    proxy_str=config.tokens.ai.proxy.string
+    if config.tokens.ai.proxy.enabled
+    else None
 )

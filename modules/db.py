@@ -532,7 +532,7 @@ class State:
         return {
             "kicked": nonpayed_players,
             "payed": payed_players,
-            "collected": collected
+            "collected": collected,
         }
 
 

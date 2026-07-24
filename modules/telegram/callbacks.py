@@ -33,7 +33,9 @@ async def _check_and_deduct_balance(
     Возвращает True или сообщение об ошибке."""
     balance = await db.get_money(user_id)
     if balance < price:
-        return phrase.money.not_enough.format(formatter.value_to_str(balance, currency))
+        return phrase.money.not_enough.format(
+            formatter.value_to_str(balance, currency)
+        )
     await db.add_money(user_id, -price)
     return True
 
@@ -84,7 +86,9 @@ async def _handle_suggestion(
                     ),
                 ),
             )
-            return await client.edit_message(sender_id, event.message_id, add_phrase)
+            return await client.edit_message(
+                sender_id, event.message_id, add_phrase
+            )
 
         case "no":
             async with aiofiles.open(reject_file, "a") as aiof:
@@ -109,14 +113,22 @@ async def state_callback(event: events.CallbackQuery.Event):
         case "pay":
             nick = await db.Nicks(id=sender_id).get()
             if nick is None:
-                return await event.answer(phrase.state.not_connected, alert=True)
+                return await event.answer(
+                    phrase.state.not_connected, alert=True
+                )
             if db.States.if_player(sender_id) is not False:
-                return await event.answer(phrase.state.already_player, alert=True)
+                return await event.answer(
+                    phrase.state.already_player, alert=True
+                )
             if db.States.if_author(sender_id) is not False:
-                return await event.answer(phrase.state.already_author, alert=True)
+                return await event.answer(
+                    phrase.state.already_author, alert=True
+                )
 
             state = db.State(data[2])
-            balance_check = await _check_and_deduct_balance(sender_id, state.price)
+            balance_check = await _check_and_deduct_balance(
+                sender_id, state.price
+            )
             if balance_check is not True:
                 return await event.answer(balance_check, alert=True)
 
@@ -126,14 +138,18 @@ async def state_callback(event: events.CallbackQuery.Event):
 
             await client.send_message(
                 entity=config.chats.chat,
-                message=phrase.state.new_player.format(state=state.name, player=nick),
+                message=phrase.state.new_player.format(
+                    state=state.name, player=nick
+                ),
                 reply_to=config.chats.topics.rp,
             )
 
             if state.type == 0 and len(players) >= config.cfg.Type1Players:
                 await client.send_message(
                     entity=config.chats.chat,
-                    message=phrase.state.up.format(name=state.name, type="Государство"),
+                    message=phrase.state.up.format(
+                        name=state.name, type="Государство"
+                    ),
                     reply_to=config.chats.topics.rp,
                 )
                 state.change("type", 1)
@@ -141,18 +157,24 @@ async def state_callback(event: events.CallbackQuery.Event):
             elif state.type == 1 and len(players) >= config.cfg.Type2Players:
                 await client.send_message(
                     entity=config.chats.chat,
-                    message=phrase.state.up.format(name=state.name, type="Империя"),
+                    message=phrase.state.up.format(
+                        name=state.name, type="Империя"
+                    ),
                     reply_to=config.chats.topics.rp,
                 )
                 state.change("type", 2)
 
-            return await event.answer(phrase.state.admit.format(state.name), alert=True)
+            return await event.answer(
+                phrase.state.admit.format(state.name), alert=True
+            )
 
         case "remove":
             try:
                 state = db.State(data[2])
             except FileNotFoundError:
-                return await event.answer(phrase.state.already_deleted, alert=True)
+                return await event.answer(
+                    phrase.state.already_deleted, alert=True
+                )
 
             if not _ensure_owner(sender_id, state.author):
                 return await event.answer(phrase.not_for_you, alert=True)
@@ -167,7 +189,9 @@ async def state_callback(event: events.CallbackQuery.Event):
                 reply_to=config.chats.topics.rp,
             )
             return await event.reply(
-                phrase.state.removed.format(author=await func.get_name(state.author)),
+                phrase.state.removed.format(
+                    author=await func.get_name(state.author)
+                ),
             )
 
         case "m":
@@ -221,7 +245,9 @@ async def state_callback(event: events.CallbackQuery.Event):
                 return await event.answer(phrase.state.already_here, alert=True)
 
             await event.reply(
-                phrase.state.renamed.format(old=state_name.capitalize(), new=new_name),
+                phrase.state.renamed.format(
+                    old=state_name.capitalize(), new=new_name
+                ),
             )
             return await client.send_message(
                 entity=config.chats.chat,
@@ -248,7 +274,9 @@ async def state_callback(event: events.CallbackQuery.Event):
                 entity=config.chats.chat,
                 message=phrase.state.transfer_rp.format(
                     state=state_name,
-                    new_leader=await func.get_name(int(data[3]), minecraft=True),
+                    new_leader=await func.get_name(
+                        int(data[3]), minecraft=True
+                    ),
                 ),
                 reply_to=config.chats.topics.rp,
             )
@@ -398,7 +426,9 @@ async def shop_callback(event: events.CallbackQuery.Event):
     except TimeoutError:
         return await event.answer(phrase.shop.timeout, alert=True)
 
-    return await event.answer(phrase.shop.buy.format(items[int(data[1])]), alert=True)
+    return await event.answer(
+        phrase.shop.buy.format(items[int(data[1])]), alert=True
+    )
 
 
 @client.on(events.CallbackQuery(func=func.checks, pattern=r"^crocodile"))
@@ -433,7 +463,9 @@ async def crocodile_callback(event: events.CallbackQuery.Event):
             )
 
             if not await CrocodileGame.is_running():
-                return await event.answer(phrase.crocodile.already_down, alert=True)
+                return await event.answer(
+                    phrase.crocodile.already_down, alert=True
+                )
 
             bets_json = CrocodileGame.get_bets()
             bets = 0
@@ -482,7 +514,9 @@ async def mine_callback(event: events.CallbackQuery.Event):
             try:
                 del mining.sessions[sender_id]
             except Exception:
-                logger.info("Триггернуто удаление сессии, но её и так нет. Пропускаю..")
+                logger.info(
+                    "Триггернуто удаление сессии, но её и так нет. Пропускаю.."
+                )
                 return None
             total = session["gems"]
             await db.add_money(sender_id, total)
@@ -546,8 +580,16 @@ async def mine_callback(event: events.CallbackQuery.Event):
                 )
                 + phrase.mine.q,
                 buttons=[
-                    [Button.inline(phrase.mine.button_yes, f"mine.yes.{sender_id}")],
-                    [Button.inline(phrase.mine.button_no, f"mine.no.{sender_id}")],
+                    [
+                        Button.inline(
+                            phrase.mine.button_yes, f"mine.yes.{sender_id}"
+                        )
+                    ],
+                    [
+                        Button.inline(
+                            phrase.mine.button_no, f"mine.no.{sender_id}"
+                        )
+                    ],
                 ],
             )
     return None
@@ -575,7 +617,9 @@ async def hint_callback(event: events.CallbackQuery.Event):
                 int(hint_data["user"]),
                 phrase.newhints.accept.format(
                     word=hint_data["word"],
-                    get=formatter.value_to_str(config.cfg.HintGift, phrase.currency),
+                    get=formatter.value_to_str(
+                        config.cfg.HintGift, phrase.currency
+                    ),
                 ),
             )
             return await event.edit(
@@ -616,7 +660,9 @@ async def simple_antibot(event: events.CallbackQuery.Event):
     await event.answer(phrase.chataction.test_passed)
     await event.delete()
     if not db.hellomsg_check(event.sender_id):
-        return logger.info(f"{event.sender_id} вступил, но приветствие уже было.")
+        return logger.info(
+            f"{event.sender_id} вступил, но приветствие уже было."
+        )
 
     return await client.send_message(
         config.chats.chat,

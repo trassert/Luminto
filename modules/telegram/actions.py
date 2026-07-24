@@ -83,7 +83,9 @@ async def chat_action(event: events.ChatAction.Event):
         await asyncio.sleep(WELCOME_DELAY)
 
         try:
-            perms = await client.get_permissions(config.chats.chat, event.user_id)
+            perms = await client.get_permissions(
+                config.chats.chat, event.user_id
+            )
             if perms.is_banned or perms.has_left:
                 logger.info(
                     f"Пользователь {event.user_id} забанен или вышел до приветствия."

@@ -34,7 +34,9 @@ async def active_check(event: Message):
 
     players = "\n".join(
         f"{i}. {name} - {count}"
-        for i, (name, count) in enumerate(all_data[: config.cfg.MaxStatPlayers], 1)
+        for i, (name, count) in enumerate(
+            all_data[: config.cfg.MaxStatPlayers], 1
+        )
     )
 
     time_str = (
@@ -50,7 +52,9 @@ async def active_check(event: Message):
             pathes.chart,
             caption=phrase.stat.chat.format(time=time_str, text=players),
         )
-    return await event.respond(phrase.stat.chat.format(time=time_str, text=players))
+    return await event.respond(
+        phrase.stat.chat.format(time=time_str, text=players)
+    )
 
 
 @func.new_command(
@@ -95,7 +99,11 @@ async def all_money(event: Message):
 )
 async def server_top_list(event: Message):
     arg = event.pattern_match.group(1).strip()
-    n = max(3, min(30, int(arg))) if arg.isdigit() else config.cfg.MaxStatPlayers
+    n = (
+        max(3, min(30, int(arg)))
+        if arg.isdigit()
+        else config.cfg.MaxStatPlayers
+    )
 
     try:
         async with mcrcon.Vanilla as rcon:
@@ -124,4 +132,6 @@ async def server_top_mine(event: Message):
         for i, (pid, amt) in enumerate(await db.get_mine_top(), 1)
         if i <= config.cfg.MaxStatPlayers
     ]
-    return await event.reply(phrase.stat.mine.format("\n".join(top)), silent=True)
+    return await event.reply(
+        phrase.stat.mine.format("\n".join(top)), silent=True
+    )
