@@ -99,3 +99,9 @@ ShopThemeWeights:
   potions: 5
   books: 6
   decorations: 2
+
+States:
+  DefaultTax: 0
+  DefaultTaxPeriod: 7
+  DefaultTaxNonpayment: "nothing"
+  RecognitionPending: false

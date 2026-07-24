@@ -29,7 +29,7 @@ dependencies = [
 [tool.ruff]
 exclude = ["depr", "scripts", ".venv"]
 unsafe-fixes = true
-line-length = 88
+line-length = 80
 indent-width = 4
 target-version = "py314"
 

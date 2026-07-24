@@ -7,6 +7,8 @@ from loguru import logger
 
 from . import config, db, formatter, pathes, phrase
 from .telegram.client import client
+from .telegram import func
+from .telegram.states import _check_and_update_tier
 
 logger.info(f"Загружен модуль {__name__}!")
 
@@ -53,61 +55,23 @@ async def rewards():
 async def pay_state_taxes() -> None:
     logger.info("Проверяем налоги государств..")
     states = db.States.get_all()
-    today: datetime = datetime.now()
-    today_str = today.strftime("%Y.%m.%d")
 
     for state_name, state_info in states.items():
-        tax_amount = int(state_info.get("tax", 0))
-        if tax_amount <= 0:
-            continue
-
-        try:
-            tax_period = int(state_info.get("tax_period", 7))
-        except TypeError, ValueError:
-            tax_period = 7
-        if tax_period <= 0:
-            tax_period = 7
-
-        last_tax_date = state_info.get("tax_last_date") or today_str
-        try:
-            last_date = datetime.strptime(last_tax_date, "%Y.%m.%d")
-        except ValueError:
-            last_date = today
-
-        if (today - last_date).days < tax_period:
-            continue
-
+        logger.info(f"Проверяем налоги государства {state_name}..")
         state = db.State(state_name)
-        kicked_players = []
-        for player_id in list(state.players):
-            balance = await db.get_money(player_id)
-            if balance < tax_amount:
-                if str(state.tax_nonpayment or "nothing").lower() in (
-                    "kick",
-                    "кик",
-                ):
-                    kicked_players.append(player_id)
-                    continue
-                continue
-
-            await db.add_money(player_id, -tax_amount)
-            state.change("money", state.money + tax_amount)
-
-        if kicked_players:
-            state.players = [p for p in state.players if p not in kicked_players]
-            state.change("players", state.players)
-            for player_id in kicked_players:
-                player_name = await db.Nicks(id=player_id).get() or player_id
-                await client.send_message(
-                    entity=config.chats.chat,
-                    message=phrase.state.tax_kicked.format(
-                        state=state.name,
-                        player=player_name,
-                    ),
-                    reply_to=config.chats.topics.rp,
-                )
-
-        state.change("tax_last_date", today_str)
+        if state.tax <= 0:
+            logger.info(f"Налог государства {state_name} отключён")
+            continue
+        ptx_result = state.pay_tax()
+        for kicked_player in ptx_result["kicked"]:
+            await client.send_message(
+                entity=config.chats.chat,
+                message=phrase.state.tax_kicked.format(
+                    player=func.get_name(kicked_player, minecraft=True),
+                    state=state_name.capitalize()),
+                reply_to=config.chats.topics.rp,
+            )
+        await _check_and_update_tier(state_name, len(state.players), state.name.capitalize())
 
 
 async def remove_states() -> None:
@@ -153,7 +117,11 @@ async def backup_db() -> None:
         return
     date_pattern = re.compile(r"^\d{4}-\d{2}-\d{2}$")
     backups = sorted(
-        [p for p in backup_root.iterdir() if p.is_dir() and date_pattern.match(p.name)],
+        [
+            p
+            for p in backup_root.iterdir()
+            if p.is_dir() and date_pattern.match(p.name)
+        ],
         key=lambda p: p.name,
     )
     if len(backups) > 3:
@@ -162,4 +130,6 @@ async def backup_db() -> None:
                 shutil.rmtree(old_backup)
                 logger.info(f"Удалён старый бекап: {old_backup}")
             except Exception:
-                logger.exception(f"Не удалось удалить старый бекап: {old_backup}")
+                logger.exception(
+                    f"Не удалось удалить старый бекап: {old_backup}"
+                )

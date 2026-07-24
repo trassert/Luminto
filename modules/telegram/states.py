@@ -150,6 +150,44 @@ async def state_tax(event: Message) -> Message:
     return await event.reply(phrase.state.tax_set.format(amount))
 
 
+@func.new_command(r"/г собратьналог$")
+@func.new_command(r"/г собратьналоги$")
+@func.new_command(r"/госво собратьналоги$")
+@func.new_command(r"/госво собратьналог$")
+@func.new_command(r"/collecttax$")
+async def state_collecttax(event: Message) -> Message:
+    state_name = db.States.if_author(event.sender_id)
+    if not state_name:
+        return await event.reply(phrase.state.not_a_author)
+    state = db.State(state_name)
+    if state.tax <= 0:
+        return await event.reply(phrase.state.tax_disabled)
+    ptx_result = await state.pay_tax()
+    if ptx_result is None:
+        return await event.reply(phrase.state.tax_collected_none)
+    if ptx_result["collected"] == 0:
+        return await event.reply(phrase.state.tax_collected_none)
+    message = phrase.state.tax_collected.format(ptx_result["collected"])
+    kicked_players = []
+    if ptx_result["kicked"] != []:
+        for player in ptx_result["kicked"]:
+            nick = await func.get_name(player, minecraft=True)
+            await client.send_message(
+                entity=config.chats.chat,
+                message=phrase.state.tax_kicked.format(
+                    player=nick,
+                    state=state_name.capitalize(),
+                ),
+                reply_to=config.chats.topics.rp,
+            )
+            kicked_players.append(nick)
+        message += "\n" + phrase.state.tax_kicked_list.format(
+            ", ".join(kicked_players),
+        )
+        await _check_and_update_tier(state, len(state.players), state.name.capitalize())
+    return await event.reply(message)
+
+
 @func.new_command(r"/г неуплата(.*)")
 async def state_tax_nonpayment(event: Message) -> Message:
     state_name = db.States.if_author(event.sender_id)
