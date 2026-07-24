@@ -6,7 +6,6 @@ from pathlib import Path
 from loguru import logger
 
 from . import config, db, formatter, pathes, phrase
-from .telegram import func
 from .telegram.client import client
 from .telegram.states import _check_and_update_tier
 
@@ -53,6 +52,7 @@ async def rewards():
 
 
 async def pay_state_taxes() -> None:
+    from .telegram import func #! fix has no attribute 'new_command'  # noqa: I001
     logger.info("Проверяем налоги государств..")
     states = db.States.get_all()
 
