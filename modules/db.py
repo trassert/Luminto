@@ -593,48 +593,57 @@ class State:
             Dict с информацией о результатах
         """
         async with self._lock:
-            if self.tax <= 0:
-                return {
-                    "kicked": [],
-                    "payed": [],
-                    "collected": 0,
-                }
+            try:
+                tax_amount = int(self.tax or 0)
+            except Exception:
+                tax_amount = 0
+
+            if tax_amount <= 0:
+                return {"kicked": [], "payed": [], "collected": 0}
 
             today = datetime.now()
             today_str = today.strftime("%Y.%m.%d")
 
-            payed_players = []
-            nonpayed_players = []
+            payed_players: list = []
+            nonpayed_players: list = []
             collected = 0
             players_copy = list(self.players)
 
             for player_id in players_copy:
-                balance = await get_money(player_id)
+                try:
+                    balance = await get_money(player_id)
+                    balance = int(balance or 0)
+                except Exception:
+                    balance = 0
 
-                if balance < self.tax:
+                if balance < tax_amount:
                     nonpayed_players.append(player_id)
                 else:
-                    await add_money(player_id, -self.tax)
+                    await add_money(player_id, -tax_amount)
                     payed_players.append(player_id)
-                    collected += self.tax
+                    collected += tax_amount
+
             if collected:
                 new_money = int(self.money or 0) + collected
                 self.money = new_money
                 self._data["money"] = new_money
+
             self.tax_last_date = today_str
             self._data["tax_last_date"] = today_str
-            if self.tax_nonpayment == "kick" and nonpayed_players:
+
+            kicked: list = []
+            if nonpayed_players and self.tax_nonpayment == "kick":
                 nonpayed_set = set(nonpayed_players)
+                kicked = [p for p in self.players if p in nonpayed_set]
                 new_players = [p for p in self.players if p not in nonpayed_set]
 
                 self.players = new_players
                 self._data["players"] = new_players
 
-                for player_id in nonpayed_players:
+                for player_id in kicked:
                     player_name = await Nicks(id=player_id).get() or str(
                         player_id
                     )
-
                     logger.info(
                         f"{player_name} ({player_id}) кикнут из {self.name} "
                         f"за неуплату налогов."
@@ -643,7 +652,7 @@ class State:
             self._save()
 
             return {
-                "kicked": nonpayed_players,
+                "kicked": kicked,
                 "payed": payed_players,
                 "collected": collected,
             }
