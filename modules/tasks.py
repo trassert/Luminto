@@ -52,7 +52,10 @@ async def rewards():
 
 
 async def pay_state_taxes() -> None:
-    from .telegram import func #! fix has no attribute 'new_command'  # noqa: I001
+    from .telegram import (
+        func,
+    )  #! fix has no attribute 'new_command'  # noqa: I001
+
     logger.info("Проверяем налоги государств..")
     states = db.States.get_all()
 
