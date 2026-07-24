@@ -1,11 +1,11 @@
 import asyncio
 from collections import defaultdict
+from copy import deepcopy
 from datetime import datetime, timedelta
 from pathlib import Path
 from random import choice, randint, sample
 from time import time
 from typing import TypedDict
-from copy import deepcopy
 
 import aiofiles
 import anyio
@@ -437,6 +437,7 @@ class Ticket:
         await _save_json_async(pathes.tickets, data, indent=True)
         return True
 
+
 class State:
     def __init__(self, name: str):
         self.name = name
@@ -608,16 +609,12 @@ class State:
             players_copy = list(self.players)
 
             for player_id in players_copy:
-                balance = await get_money(
-                    player_id
-                )
+                balance = await get_money(player_id)
 
                 if balance < self.tax:
                     nonpayed_players.append(player_id)
                 else:
-                    await add_money(
-                        player_id, -self.tax
-                    )
+                    await add_money(player_id, -self.tax)
                     payed_players.append(player_id)
                     collected += self.tax
             if collected:
