@@ -5,6 +5,7 @@ from pathlib import Path
 from random import choice, randint, sample
 from time import time
 from typing import TypedDict
+from copy import deepcopy
 
 import aiofiles
 import anyio
@@ -436,24 +437,34 @@ class Ticket:
         await _save_json_async(pathes.tickets, data, indent=True)
         return True
 
-
 class State:
-    def __init__(self, name):
+    def __init__(self, name: str):
         self.name = name
-        self._info()
+        self._load()
+        self._lock = asyncio.Lock()
 
-    def _info(self):
-        data = _load_json_sync(pathes.states / f"{self.name}.json")
-        self.all = data
-        self.price = data["price"]
-        self.enter = data["enter"]
-        self.desc = data["desc"]
-        self.players = data["players"]
-        self.type = data["type"]
-        self.date = data["date"]
-        self.author = data["author"]
-        self.coordinates = data["coordinates"]
-        self.money = data["money"]
+    def _load(self) -> None:
+        """Загружает данные из JSON файла."""
+        file_path = pathes.states / f"{self.name}.json"
+
+        if not file_path.exists():
+            msg = f"State file not found: {file_path}"
+            raise FileNotFoundError(msg)
+
+        with file_path.open("rb") as f:
+            data = orjson.loads(f.read())
+
+        self._data = data
+
+        self.price = data.get("price")
+        self.enter = data.get("enter")
+        self.desc = data.get("desc")
+        self.players = list(data.get("players", []))  # Всегда список
+        self.type = data.get("type")
+        self.date = data.get("date")
+        self.author = data.get("author")
+        self.coordinates = data.get("coordinates")
+        self.money = data.get("money")
         self.tax = data.get("tax", config.cfg.States.DefaultTax)
         self.tax_period = data.get(
             "tax_period", config.cfg.States.DefaultTaxPeriod
@@ -462,13 +473,61 @@ class State:
             "tax_nonpayment", config.cfg.States.DefaultTaxNonpayment
         )
         self.tax_last_date = data.get(
-            "tax_last_date",
-            datetime.now().strftime("%Y.%m.%d"),
+            "tax_last_date", datetime.now().strftime("%Y.%m.%d")
         )
         self.recognition_votes = data.get("recognition_votes", [])
         self.recognition_pending = data.get(
             "recognition_pending", config.cfg.States.RecognitionPending
         )
+
+    def _save(self) -> None:
+        """Сохраняет текущие данные в JSON файл."""
+        file_path = pathes.states / f"{self.name}.json"
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+
+        self._sync_data()
+
+        with file_path.open("wb") as f:
+            f.write(
+                orjson.dumps(
+                    self._data,
+                    option=orjson.OPT_INDENT_2 | orjson.OPT_SORT_KEYS,
+                )
+            )
+
+    def _sync_data(self) -> None:
+        """Синхронизирует атрибуты с _data перед сохранением."""
+        self._data.update(
+            {
+                "price": self.price,
+                "enter": self.enter,
+                "desc": self.desc,
+                "players": list(self.players),  # Всегда список
+                "type": self.type,
+                "date": self.date,
+                "author": self.author,
+                "coordinates": self.coordinates,
+                "money": self.money,
+                "tax": self.tax,
+                "tax_period": self.tax_period,
+                "tax_nonpayment": self.tax_nonpayment,
+                "tax_last_date": self.tax_last_date,
+                "recognition_votes": self.recognition_votes,
+                "recognition_pending": self.recognition_pending,
+            }
+        )
+
+    @property
+    def all(self) -> dict:
+        """Возвращает копию всех данных (для обратной совместимости)."""
+        self._sync_data()
+        return deepcopy(self._data)
+
+    @all.setter
+    def all(self, value: dict):
+        """Устанавливает все данные (для обратной совместимости)."""
+        self._data = deepcopy(value)
+        self._load()
 
     @property
     def is_recognized(self) -> bool:
@@ -477,62 +536,135 @@ class State:
             return True
         if self.money >= 500:
             return True
-        total = States.count()
+
+        total = self._count_states()
         if total > 1 and len(self.recognition_votes) / (total - 1) > 0.5:
             return True
+
         return False
 
-    def change(self, key, value):
-        self.all[key] = value
-        if hasattr(self, key):
-            setattr(self, key, value)
-        _save_json_sync(
-            pathes.states / f"{self.name}.json", self.all, indent=True
-        )
+    @staticmethod
+    def _count_states() -> int:
+        """Возвращает количество существующих государств."""
+        try:
+            return States.count()
+        except ImportError, AttributeError:
+            return len(list(pathes.states.glob("*.json")))
 
-    def rename(self, new_name: str):
+    def change(self, key: str, value) -> None:
+        """
+        Изменяет значение ключа и сохраняет в файл.
+
+        Args:
+            key: Имя ключа
+            value: Новое значение
+        """
+        self._data[key] = value
+        if hasattr(self, key):
+            if key == "players" and not isinstance(value, list):
+                value = list(value)
+            setattr(self, key, value)
+        self._save()
+
+    def rename(self, new_name: str) -> None | bool:
+        """
+        Переименовывает государство.
+
+        Returns:
+            None при успехе, False если файл уже существует
+        """
+        old_path = pathes.states / f"{self.name}.json"
         new_path = pathes.states / f"{new_name}.json"
+
         if new_path.exists():
             return False
-        (pathes.states / f"{self.name}.json").rename(new_path)
+        old_path.rename(new_path)
         self.name = new_name
-        self._info()
+        self._load()
+
         return None
 
-    async def pay_tax(self) -> None:
-        """Проверяет и списывает налоги с игроков."""
-        if self.tax <= 0:
-            return None
-        today: datetime = datetime.now()
-        today_str = today.strftime("%Y.%m.%d")
-        payed_players = []
-        nonpayed_players = []
-        collected = 0
-        for player_id in list(self.players):
-            balance = await get_money(player_id)
-            if balance < self.tax:
-                nonpayed_players.append(player_id)
-                continue
-            await add_money(player_id, -self.tax)
-            payed_players.append(player_id)
-            collected += self.tax
-        if collected:
-            self.change("money", int(self.money or 0) + collected)
-        self.change("tax_last_date", today_str)
-        if self.tax_nonpayment == "kick":
-            for player_id in nonpayed_players:
-                self.players.remove(player_id)
-            self.change("players", self.players)
-            for player_id in nonpayed_players:
-                player_name = await Nicks(id=player_id).get() or player_id
-                logger.info(
-                    f"{player_name} ({player_id}) кикнут из {self.name} за неуплату налогов.",
+    async def pay_tax(self) -> dict:
+        """
+        Проверяет и списывает налоги с игроков.
+
+        Returns:
+            Dict с информацией о результатах
+        """
+        async with self._lock:
+            if self.tax <= 0:
+                return {
+                    "kicked": [],
+                    "payed": [],
+                    "collected": 0,
+                }
+
+            today = datetime.now()
+            today_str = today.strftime("%Y.%m.%d")
+
+            payed_players = []
+            nonpayed_players = []
+            collected = 0
+            players_copy = list(self.players)
+
+            for player_id in players_copy:
+                balance = await get_money(
+                    player_id
                 )
-        return {
-            "kicked": nonpayed_players,
-            "payed": payed_players,
-            "collected": collected,
-        }
+
+                if balance < self.tax:
+                    nonpayed_players.append(player_id)
+                else:
+                    await add_money(
+                        player_id, -self.tax
+                    )
+                    payed_players.append(player_id)
+                    collected += self.tax
+            if collected:
+                new_money = int(self.money or 0) + collected
+                self.money = new_money
+                self._data["money"] = new_money
+            self.tax_last_date = today_str
+            self._data["tax_last_date"] = today_str
+            if self.tax_nonpayment == "kick" and nonpayed_players:
+                nonpayed_set = set(nonpayed_players)
+                new_players = [p for p in self.players if p not in nonpayed_set]
+
+                self.players = new_players
+                self._data["players"] = new_players
+
+                for player_id in nonpayed_players:
+                    player_name = await Nicks(id=player_id).get() or str(
+                        player_id
+                    )
+
+                    logger.info(
+                        f"{player_name} ({player_id}) кикнут из {self.name} "
+                        f"за неуплату налогов."
+                    )
+
+            self._save()
+
+            return {
+                "kicked": nonpayed_players,
+                "payed": payed_players,
+                "collected": collected,
+            }
+
+    def reload(self) -> None:
+        """Перезагружает данные из файла (полезно при внешних изменениях)."""
+        self._load()
+
+    def to_dict(self) -> dict:
+        """Возвращает копию всех данных в виде словаря."""
+        self._sync_data()
+        return deepcopy(self._data)
+
+    def __repr__(self) -> str:
+        return f"<State(name='{self.name}', players={len(self.players)})>"
+
+    def __str__(self) -> str:
+        return self.name
 
 
 class States:
