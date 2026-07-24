@@ -520,9 +520,8 @@ class State:
             self.change("money", int(self.money or 0) + collected)
         self.change("tax_last_date", today_str)
         if self.tax_nonpayment == "kick":
-            self.players = [
-                p for p in self.players if p not in nonpayed_players
-            ]
+            for player_id in nonpayed_players:
+                self.players.remove(player_id)
             self.change("players", self.players)
             for player_id in nonpayed_players:
                 player_name = await Nicks(id=player_id).get() or player_id
