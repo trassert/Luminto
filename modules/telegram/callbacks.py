@@ -16,7 +16,7 @@ from .. import (
     mining,
     pathes,
     phrase,
-    states_helper
+    states_helper,
 )
 from . import func
 from .client import client

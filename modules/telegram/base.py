@@ -23,8 +23,8 @@ from .. import (
     pathes,
     phrase,
     pic,
-    sys,
     states_helper,
+    sys,
 )
 from . import func
 from .client import aio, client
@@ -182,7 +182,9 @@ async def mine_start(event: Message) -> Message:
     """Запускает сессию майнинга (шахты)."""
     user_id: int = event.sender_id
 
-    if not (states_helper.if_player(user_id) or states_helper.if_author(user_id)):
+    if not (
+        states_helper.if_player(user_id) or states_helper.if_author(user_id)
+    ):
         return await event.reply(phrase.mine.not_in_state)
     if not await db.ready_to_mine(user_id):
         return await event.reply(choice(phrase.mine.not_ready))
@@ -573,9 +575,9 @@ async def check_info_by_nick(event: Message) -> Message:
     if user_id is None:
         return await event.reply(phrase.nick.not_find)
 
-    state: str | bool = states_helper.if_player(user_id) or states_helper.if_author(
+    state: str | bool = states_helper.if_player(
         user_id
-    )
+    ) or states_helper.if_author(user_id)
     state_info = state or "Нет"
 
     return await event.reply(

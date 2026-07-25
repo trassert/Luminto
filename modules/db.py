@@ -294,9 +294,14 @@ class Nicks:
         data = await _load_json_async(pathes.nick)
         if self.nick:
             nick_lower = self.nick.lower()
-            return next((v for k, v in data.items() if k.lower() == nick_lower), if_nothing)
+            return next(
+                (v for k, v in data.items() if k.lower() == nick_lower),
+                if_nothing,
+            )
         if self.id:
-            return next((k for k, v in data.items() if v == self.id), if_nothing)
+            return next(
+                (k for k, v in data.items() if v == self.id), if_nothing
+            )
         return if_nothing
 
     async def get_all(self):
@@ -797,7 +802,14 @@ class RefCodes:
     async def check_ref(self, name) -> str | None:
         load = await self._read()
         name_lower = name.lower()
-        return next((uid for uid, d in load.items() if d.get("own", "").lower() == name_lower), None)
+        return next(
+            (
+                uid
+                for uid, d in load.items()
+                if d.get("own", "").lower() == name_lower
+            ),
+            None,
+        )
 
     async def delete(self, id) -> bool:
         "Удаляет реф. код, return bool True/False (есть рефка или нет)"
@@ -812,8 +824,13 @@ class RefCodes:
     async def get_top_uses(self) -> list[list[str, int]]:
         load = await self._read()
         return sorted(
-            [[uid, len(info.get("used", []))] for uid, info in load.items() if info.get("used")],
-            key=lambda x: x[1], reverse=True
+            [
+                [uid, len(info.get("used", []))]
+                for uid, info in load.items()
+                if info.get("used")
+            ],
+            key=lambda x: x[1],
+            reverse=True,
         )
 
 
@@ -821,7 +838,9 @@ class CitiesGame:
     def __init__(self):
         self.data_file = pathes.cities
         self.data = self._load_data()
-        self._valid_cities = set(pathes.chk_city.read_text(encoding="utf8").splitlines())
+        self._valid_cities = set(
+            pathes.chk_city.read_text(encoding="utf8").splitlines()
+        )
         self._cities_list = list(self._valid_cities)
 
     def _load_data(self) -> dict:

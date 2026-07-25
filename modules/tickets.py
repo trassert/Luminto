@@ -1,7 +1,8 @@
 import random
+
 from loguru import logger
 
-from . import pathes, db
+from . import db, pathes
 
 logger.info(f"Загружен модуль {__name__}!")
 

@@ -1,7 +1,9 @@
+from collections.abc import Iterator
 from datetime import datetime
 from typing import Any
-from collections.abc import Iterator
+
 from loguru import logger
+
 from . import db, pathes
 
 logger.info(f"Загружен модуль {__name__}")
