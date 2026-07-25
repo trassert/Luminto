@@ -11,7 +11,7 @@ from telethon.tl.types import (
     KeyboardButtonCallback,
 )
 
-from .. import config, db, formatter, pathes, phrase, crocostat
+from .. import config, crocostat, db, formatter, pathes, phrase
 from . import func
 from .client import client
 

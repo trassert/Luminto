@@ -12,7 +12,7 @@ import asyncmy
 import orjson
 from loguru import logger
 
-from . import config, formatter, get_theme, pathes, files, nicks
+from . import config, files, formatter, get_theme, nicks, pathes
 
 logger.info(f"Загружен модуль {__name__}!")
 
@@ -1187,7 +1187,9 @@ class Topics:
         if id not in self.data:
             self.data[id] = []
         self.data[id].append(topic_id)
-        return await files.save_json_async(self.data_file, self.data, indent=True)
+        return await files.save_json_async(
+            self.data_file, self.data, indent=True
+        )
 
     async def remove(self, id: str, topic_id: str) -> bool:
         id = self.idconv(id)

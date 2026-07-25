@@ -8,7 +8,7 @@ import aiohttp
 import aiohttp.web
 from loguru import logger
 
-from . import config, db, formatter, log, phrase, nicks
+from . import config, db, formatter, log, nicks, phrase
 from .telegram import func
 from .telegram.client import client
 

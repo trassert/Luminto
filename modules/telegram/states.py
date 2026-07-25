@@ -11,7 +11,7 @@ from telethon.tl.types import (
     ReplyInlineMarkup,
 )
 
-from .. import nicks, config, db, formatter, pathes, phrase, states_helper
+from .. import config, db, formatter, nicks, pathes, phrase, states_helper
 from . import func
 from .client import client
 

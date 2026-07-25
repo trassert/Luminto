@@ -1,6 +1,6 @@
 from loguru import logger
 
-from . import db, pathes, files
+from . import files, pathes
 
 logger.info(f"Загружен модуль {__name__}!")
 

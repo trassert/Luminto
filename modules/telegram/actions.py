@@ -4,7 +4,7 @@ from aiogram import Router, exceptions, types
 from loguru import logger
 from telethon import events
 
-from .. import config, db, formatter, mcrcon, phrase, nicks
+from .. import config, db, formatter, mcrcon, nicks, phrase
 from . import func
 from .client import client, dp
 

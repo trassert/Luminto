@@ -14,10 +14,10 @@ from .. import (
     log,
     mcrcon,
     mining,
+    nicks,
     pathes,
     phrase,
     states_helper,
-    nicks
 )
 from . import func
 from .client import client

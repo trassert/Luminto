@@ -20,12 +20,12 @@ from .. import (
     formatter,
     mcrcon,
     mining,
+    nicks,
     pathes,
     phrase,
     pic,
     states_helper,
     sys,
-    nicks,
 )
 from . import func
 from .client import aio, client

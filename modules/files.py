@@ -1,9 +1,10 @@
+import asyncio
+from pathlib import Path
+
+import aiofiles
 import anyio
 import orjson
-import asyncio
-import aiofiles
 
-from pathlib import Path
 
 def load_json_sync(filepath: Path) -> dict:
     """Загружает JSON файл синхронно."""

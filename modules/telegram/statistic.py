@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
-from .. import chart, config, db, formatter, mcrcon, pathes, phrase, crocostat
+from .. import chart, config, crocostat, db, formatter, mcrcon, pathes, phrase
 from . import func
 from .client import client
 

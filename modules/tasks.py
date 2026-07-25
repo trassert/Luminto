@@ -5,7 +5,7 @@ from pathlib import Path
 
 from loguru import logger
 
-from . import config, nicks, db, formatter, pathes, phrase, states_helper
+from . import config, db, formatter, nicks, pathes, phrase, states_helper
 from .telegram.client import client
 from .telegram.states import _check_and_update_tier
 

@@ -5,7 +5,7 @@ from loguru import logger
 from telethon import events
 from telethon.tl.functions.users import GetFullUserRequest
 
-from .. import db, phrase, nicks
+from .. import db, nicks, phrase
 from .client import client
 
 if TYPE_CHECKING:
