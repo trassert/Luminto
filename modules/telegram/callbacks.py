@@ -207,7 +207,7 @@ async def state_callback(event: events.CallbackQuery.Event):
             if balance_check is not True:
                 return await event.answer(balance_check, alert=True)
 
-            if states_helper.check(state_name):
+            if states_helper.exists(state_name):
                 return await event.answer(phrase.state.already_here, alert=True)
 
             states_helper.add(state_name, sender_id)
@@ -228,7 +228,7 @@ async def state_callback(event: events.CallbackQuery.Event):
                 return await event.answer(phrase.not_for_you)
 
             new_name = data[2].capitalize()
-            if states_helper.check(new_name):
+            if states_helper.exists(new_name):
                 return await event.answer(phrase.state.already_here, alert=True)
 
             state_name = states_helper.if_author(sender_id)

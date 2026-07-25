@@ -109,7 +109,7 @@ async def state_make(event: Message) -> Message:
         return await event.reply(phrase.state.already_author)
     if states_helper.if_player(event.sender_id):
         return await event.reply(phrase.state.already_player)
-    if states_helper.check(arg):
+    if states_helper.exists(arg):
         return await event.reply(phrase.state.already_here)
 
     if await db.get_money(event.sender_id) < config.cfg.PriceForNewState:
@@ -252,7 +252,7 @@ async def state_enter(event: Message) -> Message:
     if not arg:
         return await event.reply(phrase.state.no_name)
 
-    if not states_helper.find(arg):
+    if not states_helper.exists(arg):
         return await event.reply(phrase.state.not_find)
 
     nick = await db.Nicks(id=event.sender_id).get()
@@ -315,7 +315,7 @@ async def state_get(event: Message):
     else:
         state_name = arg
 
-    if not states_helper.find(state_name):
+    if not states_helper.exists(state_name):
         return await event.reply(phrase.state.not_find)
 
     state = db.State(state_name)
@@ -620,7 +620,7 @@ async def state_rename(event: Message) -> Message:
         return await event.reply(phrase.state.not_a_author)
 
     new_name: str = event.pattern_match.group(1).strip()
-    if states_helper.check(new_name.capitalize()):
+    if states_helper.exists(new_name.capitalize()):
         return await event.reply(phrase.state.already_here)
 
     btn = [
@@ -674,7 +674,7 @@ async def state_recognize(event: Message) -> Message:
         return await event.reply(phrase.state.not_a_author)
 
     arg: str = event.pattern_match.group(1).strip().capitalize()
-    if not states_helper.find(arg):
+    if not states_helper.exists(arg):
         return await event.reply(phrase.state.not_find)
 
     if arg == voter_state:
@@ -703,7 +703,7 @@ async def state_recognize_empty(event: Message) -> Message:
 @func.new_command(r"/г статус\s(.+)")
 async def state_status(event: Message) -> Message:
     arg: str = event.pattern_match.group(1).strip().capitalize()
-    if not states_helper.find(arg):
+    if not states_helper.exists(arg):
         return await event.reply(phrase.state.not_find)
 
     state = db.State(arg)
