@@ -68,7 +68,7 @@ def get_all(sort_by: str = "players") -> dict[str, dict[str, Any]]:
     return dict(sorted(all_data.items(), key=key_func, reverse=True))
 
 
-def get_state_by_author(player_id: int) -> str | None:
+def if_author(player_id: int) -> str | None:
     """Возвращает имя государства по ID автора или None."""
     for name, data in iter_states():
         if data.get("author") == player_id:
@@ -76,7 +76,7 @@ def get_state_by_author(player_id: int) -> str | None:
     return None
 
 
-def get_state_by_player(player_id: int) -> str | None:
+def if_player(player_id: int) -> str | None:
     """Возвращает имя государства, в котором состоит игрок, или None."""
     for name, data in iter_states():
         if player_id in data.get("players", []):
