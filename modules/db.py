@@ -8,95 +8,25 @@ from time import time
 from typing import TypedDict
 
 import aiofiles
-import anyio
 import asyncmy
 import orjson
 from loguru import logger
 
-from . import config, formatter, get_theme, pathes
+from . import config, formatter, get_theme, pathes, files, nicks
 
 logger.info(f"Загружен модуль {__name__}!")
-
-
-def _load_json_sync(filepath: Path) -> dict:
-    """Загружает JSON файл синхронно."""
-    with filepath.open("rb") as f:
-        raw = f.read()
-    return orjson.loads(raw)
-
-
-def _orjson_options(sort_keys: bool = False, indent: bool = False) -> int:
-    opts = 0
-    if sort_keys:
-        opts |= orjson.OPT_SORT_KEYS
-    if indent:
-        opts |= orjson.OPT_INDENT_2
-    return opts
-
-
-def _ensure_parent(filepath: Path) -> None:
-    filepath.parent.mkdir(parents=True, exist_ok=True)
-
-
-def _save_json_sync(
-    filepath: Path,
-    data: dict,
-    sort_keys: bool = False,
-    indent: bool = False,
-):
-    """Сохраняет JSON файл синхронно."""
-    _ensure_parent(filepath)
-    options = _orjson_options(sort_keys=sort_keys, indent=indent)
-    with filepath.open("wb") as f:
-        f.write(orjson.dumps(data, option=options))
-
-
-_file_locks: dict[str, asyncio.Lock] = {}
-_locks_lock = asyncio.Lock()
-
-
-async def get_lock(filepath: Path) -> asyncio.Lock:
-    path_str = str(await anyio.Path(filepath).resolve())
-    async with _locks_lock:
-        if path_str not in _file_locks:
-            _file_locks[path_str] = asyncio.Lock()
-        return _file_locks[path_str]
-
-
-async def _load_json_async(filepath: Path) -> dict:
-    """Загружает JSON файл асинхронно."""
-    lock = await get_lock(filepath)
-    async with lock:
-        async with aiofiles.open(filepath, "rb") as f:
-            raw = await f.read()
-    return orjson.loads(raw)
-
-
-async def _save_json_async(
-    filepath: Path,
-    data: dict,
-    sort_keys: bool = False,
-    indent: bool = False,
-):
-    """Сохраняет JSON файл асинхронно."""
-    lock = await get_lock(filepath)
-    async with lock:
-        _ensure_parent(filepath)
-        options = _orjson_options(sort_keys=sort_keys, indent=indent)
-        async with aiofiles.open(filepath, "wb") as f:
-            return await f.write(orjson.dumps(data, option=options))
 
 
 async def get_money(id: int) -> int:
     """Получение баланса с защитой от чтения во время записи."""
     id_str = str(id)
-    data = await _load_json_async(pathes.money)
+    data = await files.load_json_async(pathes.money)
     return data.get(id_str, 0)
 
 
 async def get_all_money():
     """Получить все деньги"""
-    data = await _load_json_async(pathes.money)
+    data = await files.load_json_async(pathes.money)
     return sum(data.values())
 
 
@@ -105,11 +35,11 @@ async def add_money(id: int, count: int):
     Атомарное изменение баланса.
     """
     id_str = str(id)
-    data = await _load_json_async(pathes.money)
+    data = await files.load_json_async(pathes.money)
     old = data.get(id_str, 0)
     new_val = max(old + count, 0)
     data[id_str] = new_val
-    await _save_json_async(pathes.money, data, indent=True)
+    await files.save_json_async(pathes.money, data, indent=True)
     logger.info(f"Изменён баланс {id} ({old} -> {new_val})")
     return new_val
 
@@ -119,11 +49,10 @@ async def check_and_update_withdraw_limit(
 ) -> tuple[bool, int]:
     """
     Атомарная проверка и обновление day-limit.
-    Должна вызываться внутри async with await get_user_lock(id).
     """
     id_str = str(id)
     today = datetime.now().date()
-    data = await _load_json_async(pathes.wdraw)
+    data = await files.load_json_async(pathes.wdraw)
     already_withdrawn = 0
     record_date = None
     if id_str in data:
@@ -136,30 +65,30 @@ async def check_and_update_withdraw_limit(
             record_date = None
     if record_date != today:
         data[id_str] = {"date": today.isoformat(), "withdrawn": amount}
-        await _save_json_async(pathes.wdraw, data, indent=True)
+        await files.save_json_async(pathes.wdraw, data, indent=True)
         return True, 64 - amount
     remaining = 64 - already_withdrawn
     if amount > remaining:
         return False, remaining
     data[id_str]["withdrawn"] = already_withdrawn + amount
-    await _save_json_async(pathes.wdraw, data, indent=True)
+    await files.save_json_async(pathes.wdraw, data, indent=True)
     return True, remaining
 
 
 async def rollback_withdraw_limit(id: int, amount: int):
     """Откатывает лимит назад."""
     id_str = str(id)
-    data = await _load_json_async(pathes.wdraw)
+    data = await files.load_json_async(pathes.wdraw)
     if id_str in data:
         current = data[id_str].get("withdrawn", 0)
         data[id_str]["withdrawn"] = max(0, current - amount)
-        await _save_json_async(pathes.wdraw, data, indent=True)
+        await files.save_json_async(pathes.wdraw, data, indent=True)
 
 
 async def update_shop():
     """Обновляет магазин, возвращая новую тему."""
-    last_theme = (await _load_json_async(pathes.shopc)).get("theme")
-    all_themes = await _load_json_async(pathes.shop)
+    last_theme = (await files.load_json_async(pathes.shopc)).get("theme")
+    all_themes = await files.load_json_async(pathes.shop)
     if not isinstance(all_themes, dict) or not all_themes:
         logger.exception("Файл shop_all.json пуст или не содержит тем.")
         return None
@@ -204,12 +133,12 @@ async def update_shop():
                 f"Некорректный формат цены для предмета '{item}': {price}"
             )
         current_shop[item] = item_data
-    await _save_json_async(pathes.shopc, current_shop, indent=True)
+    await files.save_json_async(pathes.shopc, current_shop, indent=True)
     return new_theme
 
 
 async def get_shop() -> dict:
-    return await _load_json_async(pathes.shopc)
+    return await files.load_json_async(pathes.shopc)
 
 
 async def shop_version(update=False) -> int:
@@ -224,12 +153,12 @@ async def shop_version(update=False) -> int:
 
 async def ready_to_mine(id: str) -> bool:
     id = str(id)
-    data = await _load_json_async(pathes.mine)
+    data = await files.load_json_async(pathes.mine)
     now = int(time())
     last = data.get(id, 0)
     if now - last > config.cfg.MineWait:
         data[id] = now
-        await _save_json_async(pathes.mine, data, indent=True)
+        await files.save_json_async(pathes.mine, data, indent=True)
         return True
     return False
 
@@ -246,75 +175,17 @@ class Roles:
     async def get(self, id: str) -> int:
         """Получить роль пользователя (USER, если не найдено)"""
         id = str(id)
-        data = await _load_json_async(pathes.roles)
+        data = await files.load_json_async(pathes.roles)
         return data.get(id, self.USER)
 
     async def set(self, id: str, role: int) -> bool:
         """Установить роль пользователя"""
         id = str(id)
         role = int(role)
-        data = await _load_json_async(pathes.roles)
+        data = await files.load_json_async(pathes.roles)
         data[id] = role
         sorted_data = dict(sorted(data.items(), key=lambda x: (-x[1], x[0])))
-        await _save_json_async(pathes.roles, sorted_data, indent=True)
-        return True
-
-
-class Crorostat:
-    def __init__(self, id=False):
-        if id:
-            self.id = str(id)
-
-    async def get(self):
-        data = await _load_json_async(pathes.crocostat)
-        if self.id in data:
-            return data[self.id]
-        data[self.id] = 0
-        await _save_json_async(pathes.crocostat, data, sort_keys=True)
-        return 0
-
-    async def add(self):
-        data = await _load_json_async(pathes.crocostat)
-        data[self.id] = data.get(self.id, 0) + 1
-        await _save_json_async(pathes.crocostat, data, sort_keys=True)
-
-    async def get_all(self=False):
-        data = await _load_json_async(pathes.crocostat)
-        return dict(
-            sorted(data.items(), key=lambda item: item[1], reverse=True)
-        )
-
-
-class Nicks:
-    def __init__(self, nick=None, id=None):
-        self.nick = nick
-        self.id = id
-
-    async def get(self, if_nothing=None) -> str | None:
-        data = await _load_json_async(pathes.nick)
-        if self.nick:
-            nick_lower = self.nick.lower()
-            return next(
-                (v for k, v in data.items() if k.lower() == nick_lower),
-                if_nothing,
-            )
-        if self.id:
-            return next(
-                (k for k, v in data.items() if v == self.id), if_nothing
-            )
-        return if_nothing
-
-    async def get_all(self):
-        data = await _load_json_async(pathes.nick)
-        return dict(sorted(data.items()))
-
-    async def link(self):
-        data = await _load_json_async(pathes.nick)
-        keys_to_remove = [k for k, v in data.items() if v == self.id]
-        for k in keys_to_remove:
-            del data[k]
-        data[self.nick] = int(self.id)
-        await _save_json_async(pathes.nick, data, indent=True)
+        await files.save_json_async(pathes.roles, sorted_data, indent=True)
         return True
 
 
@@ -327,9 +198,9 @@ class Statistic:
         filepath = pathes.stats / f"{nick}.json"
         if not filepath.exists():
             stats = {datetime.now().strftime("%Y.%m.%d"): 0}
-            await _save_json_async(filepath, stats, sort_keys=True)
+            await files.save_json_async(filepath, stats, sort_keys=True)
             return 0
-        stats = await _load_json_async(filepath)
+        stats = await files.load_json_async(filepath)
         if all_days:
             return sum(stats.values()) or 0
         start_date = datetime.now() - timedelta(days=self.days)
@@ -384,11 +255,11 @@ class Statistic:
             )
             return
         try:
-            stats = await _load_json_async(resolved_filepath)
+            stats = await files.load_json_async(resolved_filepath)
         except FileNotFoundError:
             stats = {}
         stats[now] = stats.get(now, 0) + 1
-        await _save_json_async(resolved_filepath, stats, sort_keys=True)
+        await files.save_json_async(resolved_filepath, stats, sort_keys=True)
 
     async def get_raw(self) -> dict[str, int]:
         totals = defaultdict(int)
@@ -397,7 +268,7 @@ class Statistic:
                 continue
             filepath = json_file
             try:
-                data = await _load_json_async(filepath)
+                data = await files.load_json_async(filepath)
                 for date, count in data.items():
                     totals[date] += count
             except Exception:
@@ -613,7 +484,7 @@ class State:
                 self._data["players"] = new_players
 
                 for player_id in kicked:
-                    player_name = await Nicks(id=player_id).get() or str(
+                    player_name = await nicks.get_byid(player_id) or str(
                         player_id
                     )
                     logger.info(
@@ -769,10 +640,10 @@ class Notes:
 
 class RefCodes:
     async def _read(self) -> dict:
-        return await _load_json_async(pathes.ref)
+        return await files.load_json_async(pathes.ref)
 
     async def _write(self, data):
-        return await _save_json_async(pathes.ref, data, indent=True)
+        return await files.save_json_async(pathes.ref, data, indent=True)
 
     async def get_own(self, id: int, default=None) -> str:
         return (await self._read()).get(str(id), {}).get("own", default)
@@ -845,7 +716,7 @@ class CitiesGame:
 
     def _load_data(self) -> dict:
         if self.data_file.exists():
-            return _load_json_sync(self.data_file)
+            return files.load_json_sync(self.data_file)
         return {
             "current_game": {
                 "players": [],
@@ -863,7 +734,7 @@ class CitiesGame:
         logger.info(f"[Города] {msg}")
 
     def _save_data(self):
-        _save_json_sync(self.data_file, self.data, indent=True)
+        files.save_json_sync(self.data_file, self.data, indent=True)
 
     def get_players(self) -> list[int]:
         return self.data["current_game"]["players"]
@@ -991,19 +862,19 @@ class CitiesGame:
 
 def hellomsg_check(input_id):
     id_str = str(input_id)
-    ids_list = _load_json_sync(pathes.hellomsg)
+    ids_list = files.load_json_sync(pathes.hellomsg)
     if not isinstance(ids_list, list):
         ids_list = []
     if id_str in ids_list:
         return False
     ids_list.append(id_str)
-    _save_json_sync(pathes.hellomsg, ids_list, indent=True)
+    files.save_json_sync(pathes.hellomsg, ids_list, indent=True)
     return True
 
 
 async def mailing_get():
-    users = (await Nicks().get_all()).values()
-    data = await _load_json_async(pathes.mailing)
+    users = (await nicks.get_all()).values()
+    data = await files.load_json_async(pathes.mailing)
     unsub_set = set(data["unsub"])
     return [x for x in users if x not in unsub_set]
 
@@ -1012,11 +883,11 @@ async def mailing_addsub(id: int) -> bool:
     if not isinstance(id, int):
         msg = f"Int expected, got {type(id).__name__}"
         raise TypeError(msg)
-    data = await _load_json_async(pathes.mailing)
+    data = await files.load_json_async(pathes.mailing)
     if id not in data["unsub"]:
         return False
     data["unsub"].remove(id)
-    await _save_json_async(pathes.mailing, data)
+    await files.save_json_async(pathes.mailing, data)
     return True
 
 
@@ -1024,59 +895,59 @@ async def mailing_rmsub(id: int) -> bool:
     if not isinstance(id, int):
         msg = f"Int expected, got {type(id).__name__}"
         raise TypeError(msg)
-    data = await _load_json_async(pathes.mailing)
+    data = await files.load_json_async(pathes.mailing)
     if id in data["unsub"]:
         return False
     data["unsub"].append(id)
-    await _save_json_async(pathes.mailing, data)
+    await files.save_json_async(pathes.mailing, data)
     return True
 
 
 async def get_votes(player: str) -> int:
     player = str(player)
-    data = await _load_json_async(pathes.votes)
+    data = await files.load_json_async(pathes.votes)
     return data.get(player, 0)
 
 
 async def add_votes(player: str, count: int = 1) -> None:
     player = str(player)
-    data = await _load_json_async(pathes.votes)
+    data = await files.load_json_async(pathes.votes)
     data[player] = data.get(player, 0) + count
     if data[player] == config.cfg.Advancements.Votes:
         pass
-    await _save_json_async(pathes.votes, data)
+    await files.save_json_async(pathes.votes, data)
 
 
 async def get_crocodile_word() -> str:
-    words = await _load_json_async(pathes.crocomap)
+    words = await files.load_json_async(pathes.crocomap)
     return choice(list(words))
 
 
 async def add_pending_hint(
     user_id: int | str, hint_string: str, word: str
 ) -> int:
-    data = await _load_json_async(pathes.pending_hints)
+    data = await files.load_json_async(pathes.pending_hints)
     pending_id = max((int(k) for k in data), default=0) + 1
     data[str(pending_id)] = {
         "user": str(user_id),
         "hint": str(hint_string),
         "word": str(word),
     }
-    await _save_json_async(pathes.pending_hints, data, indent=True)
+    await files.save_json_async(pathes.pending_hints, data, indent=True)
     return pending_id
 
 
 async def remove_pending_hint(id: int | str):
-    data = await _load_json_async(pathes.pending_hints)
+    data = await files.load_json_async(pathes.pending_hints)
     if str(id) not in data:
         return None
     del data[str(id)]
-    await _save_json_async(pathes.pending_hints, data, indent=True)
+    await files.save_json_async(pathes.pending_hints, data, indent=True)
     return True
 
 
 async def get_latest_pending_hint() -> dict:
-    data = await _load_json_async(pathes.pending_hints)
+    data = await files.load_json_async(pathes.pending_hints)
     try:
         hint_id = list(data.keys())[-1]
     except IndexError:
@@ -1087,29 +958,29 @@ async def get_latest_pending_hint() -> dict:
 
 
 async def get_hint_byid(id: str | int) -> dict | None:
-    data = await _load_json_async(pathes.pending_hints)
+    data = await files.load_json_async(pathes.pending_hints)
     return data.get(str(id))
 
 
 async def append_hint(word: str, hint: str):
-    data = await _load_json_async(pathes.crocomap)
+    data = await files.load_json_async(pathes.crocomap)
     word_hints = data.get(word, [])
     if hint not in word_hints:
         word_hints.append(hint)
     data[word] = word_hints
-    await _save_json_async(pathes.crocomap, data, indent=True)
+    await files.save_json_async(pathes.crocomap, data, indent=True)
 
 
 async def add_mine_top(id: int | str, count: int):
     id = str(id)
-    data = await _load_json_async(pathes.mine_stat)
+    data = await files.load_json_async(pathes.mine_stat)
     data[id] = data.get(id, 0) + int(count)
-    await _save_json_async(pathes.mine_stat, data, indent=True)
+    await files.save_json_async(pathes.mine_stat, data, indent=True)
 
 
 async def get_mine_top() -> list[list[str, int]]:
     return sorted(
-        (await _load_json_async(pathes.mine_stat)).items(),
+        (await files.load_json_async(pathes.mine_stat)).items(),
         key=lambda x: -x[1],
     )
 
@@ -1125,19 +996,19 @@ async def add_item(
     id: str, author_id: int, item: str, count: int, price: int
 ) -> None:
     """Добавляет новый товар по ID. Перезаписывает, если уже существует."""
-    data = await _load_json_async(pathes.items)
+    data = await files.load_json_async(pathes.items)
     data[str(id)] = {
         "author_id": author_id,
         "item": item,
         "count": count,
         "price": price,
     }
-    await _save_json_async(pathes.items, data, indent=True)
+    await files.save_json_async(pathes.items, data, indent=True)
 
 
 async def get_item(id: str) -> Item | None:
     """Возвращает товар по ID или None, если не найден."""
-    data = await _load_json_async(pathes.items)
+    data = await files.load_json_async(pathes.items)
     raw_item = data.get(str(id))
     if raw_item is None:
         return None
@@ -1146,12 +1017,12 @@ async def get_item(id: str) -> Item | None:
 
 async def remove_item(id: str) -> bool:
     """Удаляет товар по ID. Возвращает True, если существовал и удалён."""
-    data = await _load_json_async(pathes.items)
+    data = await files.load_json_async(pathes.items)
     id = str(id)
     if id not in data:
         return False
     del data[id]
-    await _save_json_async(pathes.items, data, indent=True)
+    await files.save_json_async(pathes.items, data, indent=True)
     return True
 
 
@@ -1162,12 +1033,12 @@ class CrocodileGame:
 
     def _load_data(self):
         try:
-            return _load_json_sync(self.data_file)
+            return files.load_json_sync(self.data_file)
         except FileNotFoundError:
             return {"bets": {}, "current_game": {}}
 
     async def _save_data(self, data):
-        await _save_json_async(self.data_file, data)
+        await files.save_json_async(self.data_file, data)
 
     async def add_bet(self, user_id: int, bet: int):
         """Добавляет (или уменьшает) ставку пользователя. Возвращает True/False."""
@@ -1295,7 +1166,7 @@ class Topics:
     def __init__(self):
         self.data_file = pathes.topics
         if not self.data_file.exists():
-            _save_json_sync(self.data_file, {})
+            files.save_json_sync(self.data_file, {})
 
     def idconv(self, id):
         try:
@@ -1306,24 +1177,24 @@ class Topics:
 
     async def get_byid(self, id: str) -> dict:
         id = self.idconv(id)
-        self.data = await _load_json_async(self.data_file)
+        self.data = await files.load_json_async(self.data_file)
         return self.data.get(id, [])
 
     async def add(self, id: str, topic_id: str) -> None:
         id = self.idconv(id)
         topic_id = self.idconv(topic_id)
-        self.data = await _load_json_async(self.data_file)
+        self.data = await files.load_json_async(self.data_file)
         if id not in self.data:
             self.data[id] = []
         self.data[id].append(topic_id)
-        return await _save_json_async(self.data_file, self.data, indent=True)
+        return await files.save_json_async(self.data_file, self.data, indent=True)
 
     async def remove(self, id: str, topic_id: str) -> bool:
         id = self.idconv(id)
         topic_id = self.idconv(topic_id)
-        self.data = await _load_json_async(self.data_file)
+        self.data = await files.load_json_async(self.data_file)
         if topic_id in self.data.get(id, []):
             self.data[id].remove(topic_id)
-            await _save_json_async(self.data_file, self.data, indent=True)
+            await files.save_json_async(self.data_file, self.data, indent=True)
             return True
         return False

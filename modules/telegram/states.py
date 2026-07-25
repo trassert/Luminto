@@ -11,7 +11,7 @@ from telethon.tl.types import (
     ReplyInlineMarkup,
 )
 
-from .. import config, db, formatter, pathes, phrase, states_helper
+from .. import nicks, config, db, formatter, pathes, phrase, states_helper
 from . import func
 from .client import client
 
@@ -103,7 +103,7 @@ async def state_make(event: Message) -> Message:
     ):
         return await event.reply(phrase.state.not_valid)
 
-    if await db.Nicks(id=event.sender_id).get() is None:
+    if await nicks.get_byid(event.sender_id) is None:
         return await event.reply(phrase.state.not_connected)
     if states_helper.if_author(event.sender_id):
         return await event.reply(phrase.state.already_author)
@@ -255,7 +255,7 @@ async def state_enter(event: Message) -> Message:
     if not states_helper.exists(arg):
         return await event.reply(phrase.state.not_find)
 
-    nick = await db.Nicks(id=event.sender_id).get()
+    nick = await nicks.get_byid(event.sender_id)
     if not nick:
         return await event.reply(phrase.state.not_connected)
 
@@ -345,7 +345,7 @@ async def state_get(event: Message):
             type=phrase.state_types[state.type],
             name=state.name,
             money=formatter.value_to_str(int(state.money), phrase.currency),
-            author=await db.Nicks(id=state.author).get(),
+            author=await nicks.get_byid(state.author),
             enter=enter_val,
             tax=tax_val,
             period=period_val,
@@ -384,7 +384,7 @@ async def state_leave(event: Message) -> Message:
         entity=config.chats.chat,
         message=phrase.state.leave_player.format(
             state=name_cap,
-            player=await db.Nicks(id=event.sender_id).get(),
+            player=await nicks.get_byid(event.sender_id),
         ),
         reply_to=config.chats.topics.rp,
     )

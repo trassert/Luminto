@@ -5,7 +5,7 @@ from loguru import logger
 from telethon import events
 from telethon.tl.functions.users import GetFullUserRequest
 
-from .. import db, phrase
+from .. import db, phrase, nicks
 from .client import client
 
 if TYPE_CHECKING:
@@ -30,7 +30,7 @@ async def get_name(id, push=False, minecraft=False, log=False) -> str | None:
     id = int(id)
 
     if minecraft:
-        nick = await db.Nicks(id=id).get()
+        nick = await nicks.get_byid(id)
         return f"[{nick}](tg://user?id={id})" if nick else None
 
     try:
@@ -65,40 +65,6 @@ async def get_id(str: str) -> int:
         return int(str)
     user = await client(GetFullUserRequest(str))
     return user.full_user.id
-
-
-# async def make_quiz_poll(
-#     answers: list, correct_answer_id: int, question: str
-# ) -> types.MessageMediaPoll:
-#     return (
-#         types.MessageMediaPoll(
-#             poll=types.Poll(
-#                 id=random.randint(1, 100000),
-#                 question=types.TextWithEntities(
-#                     text=question,
-#                     entities=[],
-#                 ),
-#                 answers=[
-#                     types.PollAnswer(
-#                         text=types.TextWithEntities(text=option, entities=[]),
-#                         option=bytes([i]),
-#                     )
-#                     for i, option in enumerate(answers, start=1)
-#                 ],
-#                 quiz=True,
-#             ),
-#             results=types.PollResults(
-#                 results=[
-#                     types.PollAnswerVoters(
-#                         option=bytes([correct_answer_id]),
-#                         voters=0,
-#                         correct=True,
-#                     ),
-#                 ],
-#             ),
-#         ),
-#     )
-# Why i need ts? Probably unused
 
 
 def get_reply_message_id(event):

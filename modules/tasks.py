@@ -5,7 +5,7 @@ from pathlib import Path
 
 from loguru import logger
 
-from . import config, db, formatter, pathes, phrase, states_helper
+from . import config, nicks, db, formatter, pathes, phrase, states_helper
 from .telegram.client import client
 from .telegram.states import _check_and_update_tier
 
@@ -34,7 +34,7 @@ async def rewards():
     logger.info("Начисление подарков за активность..")
     day_stat = await db.Statistic().get_all()
     for top in day_stat:
-        tg_id = await db.Nicks(nick=top[0]).get()
+        tg_id = await nicks.get_byname(top[0])
         if tg_id is not None:
             await db.add_money(tg_id, config.cfg.ActiveGift)
             logger.info(f"Начислен подарок за активность {top[0]}")

@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
-from .. import chart, config, db, formatter, mcrcon, pathes, phrase
+from .. import chart, config, db, formatter, mcrcon, pathes, phrase, crocostat
 from . import func
 from .client import client
 
@@ -67,7 +67,7 @@ async def active_check(event: Message):
     ]
 )
 async def crocodile_wins(event: Message):
-    all_data = await db.Crorostat.get_all()
+    all_data = await crocostat.get_all()
     text = "\n".join(
         [
             f"{i}. **{await func.get_name(pid)}**: {wins} побед"

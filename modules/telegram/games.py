@@ -11,7 +11,7 @@ from telethon.tl.types import (
     KeyboardButtonCallback,
 )
 
-from .. import config, db, formatter, pathes, phrase
+from .. import config, db, formatter, pathes, phrase, crocostat
 from . import func
 from .client import client
 
@@ -158,7 +158,7 @@ async def crocodile_handler(event: Message):
         bets = CrocodileGame.get_bets()
         total_payout = 0
 
-        top_players = list((await db.Crorostat.get_all()).keys())[
+        top_players = list((await crocostat.get_all()).keys())[
             : config.cfg.TopLowerBets
         ]
 
@@ -185,7 +185,7 @@ async def crocodile_handler(event: Message):
         await CrocodileGame.set_last_hint(0)
         client.remove_event_handler(crocodile_hint)
         client.remove_event_handler(crocodile_handler)
-        await db.Crorostat(event.sender_id).add()
+        await crocostat.add(event.sender_id)
 
         return await event.reply(
             phrase.crocodile.win.format(current_word) + win_msg

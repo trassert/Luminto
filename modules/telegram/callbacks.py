@@ -17,6 +17,7 @@ from .. import (
     pathes,
     phrase,
     states_helper,
+    nicks
 )
 from . import func
 from .client import client
@@ -112,7 +113,7 @@ async def state_callback(event: events.CallbackQuery.Event):
 
     match data[1]:
         case "pay":
-            nick = await db.Nicks(id=sender_id).get()
+            nick = await nicks.get_byid(sender_id)
             if nick is None:
                 return await event.answer(
                     phrase.state.not_connected, alert=True
@@ -266,7 +267,7 @@ async def state_callback(event: events.CallbackQuery.Event):
             db.State(state_name).change("author", int(data[3]))
             await event.answer(
                 phrase.state.transfer_ok.format(
-                    new_leader=await db.Nicks(id=int(data[3])).get(),
+                    new_leader=await nicks.get_byid(int(data[3])),
                     state=state_name,
                 ),
                 alert=True,
@@ -350,7 +351,7 @@ async def nick_callback(event: events.CallbackQuery.Event):
     if not _ensure_owner(sender_id, data[2]):
         return await event.answer(phrase.not_for_you)
 
-    old_nick = await db.Nicks(id=sender_id).get()
+    old_nick = await nicks.get_byid(sender_id)
     if old_nick == data[1]:
         return await event.answer(phrase.nick.already_you, alert=True)
 
@@ -369,7 +370,7 @@ async def nick_callback(event: events.CallbackQuery.Event):
         logger.error("Внутренняя ошибка при управлении белым списком")
         return await event.answer(phrase.nick.error, alert=True)
 
-    await db.Nicks(data[1], sender_id).link()
+    await nicks.link(sender_id, data[1])
     user_name = await func.get_name(sender_id)
     return await event.reply(
         phrase.nick.buy_nick.format(
@@ -406,7 +407,7 @@ async def shop_callback(event: events.CallbackQuery.Event):
     if int(data[-1]) != await db.shop_version():
         return await event.answer(phrase.shop.old, alert=True)
 
-    nick = await db.Nicks(id=sender_id).get()
+    nick = await nicks.get_byid(sender_id)
     if nick is None:
         return await event.answer(phrase.nick.not_append, alert=True)
 

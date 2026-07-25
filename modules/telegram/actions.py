@@ -4,7 +4,7 @@ from aiogram import Router, exceptions, types
 from loguru import logger
 from telethon import events
 
-from .. import config, db, formatter, mcrcon, phrase
+from .. import config, db, formatter, mcrcon, phrase, nicks
 from . import func
 from .client import client, dp
 
@@ -36,7 +36,7 @@ async def chat_action(event: events.ChatAction.Event):
         return None
 
     if event.user_left:
-        nick = await db.Nicks(id=event.user_id).get()
+        nick = await nicks.get_byid(event.user_id)
         if nick is None:
             messages = "0"
             time_played = "0 секунд"
@@ -111,7 +111,7 @@ async def handle_join_request(request: types.ChatJoinRequest):
     """Обработка запроса на вступление."""
     user_id = request.from_user.id
 
-    if await db.Nicks(id=user_id).get() is not None:
+    if await nicks.get_byid(user_id) is not None:
         try:
             return await request.approve()
         except exceptions.TelegramBadRequest:

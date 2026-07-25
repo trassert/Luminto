@@ -8,7 +8,7 @@ import aiohttp
 import aiohttp.web
 from loguru import logger
 
-from . import config, db, formatter, log, phrase
+from . import config, db, formatter, log, phrase, nicks
 from .telegram import func
 from .telegram.client import client
 
@@ -56,7 +56,7 @@ async def server():
                 text="Переданные данные не прошли проверку.",
                 status=401,
             )
-        tg_id = await db.Nicks(nick=nick).get()
+        tg_id = await nicks.get_byname(nick)
         if tg_id is not None:
             await db.add_money(tg_id, 10)
             await db.add_votes(tg_id, 1)
@@ -89,7 +89,7 @@ async def server():
                 text="Переданные данные не прошли проверку.",
                 status=401,
             )
-        tg_id = await db.Nicks(nick=username).get()
+        tg_id = await nicks.get_byname(username)
         if tg_id is not None:
             await db.add_money(tg_id, 10)
             await db.add_votes(tg_id, 1)
@@ -132,7 +132,7 @@ async def server():
                 return aiohttp.web.Response(
                     text="Password is not valid", status=401
                 )
-            tgid = await db.Nicks(nick=data.get("player")).get()
+            tgid = await nicks.get_byname(data.get("player"))
             if tgid is None:
                 logger.warning("Неверный игрок (vip-action)")
                 return aiohttp.web.Response(text="Uncorrect player", status=401)
@@ -158,7 +158,7 @@ async def server():
         if request.query.get("key") != config.tokens.bankplugin:
             logger.warning("Неверный пароль (BankPlugin)")
             return aiohttp.web.Response(text="Uncorrect key", status=401)
-        playerid = await db.Nicks(nick=request.query.get("player")).get()
+        playerid = await nicks.get_byname(request.query.get("player"))
         if playerid is None:
             logger.warning("Неверный игрок (BankPlugin)")
             return aiohttp.web.Response(text="Uncorrect player", status=401)

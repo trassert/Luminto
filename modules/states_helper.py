@@ -4,7 +4,7 @@ from typing import Any
 
 from loguru import logger
 
-from . import db, pathes
+from . import files, pathes
 
 logger.info(f"Загружен модуль {__name__}")
 
@@ -29,7 +29,7 @@ def add(state_name: str, author: int) -> bool:
         "tax_nonpayment": "nothing",
         "tax_last_date": today,
     }
-    db._save_json_sync(filepath, data, indent=True)
+    files.save_json_sync(filepath, data, indent=True)
     logger.info(f"Государство создано: {state_name}")
     return True
 
@@ -48,7 +48,7 @@ def iter_states() -> Iterator[tuple[str, dict[str, Any]]]:
     """Генератор пар (имя_государства, данные)."""
     for file in pathes.states.glob("*.json"):
         try:
-            yield file.stem, db._load_json_sync(file)
+            yield file.stem, files.load_json_sync(file)
         except Exception as e:
             logger.error(f"Не удалось загрузить гос-во {file.name}: {e}")
 
