@@ -25,6 +25,19 @@ def _load_json_sync(filepath: Path) -> dict:
     return orjson.loads(raw)
 
 
+def _orjson_options(sort_keys: bool = False, indent: bool = False) -> int:
+    opts = 0
+    if sort_keys:
+        opts |= orjson.OPT_SORT_KEYS
+    if indent:
+        opts |= orjson.OPT_INDENT_2
+    return opts
+
+
+def _ensure_parent(filepath: Path) -> None:
+    filepath.parent.mkdir(parents=True, exist_ok=True)
+
+
 def _save_json_sync(
     filepath: Path,
     data: dict,
@@ -32,12 +45,8 @@ def _save_json_sync(
     indent: bool = False,
 ):
     """Сохраняет JSON файл синхронно."""
-    filepath.parent.mkdir(parents=True, exist_ok=True)
-    options = 0
-    if sort_keys:
-        options |= orjson.OPT_SORT_KEYS
-    if indent:
-        options |= orjson.OPT_INDENT_2
+    _ensure_parent(filepath)
+    options = _orjson_options(sort_keys=sort_keys, indent=indent)
     with filepath.open("wb") as f:
         f.write(orjson.dumps(data, option=options))
 
@@ -72,12 +81,8 @@ async def _save_json_async(
     """Сохраняет JSON файл асинхронно."""
     lock = await get_lock(filepath)
     async with lock:
-        filepath.parent.mkdir(parents=True, exist_ok=True)
-        options = 0
-        if sort_keys:
-            options |= orjson.OPT_SORT_KEYS
-        if indent:
-            options |= orjson.OPT_INDENT_2
+        _ensure_parent(filepath)
+        options = _orjson_options(sort_keys=sort_keys, indent=indent)
         async with aiofiles.open(filepath, "wb") as f:
             return await f.write(orjson.dumps(data, option=options))
 
@@ -286,19 +291,12 @@ class Nicks:
         self.id = id
 
     async def get(self, if_nothing=None) -> str | None:
+        data = await _load_json_async(pathes.nick)
         if self.nick:
-            data = await _load_json_async(pathes.nick)
             nick_lower = self.nick.lower()
-            for key, value in data.items():
-                if key.lower() == nick_lower:
-                    return value
-            return if_nothing
+            return next((v for k, v in data.items() if k.lower() == nick_lower), if_nothing)
         if self.id:
-            data = await _load_json_async(pathes.nick)
-            for key, value in data.items():
-                if value == self.id:
-                    return key
-            return if_nothing
+            return next((k for k, v in data.items() if v == self.id), if_nothing)
         return if_nothing
 
     async def get_all(self):
@@ -410,34 +408,6 @@ class Statistic:
         }
 
 
-class Ticket:
-    async def get(self):
-        self = str(self)
-        if not pathes.tickets.exists():
-            await _save_json_async(pathes.tickets, {})
-            return None
-        data = await _load_json_async(pathes.tickets)
-        return data.get(self)
-
-    async def add(self, value):
-        data = await _load_json_async(pathes.tickets)
-        while True:
-            random_id = str(randint(1000, 9999))
-            if random_id not in data:
-                break
-        data[random_id] = {"author": int(self), "value": int(value)}
-        await _save_json_async(pathes.tickets, data, indent=True)
-        return random_id
-
-    async def delete(self):
-        data = await _load_json_async(pathes.tickets)
-        if self not in data:
-            return None
-        del data[self]
-        await _save_json_async(pathes.tickets, data, indent=True)
-        return True
-
-
 class State:
     def __init__(self, name: str):
         self.name = name
@@ -547,10 +517,7 @@ class State:
     @staticmethod
     def _count_states() -> int:
         """Возвращает количество существующих государств."""
-        try:
-            return States.count()
-        except ImportError, AttributeError:
-            return len(list(pathes.states.glob("*.json")))
+        return len(list(pathes.states.glob("*.json")))
 
     def change(self, key: str, value) -> None:
         """
@@ -671,89 +638,6 @@ class State:
 
     def __str__(self) -> str:
         return self.name
-
-
-class States:
-    def add(self, author):
-        filepath = pathes.states / f"{self}.json"
-        if filepath.exists():
-            return None
-        data = {
-            "price": 0,
-            "enter": True,
-            "desc": "Пусто",
-            "players": [],
-            "type": 0,
-            "date": datetime.now().strftime("%Y.%m.%d"),
-            "money": 0,
-            "author": author,
-            "coordinates": "Не найдено",
-            "tax": 0,
-            "tax_period": 7,
-            "tax_nonpayment": "nothing",
-            "tax_last_date": datetime.now().strftime("%Y.%m.%d"),
-        }
-        _save_json_sync(filepath, data, indent=True)
-        return True
-
-    def check(self):
-        return (pathes.states / f"{self}.json").exists()
-
-    def get_all(self="players"):
-        all_data = {}
-        for file in pathes.states.iterdir():
-            if file.suffix != ".json":
-                continue
-            name = file.stem
-            try:
-                all_data[name] = _load_json_sync(file)
-            except Exception:
-                logger.error(f"Не удалось просмотреть гос-во {file.name}")
-        if self == "money":
-
-            def key_func(item):
-                return item[1]["money"]
-        else:
-
-            def key_func(item):
-                return len(item[1]["players"])
-
-        return dict(sorted(all_data.items(), key=key_func, reverse=True))
-
-    def if_author(self: int) -> str | bool:
-        for file in pathes.states.iterdir():
-            if file.suffix != ".json":
-                continue
-            data = _load_json_sync(file)
-            if data["author"] == self:
-                return file.stem
-        return False
-
-    def if_player(self: int):
-        for file in pathes.states.iterdir():
-            if file.suffix != ".json":
-                continue
-            data = _load_json_sync(file)
-            if self in data["players"]:
-                return file.stem
-        return False
-
-    def count() -> int:
-        """Количество существующих государств."""
-        return sum(1 for f in pathes.states.iterdir() if f.suffix == ".json")
-
-    def find(self: str) -> bool:
-        return (pathes.states / f"{self}.json").exists()
-
-    def remove(self: str) -> bool:
-        state_path = pathes.states / f"{self}.json"
-        if not state_path.exists():
-            return False
-        pic_path = pathes.states_pic / f"{self}.png"
-        if pic_path.exists():
-            pic_path.rename(pathes.old_states / f"{self}.png")
-        state_path.rename(pathes.old_states / f"{self}.json")
-        return True
 
 
 class Mysql:
@@ -912,13 +796,8 @@ class RefCodes:
 
     async def check_ref(self, name) -> str | None:
         load = await self._read()
-        for user_id, data in load.items():
-            try:
-                if data.get("own", "").lower() == name.lower():
-                    return user_id
-            except Exception:
-                pass
-        return None
+        name_lower = name.lower()
+        return next((uid for uid, d in load.items() if d.get("own", "").lower() == name_lower), None)
 
     async def delete(self, id) -> bool:
         "Удаляет реф. код, return bool True/False (есть рефка или нет)"
@@ -931,18 +810,19 @@ class RefCodes:
         return True
 
     async def get_top_uses(self) -> list[list[str, int]]:
-        result = []
-        for user_id, info in (await self._read()).items():
-            used = info.get("used", None)
-            if used:
-                result.append([user_id, len(used)])
-        return sorted(result, key=lambda x: x[1], reverse=True)
+        load = await self._read()
+        return sorted(
+            [[uid, len(info.get("used", []))] for uid, info in load.items() if info.get("used")],
+            key=lambda x: x[1], reverse=True
+        )
 
 
 class CitiesGame:
     def __init__(self):
         self.data_file = pathes.cities
         self.data = self._load_data()
+        self._valid_cities = set(pathes.chk_city.read_text(encoding="utf8").splitlines())
+        self._cities_list = list(self._valid_cities)
 
     def _load_data(self) -> dict:
         if self.data_file.exists():
@@ -1056,10 +936,7 @@ class CitiesGame:
         if str(id) != str(self.data["current_game"]["current_player_id"]):
             self.logger(f"{id} сейчас не должен отвечать")
             return 2
-        valid_cities = set(
-            (pathes.chk_city).read_text(encoding="utf8").splitlines()
-        )
-        if city not in valid_cities:
+        if city not in self._valid_cities:
             self.logger(f"{id} ответил неизвестным городом")
             return 1
         last_city = self.data["current_game"]["last_city"]
@@ -1106,9 +983,10 @@ def hellomsg_check(input_id):
 
 
 async def mailing_get():
-    users = list((await Nicks().get_all()).values())
+    users = (await Nicks().get_all()).values()
     data = await _load_json_async(pathes.mailing)
-    return [x for x in users if x not in data["unsub"]]
+    unsub_set = set(data["unsub"])
+    return [x for x in users if x not in unsub_set]
 
 
 async def mailing_addsub(id: int) -> bool:
@@ -1350,9 +1228,9 @@ class CrocodileGame:
         word = current.get("word", "")
         mask = list(current.get("unsec", ""))
         changed = False
-        for i, ch in enumerate(word):
-            if i < len(guess) and guess[i] == ch and mask[i] == "_":
-                mask[i] = ch
+        for i, (w_char, g_char) in enumerate(zip(word, guess)):
+            if w_char == g_char and mask[i] == "_":
+                mask[i] = w_char
                 changed = True
         new_mask_str = "".join(mask)
         finished = False

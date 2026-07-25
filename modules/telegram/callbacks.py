@@ -16,6 +16,7 @@ from .. import (
     mining,
     pathes,
     phrase,
+    states_helper
 )
 from . import func
 from .client import client
@@ -116,11 +117,11 @@ async def state_callback(event: events.CallbackQuery.Event):
                 return await event.answer(
                     phrase.state.not_connected, alert=True
                 )
-            if db.States.if_player(sender_id) is not False:
+            if states_helper.if_player(sender_id) is not False:
                 return await event.answer(
                     phrase.state.already_player, alert=True
                 )
-            if db.States.if_author(sender_id) is not False:
+            if states_helper.if_author(sender_id) is not False:
                 return await event.answer(
                     phrase.state.already_author, alert=True
                 )
@@ -180,7 +181,7 @@ async def state_callback(event: events.CallbackQuery.Event):
                 return await event.answer(phrase.not_for_you, alert=True)
 
             await db.add_money(state.author, state.money)
-            if not db.States.remove(data[2]):
+            if not states_helper.remove(data[2]):
                 return await event.answer(phrase.error, alert=True)
 
             await client.send_message(
@@ -206,10 +207,10 @@ async def state_callback(event: events.CallbackQuery.Event):
             if balance_check is not True:
                 return await event.answer(balance_check, alert=True)
 
-            if db.States.check(state_name):
+            if states_helper.check(state_name):
                 return await event.answer(phrase.state.already_here, alert=True)
 
-            db.States.add(state_name, sender_id)
+            states_helper.add(state_name, sender_id)
             await event.reply(
                 phrase.state.make_by_callback.format(
                     author=await func.get_name(sender_id),
@@ -227,10 +228,10 @@ async def state_callback(event: events.CallbackQuery.Event):
                 return await event.answer(phrase.not_for_you)
 
             new_name = data[2].capitalize()
-            if db.States.check(new_name):
+            if states_helper.check(new_name):
                 return await event.answer(phrase.state.already_here, alert=True)
 
-            state_name = db.States.if_author(sender_id)
+            state_name = states_helper.if_author(sender_id)
             if state_name is False:
                 return await event.answer(phrase.state.not_a_author, alert=True)
 
@@ -259,7 +260,7 @@ async def state_callback(event: events.CallbackQuery.Event):
             )
 
         case "mv":
-            state_name = db.States.if_author(sender_id)
+            state_name = states_helper.if_author(sender_id)
             if state_name != data[2]:
                 return await event.answer(phrase.state.not_a_author, alert=True)
             db.State(state_name).change("author", int(data[3]))

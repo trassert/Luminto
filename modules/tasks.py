@@ -5,7 +5,7 @@ from pathlib import Path
 
 from loguru import logger
 
-from . import config, db, formatter, pathes, phrase
+from . import config, db, formatter, pathes, phrase, states_helper
 from .telegram.client import client
 from .telegram.states import _check_and_update_tier
 
@@ -57,7 +57,7 @@ async def pay_state_taxes() -> None:
     )  #! fix has no attribute 'new_command'  # noqa: I001
 
     logger.info("Проверяем налоги государств..")
-    states = db.States.get_all()
+    states = states_helper.get_all()
 
     for state_name in states.keys():
         logger.info(f"Проверяем налоги государства {state_name}..")
@@ -82,7 +82,7 @@ async def pay_state_taxes() -> None:
 
 async def remove_states() -> None:
     logger.info("Проверяем пустые государства..")
-    states = db.States.get_all()
+    states = states_helper.get_all()
     today: datetime = datetime.now()
     for state in states:
         state_info = states[state]
@@ -92,7 +92,7 @@ async def remove_states() -> None:
             > timedelta(days=config.cfg.DaysToStatesRemove)
         ):
             await db.add_money(state_info["author"], state_info["money"])
-            db.States.remove(state)
+            states_helper.remove(state)
             logger.warning(f"Государство {state} распалось")
             await client.send_message(
                 entity=config.chats.chat,
