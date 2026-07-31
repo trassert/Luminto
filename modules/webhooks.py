@@ -32,9 +32,10 @@ def is_local_request(request: aiohttp.web.Request) -> bool:
 
     try:
         ip = ipaddress.ip_address(real_ip)
-        return ip.is_loopback or ip.is_private
     except ValueError:
         return False
+    else:
+        return ip.is_loopback or ip.is_private
 
 
 async def server():
