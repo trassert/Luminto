@@ -98,10 +98,12 @@ async def ping(event: Message) -> Message:
     return await event.reply(text)
 
 
-@func.new_command(r"/start$")
-@func.new_command(r"/старт$")
+@func.new_command(r"/start(.*)")
+@func.new_command(r"/старт(.*)")
 async def start(event: Message) -> Message:
     """Приветственное сообщение при первом запуске."""
+    arg: str = event.pattern_match.group(1).strip().lower()
+    await event.reply(f"Аргумент: {arg}")
     name: str = await func.get_name(event.sender_id)
     return await event.reply(phrase.start.format(name), silent=True)
 
