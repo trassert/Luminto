@@ -26,6 +26,7 @@ from .. import (
     pic,
     states_helper,
     sys,
+    referrals,
 )
 from . import func
 from .client import aio, client
@@ -100,12 +101,30 @@ async def ping(event: Message) -> Message:
 
 @func.new_command(r"/start(.*)")
 @func.new_command(r"/старт(.*)")
-async def start(event: Message) -> Message:
+async def start(event: Message):
     """Приветственное сообщение при первом запуске."""
-    arg: str = event.pattern_match.group(1).strip().lower()
-    await event.reply(f"Аргумент: {arg}")
     name: str = await func.get_name(event.sender_id)
-    return await event.reply(phrase.start.format(name), silent=True)
+    await event.reply(phrase.start.format(name), silent=True)
+    arg: str = event.pattern_match.group(1).strip().lower()
+    if not arg.isdigit():
+        return
+    try:
+        referral_id: int = int(arg)
+    except ValueError:
+        return
+    if referral_id == event.sender_id:
+        return
+    if not await referrals.new(referral_id, event.sender_id):
+        return
+    try:
+        await client.send_message(
+            referral_id,
+            phrase.ref.start_withref.format(
+                await func.get_name(event.sender_id),
+            ),
+        )
+    except Exception:
+        logger.warning(f"Не удалось отправить сообщение рефералу {referral_id}")
 
 
 @func.new_command(r"/обо мне$")
@@ -419,22 +438,16 @@ async def get_balance(event: Message) -> Message:
     )
 
 
-@func.new_command(r"/linknick (\S+)\s*(\S*)$")
-@func.new_command(r"/привязать (\S+)\s*(\S*)$")
-@func.new_command(r"привязать (\S+)\s*(\S*)$")
-@func.new_command(r"/новый ник (\S+)\s*(\S*)$")
-@func.new_command(r"/линкник (\S+)\s*(\S*)$")
+@func.new_command(r"/linknick (.+)")
+@func.new_command(r"/привязать (.+)")
+@func.new_command(r"привязать (.+)")
+@func.new_command(r"/новый ник (.+)")
+@func.new_command(r"/линкник (.+)")
 async def link_nick(event: Message) -> Message:
-    """Привязывает Minecraft ник к Telegram аккаунту и добавляет в WhiteList."""
-
     nick: str = event.pattern_match.group(1).strip()
-    ref_code: str = event.pattern_match.group(2).strip()
-    sender_id: int = event.sender_id
-
     if formatter.is_valid_mc_nick(nick) is False:
         return await event.reply(phrase.nick.invalid)
-
-    current_linked_nick = await nicks.get_byid(sender_id)
+    current_linked_nick = await nicks.get_byid(event.sender_id)
     if current_linked_nick == nick:
         return await event.reply(phrase.nick.already_you)
     if await nicks.get_byname(nick) is not None:
@@ -443,7 +456,7 @@ async def link_nick(event: Message) -> Message:
     if current_linked_nick is not None:
         btn = [
             KeyboardButtonCallback(
-                "✅ Сменить", f"nick.{nick}.{sender_id}".encode()
+                "✅ Сменить", f"nick.{nick}.{event.sender_id}".encode()
             ),
         ]
         price_str = formatter.value_to_str(
@@ -462,46 +475,43 @@ async def link_nick(event: Message) -> Message:
         logger.error("RCON: Ошибка при добавлении в белый список")
         return await event.reply(phrase.nick.error)
 
-    ref_msg = ""
-    if ref_code:
-        ref_author_id = await db.RefCodes().check_ref(ref_code)
-        if ref_author_id:
-            await db.RefCodes().add_uses(ref_author_id, sender_id)
-            await db.add_money(ref_author_id, config.cfg.RefGift)
-            await db.add_money(sender_id, config.cfg.RefGift)
-            ref_msg = phrase.ref.gift.format(config.cfg.RefGift)
+    referral = await referrals.is_ref(event.sender_id)
+    if referral is not None:
+        await db.add_money(referral, config.cfg.RefGift)
+        await db.add_money(event.sender_id, config.cfg.RefGift)
+        ref_msg = phrase.ref.gift.format(config.cfg.RefGift)
 
-            try:
-                sender_name = await func.get_name(sender_id, minecraft=True)
-                await client.send_message(
-                    int(ref_author_id),
-                    phrase.ref.used.format(
-                        user=sender_name, amount=config.cfg.RefGift
-                    ),
-                )
-            except Exception:
-                pass
+        try:
+            sender_name = await func.get_name(event.sender_id, minecraft=True)
+            await client.send_message(
+                referral,
+                phrase.ref.used.format(
+                    user=sender_name, amount=config.cfg.RefGift
+                ),
+            )
+        except Exception:
+            pass
 
-    await db.add_money(sender_id, config.cfg.LinkGift)
-    await nicks.link(sender_id, nick)
+    await db.add_money(event.sender_id, config.cfg.LinkGift)
+    await nicks.link(event.sender_id, nick)
 
+    logger.success(f"Юзер {event.sender_id} привязал свой ник!")
     await event.reply(
         phrase.nick.success.format(
             formatter.value_to_str(config.cfg.LinkGift, phrase.currency),
         ),
     )
+
     if ref_msg:
         await event.reply(ref_msg)
-    logger.success(f"Юзер {sender_id} привязал свой ник!")
-    if current_linked_nick is None:
-        await event.reply(phrase.nick.referrals, link_preview=False)
+
     try:
         return await aio.approve_chat_join_request(
-            chat_id=config.chats.chat, user_id=sender_id
+            chat_id=config.chats.chat, user_id=event.sender_id
         )
     except Exception:
         logger.info(
-            f"Игрок {sender_id} привязал ник, но заявки нет. Пропускаю..."
+            f"Игрок {event.sender_id} привязал ник, но заявки нет. Пропускаю..."
         )
 
 
