@@ -47,7 +47,7 @@ async def top_ref(event: Message):
 @func.new_command(r"/reflink")
 @func.new_command(r"/рефссылка")
 async def my_ref(event: Message):
-    ref = await referrals.check_uses()
+    ref = await referrals.check_uses(event.sender_id)
     if len(ref) == 0:
         uses = "0"
     else:
