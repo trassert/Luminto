@@ -475,6 +475,9 @@ async def link_nick(event: Message) -> Message:
         logger.error("RCON: Ошибка при добавлении в белый список")
         return await event.reply(phrase.nick.error)
 
+    await db.add_money(event.sender_id, config.cfg.LinkGift)
+    await nicks.link(event.sender_id, nick)
+
     referral = await referrals.is_ref(event.sender_id)
     if referral is not None:
         await db.add_money(referral, config.cfg.RefGift)
@@ -491,9 +494,6 @@ async def link_nick(event: Message) -> Message:
             )
         except Exception:
             pass
-
-    await db.add_money(event.sender_id, config.cfg.LinkGift)
-    await nicks.link(event.sender_id, nick)
 
     logger.success(f"Юзер {event.sender_id} привязал свой ник!")
     await event.reply(
