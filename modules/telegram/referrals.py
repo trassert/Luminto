@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
-from .. import config, db, phrase, referrals
+from .. import config, phrase, referrals
 from . import func
 
 if TYPE_CHECKING:
@@ -21,10 +21,10 @@ logger.info(f"Загружен модуль {__name__}!")
 async def top_ref(event: Message):
     text = [phrase.ref.top]
     info = await referrals.get_top()
-    
+
     if not info:
         return await event.reply(phrase.ref.top_empty)
-    
+
     n = 1
     for user_id, ref_list in info.items():  # items() даёт пары (ключ, значение)
         text.append(
@@ -33,7 +33,7 @@ async def top_ref(event: Message):
         n += 1
         if n > config.cfg.MaxStatPlayers:
             break
-    
+
     return await event.reply("\n".join(text))
 
 
@@ -55,4 +55,6 @@ async def my_ref(event: Message):
         for player in uses:
             players.append(await func.get_name(player, minecraft=True))  # noqa: PERF401
         uses = f"{len(uses)}: {', '.join(players)}"
-    return await event.reply(phrase.ref.my.format(ref_id=event.sender_id, uses=uses))
+    return await event.reply(
+        phrase.ref.my.format(ref_id=event.sender_id, uses=uses)
+    )

@@ -1,25 +1,26 @@
+from typing import Any
+
 from loguru import logger
-from typing import Optional, List, Dict, Any
-from . import files, pathes, nicks
+
+from . import files, nicks, pathes
 
 logger.info(f"Загружен модуль {__name__}!")
 
 
-async def _get_default_data() -> Dict[str, Any]:
+async def _get_default_data() -> dict[str, Any]:
     """Возвращает структуру данных по умолчанию"""
     return {"referrals": {}, "referrers": {}}
 
 
-async def _load() -> Dict[str, Any]:
+async def _load() -> dict[str, Any]:
     """Загружает данные из файла"""
     try:
-        data = await files.load_json_async(pathes.referrals)
-        return data
+        return await files.load_json_async(pathes.referrals)
     except FileNotFoundError:
         return await _get_default_data()
 
 
-async def check_uses(referral_id: int) -> List[int]:
+async def check_uses(referral_id: int) -> list[int]:
     """
     Проверяет, кто переходил по рефералке
     Args:
@@ -71,7 +72,7 @@ async def new(referral_id: int, new_user_id: int) -> bool:
     return True
 
 
-async def is_ref(user_id: int) -> Optional[int]:
+async def is_ref(user_id: int) -> int | None:
     """
     Проверяет, кто привёл этого человека
     Args:
@@ -84,7 +85,7 @@ async def is_ref(user_id: int) -> Optional[int]:
     return int(referrer) if referrer is not None else None
 
 
-async def get_top() -> Dict[int, List[int]]:
+async def get_top() -> dict[int, list[int]]:
     """
     Выдаёт топ рефоводов
     Returns:
