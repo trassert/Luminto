@@ -52,9 +52,9 @@ async def my_ref(event: Message):
         uses = "0"
     else:
         players = []
-        for player in uses:
+        for player in ref:
             players.append(await func.get_name(player, minecraft=True))  # noqa: PERF401
-        uses = f"{len(uses)}: {', '.join(players)}"
+        uses = f"{len(ref)}: {', '.join(players)}"
     return await event.reply(
         phrase.ref.my.format(ref_id=event.sender_id, uses=uses)
     )
