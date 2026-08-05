@@ -479,6 +479,7 @@ async def link_nick(event: Message) -> Message:
     await nicks.link(event.sender_id, nick)
 
     referral = await referrals.is_ref(event.sender_id)
+    ref_msg = None
     if referral is not None:
         await db.add_money(referral, config.cfg.RefGift)
         await db.add_money(event.sender_id, config.cfg.RefGift)
