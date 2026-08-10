@@ -118,11 +118,11 @@ async def state_callback(event: events.CallbackQuery.Event):
                 return await event.answer(
                     phrase.state.not_connected, alert=True
                 )
-            if states_helper.if_player(sender_id) is not False:
+            if states_helper.if_player(sender_id) is not None:
                 return await event.answer(
                     phrase.state.already_player, alert=True
                 )
-            if states_helper.if_author(sender_id) is not False:
+            if states_helper.if_author(sender_id) is not None:
                 return await event.answer(
                     phrase.state.already_author, alert=True
                 )
