@@ -186,9 +186,7 @@ def new_callback(pattern: str, checks=checks, min_role: int = 0):
     def decorator(func):
         client.add_event_handler(
             func,
-            events.CallbackQuery(
-                pattern=rf"^{pattern}", func=check_wrapper
-            ),
+            events.CallbackQuery(pattern=rf"^{pattern}", func=check_wrapper),
         )
         return func
 
