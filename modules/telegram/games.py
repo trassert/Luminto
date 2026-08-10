@@ -61,9 +61,7 @@ async def casino(event: Message):
     )
 
 
-@func.new_command(r"/крокодил$")
-@func.new_command(r"/crocodile$")
-@func.new_command(r"старт крокодил$")
+@func.new_command([r"/крокодил$", r"/crocodile$", r"старт крокодил$"])
 async def crocodile(event: Message):
     if event.chat_id != config.chats.chat:
         return await event.reply(phrase.crocodile.chat)
@@ -89,8 +87,7 @@ async def crocodile(event: Message):
     return await event.reply(phrase.crocodile.no, buttons=[[stop_btn]])
 
 
-@func.new_command(r"/ставка(.*)")
-@func.new_command(r"/крокоставка(.*)")
+@func.new_command([r"/ставка(.*)", r"/крокоставка(.*)"])
 async def crocodile_bet(event: Message):
     if not _check_topic(event):
         return await event.reply(phrase.game_topic_warning)

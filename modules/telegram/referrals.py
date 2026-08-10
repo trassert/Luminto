@@ -11,13 +11,7 @@ if TYPE_CHECKING:
 logger.info(f"Загружен модуль {__name__}!")
 
 
-@func.new_command(r"/топреф$")
-@func.new_command(r"/топрефералов$")
-@func.new_command(r"/топрефералы$")
-@func.new_command(r"/топ рефералы$")
-@func.new_command(r"/топ реф$")
-@func.new_command(r"/топ рефералов$")
-@func.new_command(r"/рефералы топ$")
+@func.new_command([r"/топреф$", r"/топрефералов$", r"/топрефералы$", r"/топ рефералы$", r"/топ реф$", r"/топ рефералов$", r"/рефералы топ$"])
 async def top_ref(event: Message):
     text = [phrase.ref.top]
     info = await referrals.get_top()
@@ -37,15 +31,7 @@ async def top_ref(event: Message):
     return await event.reply("\n".join(text))
 
 
-@func.new_command(r"/рефка$")
-@func.new_command(r"/рефкод$")
-@func.new_command(r"/моярефка$")
-@func.new_command(r"/мойрефкод$")
-@func.new_command(r"/реферальныйкод$")
-@func.new_command(r"/реферальный код$")
-@func.new_command(r"/refcode")
-@func.new_command(r"/reflink")
-@func.new_command(r"/рефссылка")
+@func.new_command([r"/рефка$", r"/рефкод$", r"/моярефка$", r"/мойрефкод$", r"/реферальныйкод$", r"/реферальный код$", r"/refcode", r"/reflink", r"/рефссылка"])
 async def my_ref(event: Message):
     ref = await referrals.check_uses(event.sender_id)
     if len(ref) == 0:

@@ -37,29 +37,19 @@ if TYPE_CHECKING:
 logger.info(f"Загружен модуль {__name__}!")
 
 
-@func.new_command(r"/хост$")
-@func.new_command(r"/host$")
-@func.new_command(r"/айпи$")
-@func.new_command(r"/ip")
+@func.new_command([r"/хост$", r"/host$", r"/айпи$", r"/ip"])
 async def host(event: Message) -> Message:
     """Выводит IP-адрес игрового сервера."""
     return await event.reply(phrase.server.host, link_preview=False)
 
 
-@func.new_command(r"/помощь$")
-@func.new_command(r"/help")
-@func.new_command(r"/команды$")
-@func.new_command(r"/commands$")
-@func.new_command(r"команды$")
-@func.new_command(r"бот помощь$")
+@func.new_command([r"/помощь$", r"/help", r"/команды$", r"/commands$", r"команды$", r"бот помощь$"])
 async def help(event: Message) -> Message:
     """Выводит список доступных команд."""
     return await event.reply(phrase.help.comm, link_preview=False)
 
 
-@func.new_command(r"/пинг(.*)")
-@func.new_command(r"/ping(.*)")
-@func.new_command(r"пинг(.*)")
+@func.new_command([r"/пинг(.*)", r"/ping(.*)", r"пинг(.*)"])
 async def ping(event: Message) -> Message:
     """Проверяет задержку бота и (опционально) сервера."""
     arg: str = event.pattern_match.group(1).strip().lower()
@@ -99,8 +89,7 @@ async def ping(event: Message) -> Message:
     return await event.reply(text)
 
 
-@func.new_command(r"/start(.*)")
-@func.new_command(r"/старт(.*)")
+@func.new_command([r"/start(.*)", r"/старт(.*)"])
 async def start(event: Message):
     """Приветственное сообщение при первом запуске."""
     name: str = await func.get_name(event.sender_id)
@@ -127,12 +116,7 @@ async def start(event: Message):
         logger.warning(f"Не удалось отправить сообщение рефералу {referral_id}")
 
 
-@func.new_command(r"/обо мне$")
-@func.new_command(r"/я$")
-@func.new_command(r"/i$")
-@func.new_command(r"/profile")
-@func.new_command(r"/профиль$")
-@func.new_command(r"/myprofile")
+@func.new_command([r"/обо мне$", r"/я$", r"/i$", r"/profile", r"/профиль$", r"/myprofile"])
 async def profile(event: Message) -> Message:
     """Выводит детальную информацию об игроке, его роли, государстве и статистике."""
     user_id: int = event.sender_id
@@ -186,10 +170,7 @@ async def profile(event: Message) -> Message:
     )
 
 
-@func.new_command(r"/time")
-@func.new_command(r"/время$")
-@func.new_command(r"/мск$")
-@func.new_command(r"/msk$")
+@func.new_command([r"/time", r"/время$", r"/мск$", r"/msk$"])
 async def msktime(event: Message) -> Message:
     """Показывает текущее московское время."""
     return await event.reply(
@@ -197,9 +178,7 @@ async def msktime(event: Message) -> Message:
     )
 
 
-@func.new_command(r"(/г )?(шахта|майнить|копать)$")
-@func.new_command(r"/mine")
-@func.new_command(r"/(шахта|майнить|копать)$")
+@func.new_command([r"(/г )?(шахта|майнить|копать)$", r"/mine", r"/(шахта|майнить|копать)$"])
 async def mine_start(event: Message) -> Message:
     """Запускает сессию майнинга (шахты)."""
     user_id: int = event.sender_id
@@ -236,8 +215,7 @@ async def mine_start(event: Message) -> Message:
     return await event.reply(msg_text, buttons=buttons)
 
 
-@func.new_command(r"/nick(.*)")
-@func.new_command(r"/ник(.*)")
+@func.new_command([r"/nick(.*)", r"/ник(.*)"])
 async def check_nick(event: Message) -> Message:
     """Показывает привязанный Minecraft ник пользователя."""
     arg: str = event.pattern_match.group(1).strip()
@@ -271,11 +249,7 @@ async def check_nick(event: Message) -> Message:
     )
 
 
-@func.new_command(r"/скинуть(.*)")
-@func.new_command(r"/кинуть(.*)")
-@func.new_command(r"/дать(.*)")
-@func.new_command(r"/перевести(.*)")
-@func.new_command(r"перевести(.*)")
+@func.new_command([r"/скинуть(.*)", r"/кинуть(.*)", r"/дать(.*)", r"/перевести(.*)", r"перевести(.*)"])
 async def swap_money(event: Message) -> Message:
     """Переводит валюту другому игроку."""
     args: list[str] = event.pattern_match.group(1).strip().split()
@@ -343,13 +317,7 @@ async def swap_money(event: Message) -> Message:
     )
 
 
-@func.new_command(r"/вывести (.+)")
-@func.new_command(r"/вывод (.+)")
-@func.new_command(r"/вмайн (.+)")
-@func.new_command(r"/в майн (.+)")
-@func.new_command(r"/вмаин (.+)")
-@func.new_command(r"/в маин (.+)")
-@func.new_command(r"вывести (.+)")
+@func.new_command([r"/вывести (.+)", r"/вывод (.+)", r"/вмайн (.+)", r"/в майн (.+)", r"/вмаин (.+)", r"/в маин (.+)", r"вывести (.+)"])
 async def money_to_server(event: Message) -> Message:
     user_id: int = event.sender_id
     nick: str = await nicks.get_byid(user_id)
@@ -410,24 +378,12 @@ async def money_to_server(event: Message) -> Message:
     )
 
 
-@func.new_command(r"/вывести$")
-@func.new_command(r"/вывод$")
-@func.new_command(r"/вмайн$")
-@func.new_command(r"/в майн$")
-@func.new_command(r"/вмаин$")
-@func.new_command(r"/в маин$")
-@func.new_command(r"вывести$")
+@func.new_command([r"/вывести$", r"/вывод$", r"/вмайн$", r"/в майн$", r"/вмаин$", r"/в маин$", r"вывести$"])
 async def money_to_server_empty(event: Message) -> Message:
     return await event.reply(phrase.money.no_count)
 
 
-@func.new_command(r"/аметисты$")
-@func.new_command(r"/баланс$")
-@func.new_command(r"баланс$")
-@func.new_command(r"/wallet")
-@func.new_command(r"wallet$")
-@func.new_command(r"/мой баланс$")
-@func.new_command(r"мой баланс$")
+@func.new_command([r"/аметисты$", r"/баланс$", r"баланс$", r"/wallet", r"wallet$", r"/мой баланс$", r"мой баланс$"])
 async def get_balance(event: Message) -> Message:
     """Показывает баланс аметистов игрока."""
     balance: int = await db.get_money(event.sender_id)
@@ -438,11 +394,7 @@ async def get_balance(event: Message) -> Message:
     )
 
 
-@func.new_command(r"/linknick (.+)")
-@func.new_command(r"/привязать (.+)")
-@func.new_command(r"привязать (.+)")
-@func.new_command(r"/новый ник (.+)")
-@func.new_command(r"/линкник (.+)")
+@func.new_command([r"/linknick (.+)", r"/привязать (.+)", r"привязать (.+)", r"/новый ник (.+)", r"/линкник (.+)"])
 async def link_nick(event: Message) -> Message:
     nick: str = event.pattern_match.group(1).strip()
     if formatter.is_valid_mc_nick(nick) is False:
@@ -516,26 +468,18 @@ async def link_nick(event: Message) -> Message:
         )
 
 
-@func.new_command(r"/linknick$")
-@func.new_command(r"/привязать$")
-@func.new_command(r"привязать$")
-@func.new_command(r"/новый ник$")
-@func.new_command(r"/линкник$")
+@func.new_command([r"/linknick$", r"/привязать$", r"привязать$", r"/новый ник$", r"/линкник$"])
 async def link_nick_empty(event: Message) -> Message:
     return await event.reply(phrase.nick.not_select)
 
 
-@func.new_command(r"/серв$")
-@func.new_command(r"/сервер")
-@func.new_command(r"/server")
+@func.new_command([r"/серв$", r"/сервер", r"/server"])
 async def sysinfo(event: Message) -> Message:
     """Выводит системную информацию о хосте бота."""
     return await event.reply(await sys.get_info())
 
 
-@func.new_command(r"/randompic")
-@func.new_command(r"/рандомпик$")
-@func.new_command(r"/картинка$")
+@func.new_command([r"/randompic", r"/рандомпик$", r"/картинка$"])
 async def randompic(event: Message) -> Message:
     """Отправляет случайную картинку с учетом Flood-контроля."""
     wait_time = floodwait.WaitPic.request()
@@ -551,19 +495,13 @@ async def randompic(event: Message) -> Message:
     )
 
 
-@func.new_command(r"/map")
-@func.new_command(r"/мап$")
-@func.new_command(r"/карта$")
+@func.new_command([r"/map", r"/мап$", r"/карта$"])
 async def getmap(event: Message) -> Message:
     """Выводит ссылку на онлайн-карту сервера."""
     return await event.reply(phrase.get_map, link_preview=False)
 
 
-@func.new_command(r"/vote@luminto_chatbot$")
-@func.new_command(r"/vote$")
-@func.new_command(r"/голос$")
-@func.new_command(r"/голосование$")
-@func.new_command(r"/проголосовать$")
+@func.new_command([r"/vote@luminto_chatbot$", r"/vote$", r"/голос$", r"/голосование$", r"/проголосовать$"])
 async def vote(event: Message) -> Message:
     """Выводит ссылку на мониторинги для голосования."""
     return await client.send_message(
@@ -574,13 +512,7 @@ async def vote(event: Message) -> Message:
     )
 
 
-@func.new_command(r"/нпоиск (.+)")
-@func.new_command(r"/пник (.+)")
-@func.new_command(r"/игрок (.+)")
-@func.new_command(r"/поискпонику (.+)")
-@func.new_command(r"игрок (.+)")
-@func.new_command(r"нпоиск (.+)")
-@func.new_command(r"пник (.+)")
+@func.new_command([r"/нпоиск (.+)", r"/пник (.+)", r"/игрок (.+)", r"/поискпонику (.+)", r"игрок (.+)", r"нпоиск (.+)", r"пник (.+)"])
 async def check_info_by_nick(event: Message) -> Message:
     """Ищет Telegram-профиль и статус игрока по его Minecraft нику."""
     nick: str = event.pattern_match.group(1).strip()
@@ -603,13 +535,7 @@ async def check_info_by_nick(event: Message) -> Message:
     )
 
 
-@func.new_command(r"/нпоиск$")
-@func.new_command(r"/пник$")
-@func.new_command(r"/игрок$")
-@func.new_command(r"/поискпонику$")
-@func.new_command(r"игрок$")
-@func.new_command(r"нпоиск$")
-@func.new_command(r"пник$")
+@func.new_command([r"/нпоиск$", r"/пник$", r"/игрок$", r"/поискпонику$", r"игрок$", r"нпоиск$", r"пник$"])
 async def check_info_by_nick_empty(event: Message) -> Message:
     return await event.reply(phrase.nick.empty)
 
@@ -737,21 +663,13 @@ async def cities_remove(event: Message) -> Message:
     return await event.reply(phrase.cities.deleted.format(word))
 
 
-@func.new_command(r"/rules")
-@func.new_command(r"/правила$")
-@func.new_command(r"/правилачата$")
-@func.new_command(r"/правила сервера$")
-@func.new_command(r"rules")
-@func.new_command(r"правила$")
+@func.new_command([r"/rules", r"/правила$", r"/правилачата$", r"/правила сервера$", r"rules", r"правила$"])
 async def rules(event: Message) -> Message:
     """Выводит правила сервера/чата."""
     return await event.reply(phrase.rules.base, link_preview=False)
 
 
-@func.new_command(r"онлайн$")
-@func.new_command(r"/онлайн$")
-@func.new_command(r"online$")
-@func.new_command(r"/online")
+@func.new_command([r"онлайн$", r"/онлайн$", r"online$", r"/online"])
 async def online(event: Message) -> Message:
     """Запрашивает список игроков онлайн через RCON."""
     try:
@@ -775,8 +693,7 @@ async def online(event: Message) -> Message:
         )
 
 
-@func.new_command(r"/newhint")
-@func.new_command(r"/addhint")
+@func.new_command([r"/newhint", r"/addhint"])
 async def add_new_hint(event: Message) -> Message:
     """Запускает диалог для добавления новой подсказки к слову в игре Крокодил."""
     if not event.is_private:

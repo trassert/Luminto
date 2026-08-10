@@ -62,8 +62,7 @@ async def get_note(event: Message):
     )
 
 
-@func.new_command(r"/notes$")
-@func.new_command(r"/ноты$")
+@func.new_command([r"/notes$", r"/ноты$"])
 async def get_all_notes(event: Message):
     text = ""
     n = 1

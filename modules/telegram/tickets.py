@@ -11,8 +11,7 @@ if TYPE_CHECKING:
 logger.info(f"Загружен модуль {__name__}!")
 
 
-@func.new_command(r"\+чек(.*)")
-@func.new_command(r"\+ticket(.*)")
+@func.new_command([r"\+чек(.*)", r"\+ticket(.*)"])
 async def do_ticket(event: Message):
     if not event.is_private:
         return await event.reply(phrase.ticket.in_chat)
@@ -43,11 +42,7 @@ async def do_ticket(event: Message):
     )
 
 
-@func.new_command(r"/чек(.*)")
-@func.new_command(r"/ticket(.*)")
-@func.new_command(r"/активировать(.*)")
-@func.new_command(r"активировать(.*)")
-@func.new_command(r"/activate(.*)")
+@func.new_command([r"/чек(.*)", r"/ticket(.*)", r"/активировать(.*)", r"активировать(.*)", r"/activate(.*)"])
 async def get_ticket(event: Message):
     arg = event.pattern_match.group(1).strip()
     if arg == "":
