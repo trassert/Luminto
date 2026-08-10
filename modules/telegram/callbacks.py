@@ -106,7 +106,7 @@ async def _handle_suggestion(
             )
 
 
-@client.on(events.CallbackQuery(func=func.checks, pattern=r"^state"))
+@func.new_callback("state")
 async def state_callback(event: events.CallbackQuery.Event):
     data = event.data.decode("utf-8").split(".")
     sender_id = event.sender_id
@@ -284,7 +284,7 @@ async def state_callback(event: events.CallbackQuery.Event):
             )
 
 
-@client.on(events.CallbackQuery(func=func.checks, pattern=r"^casino"))
+@func.new_callback("casino")
 async def casino_callback(event: events.CallbackQuery.Event):
     data = event.data.decode("utf-8").split(".")
     request = floodwait.WaitCasino.request()
@@ -343,7 +343,7 @@ async def casino_callback(event: events.CallbackQuery.Event):
     )
 
 
-@client.on(events.CallbackQuery(func=func.checks, pattern=r"^nick"))
+@func.new_callback("nick")
 async def nick_callback(event: events.CallbackQuery.Event):
     data = event.data.decode("utf-8").split(".")
     sender_id = event.sender_id
@@ -383,7 +383,7 @@ async def nick_callback(event: events.CallbackQuery.Event):
     )
 
 
-@client.on(events.CallbackQuery(func=func.checks, pattern=r"^cityadd"))
+@func.new_callback("cityadd")
 async def cityadd_callback(event: events.CallbackQuery.Event):
     data = event.data.decode("utf-8").split(".")
     return await _handle_suggestion(
@@ -399,7 +399,7 @@ async def cityadd_callback(event: events.CallbackQuery.Event):
     )
 
 
-@client.on(events.CallbackQuery(func=func.checks, pattern=r"^shop"))
+@func.new_callback("shop")
 async def shop_callback(event: events.CallbackQuery.Event):
     data = event.data.decode("utf-8").split(".")
     sender_id = event.sender_id
@@ -433,7 +433,7 @@ async def shop_callback(event: events.CallbackQuery.Event):
     )
 
 
-@client.on(events.CallbackQuery(func=func.checks, pattern=r"^crocodile"))
+@func.new_callback("crocodile")
 async def crocodile_callback(event: events.CallbackQuery.Event):
     data = event.data.decode("utf-8").split(".")
     sender_id = event.sender_id
@@ -496,7 +496,7 @@ async def crocodile_callback(event: events.CallbackQuery.Event):
             return await event.reply(phrase.crocodile.down.format(word))
 
 
-@client.on(events.CallbackQuery(func=func.checks, pattern=r"^mine"))
+@func.new_callback("mine")
 async def mine_callback(event: events.CallbackQuery.Event):
     data = event.data.decode("utf-8").split(".")
     sender_id = event.sender_id
@@ -597,7 +597,7 @@ async def mine_callback(event: events.CallbackQuery.Event):
     return None
 
 
-@client.on(events.CallbackQuery(func=func.checks, pattern=r"^hint"))
+@func.new_callback("hint")
 async def hint_callback(event: events.CallbackQuery.Event):
     data = event.data.decode("utf-8").split(".")
     roles = db.Roles()
@@ -649,7 +649,7 @@ async def hint_callback(event: events.CallbackQuery.Event):
             )
 
 
-@client.on(events.CallbackQuery(func=func.checks, pattern=r"^test"))
+@func.new_callback("test")
 async def simple_antibot(event: events.CallbackQuery.Event):
     data = event.data.decode("utf-8").split(".")
     if str(event.sender_id) != data[1]:

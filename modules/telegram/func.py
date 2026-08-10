@@ -177,3 +177,19 @@ def new_command(
         return decorator
     msg = "Expected str | list[str], got " + type(command).__name__
     raise ValueError(msg)
+
+
+def new_callback(pattern: str, checks=checks, min_role: int = 0):
+    async def check_wrapper(event):
+        return await checks(event, min_role=min_role)
+
+    def decorator(func):
+        client.add_event_handler(
+            func,
+            events.CallbackQuery(
+                pattern=rf"^{pattern}", func=check_wrapper
+            ),
+        )
+        return func
+
+    return decorator
