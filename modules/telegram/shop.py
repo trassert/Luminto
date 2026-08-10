@@ -17,7 +17,9 @@ if TYPE_CHECKING:
 logger.info(f"Загружен модуль {__name__}!")
 
 
-@func.new_command([r"/shop", r"/шоп$", r"/магазин$", r"магазин$", r"shop$", r"шоп$"])
+@func.new_command(
+    [r"/shop", r"/шоп$", r"/магазин$", r"магазин$", r"shop$", r"шоп$"]
+)
 async def shop(event: Message):
     shop_data = await db.get_shop()
     version = await db.shop_version()

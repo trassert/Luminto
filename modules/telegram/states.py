@@ -49,7 +49,16 @@ async def _check_and_update_tier(
         )
 
 
-@func.new_command([r"/states$", r"/states@luminto_chatbot$", r"/госва$", r"/государства$", r"государства$", r"список госв$"])
+@func.new_command(
+    [
+        r"/states$",
+        r"/states@luminto_chatbot$",
+        r"/госва$",
+        r"/государства$",
+        r"государства$",
+        r"список госв$",
+    ]
+)
 async def states_all(event: Message) -> Message:
     data = states_helper.get_all()
     if not data:
@@ -61,7 +70,19 @@ async def states_all(event: Message) -> Message:
     return await event.reply("\n".join(lines))
 
 
-@func.new_command([r"/toptreasury$", r"/topstate@luminto_chatbot$", r"/топказна$", r"/топ казна$", r"/казна топ$", r"/казтоп$", r"/ктоп$", r"казна топ$", r"казтоп$"])
+@func.new_command(
+    [
+        r"/toptreasury$",
+        r"/topstate@luminto_chatbot$",
+        r"/топказна$",
+        r"/топ казна$",
+        r"/казна топ$",
+        r"/казтоп$",
+        r"/ктоп$",
+        r"казна топ$",
+        r"казтоп$",
+    ]
+)
 async def states_all_top(event: Message) -> Message:
     data = states_helper.get_all("money")
     if not data:
@@ -76,7 +97,9 @@ async def states_all_top(event: Message) -> Message:
     return await event.reply("\n".join(lines))
 
 
-@func.new_command([r"/создать госво\s(.+)", r"\+госво\s(.+)", r"\+государство\s(.+)"])
+@func.new_command(
+    [r"/создать госво\s(.+)", r"\+госво\s(.+)", r"\+государство\s(.+)"]
+)
 async def state_make(event: Message) -> Message:
     arg: str = event.pattern_match.group(1).strip().capitalize()
 
@@ -139,7 +162,15 @@ async def state_tax(event: Message) -> Message:
     return await event.reply(phrase.state.tax_set.format(amount))
 
 
-@func.new_command([r"/г собратьналог$", r"/г собратьналоги$", r"/госво собратьналоги$", r"/госво собратьналог$", r"/collecttax$"])
+@func.new_command(
+    [
+        r"/г собратьналог$",
+        r"/г собратьналоги$",
+        r"/госво собратьналоги$",
+        r"/госво собратьналог$",
+        r"/collecttax$",
+    ]
+)
 async def state_collecttax(event: Message) -> Message:
     state_name = states_helper.if_author(event.sender_id)
     if not state_name:
@@ -222,7 +253,9 @@ async def state_tax_period(event: Message) -> Message:
     return await event.reply(phrase.state.tax_period_set.format(period))
 
 
-@func.new_command([r"/вступить(.*)", r"вступить(.*)", r"/г вступить(.*)", r"/г войти(.*)"])
+@func.new_command(
+    [r"/вступить(.*)", r"вступить(.*)", r"/г вступить(.*)", r"/г войти(.*)"]
+)
 async def state_enter(event: Message) -> Message:
     arg: str = event.pattern_match.group(1).strip().capitalize()
     if not arg:
@@ -270,7 +303,9 @@ async def state_enter(event: Message) -> Message:
     return await event.reply(phrase.state.admit.format(state.name))
 
 
-@func.new_command([r"/state$", r"/state@luminto_chatbot$", r"/госво(.*)", r"/государство(.*)"])
+@func.new_command(
+    [r"/state$", r"/state@luminto_chatbot$", r"/госво(.*)", r"/государство(.*)"]
+)
 async def state_get(event: Message):
     try:
         arg: str = event.pattern_match.group(1).strip().capitalize()
@@ -336,7 +371,17 @@ async def state_get(event: Message):
     )
 
 
-@func.new_command([r"/ливнуть", r"/покинуть госво", r"/покинуть государство", r"выйти из государства", r"выйти из госва", r"/г покинуть", r"/г выйти"])
+@func.new_command(
+    [
+        r"/ливнуть",
+        r"/покинуть госво",
+        r"/покинуть государство",
+        r"выйти из государства",
+        r"выйти из госва",
+        r"/г покинуть",
+        r"/г выйти",
+    ]
+)
 async def state_leave(event: Message) -> Message:
     state_name = states_helper.if_player(event.sender_id)
     if not state_name:
@@ -360,7 +405,17 @@ async def state_leave(event: Message) -> Message:
     return await event.reply(phrase.state.leave)
 
 
-@func.new_command([r"/уничтожить госво", r"/удалить госво", r"/удалить государство", r"уничтожить государство", r"удалить государство", r"/г уничтожить", r"/г удалить"])
+@func.new_command(
+    [
+        r"/уничтожить госво",
+        r"/удалить госво",
+        r"/удалить государство",
+        r"уничтожить государство",
+        r"удалить государство",
+        r"/г уничтожить",
+        r"/г удалить",
+    ]
+)
 async def state_rem(event: Message) -> Message:
     state_name = states_helper.if_author(event.sender_id)
     if not state_name:
@@ -378,7 +433,13 @@ async def state_rem(event: Message) -> Message:
     )
 
 
-@func.new_command([r"/г описание\s([\s\S]+)", r"/о госве\s([\s\S]+)", r"/г о госве\s([\s\S]+)"])
+@func.new_command(
+    [
+        r"/г описание\s([\s\S]+)",
+        r"/о госве\s([\s\S]+)",
+        r"/г о госве\s([\s\S]+)",
+    ]
+)
 async def state_desc(event: Message) -> Message:
     state_name = states_helper.if_author(event.sender_id)
     if not state_name:
@@ -448,7 +509,14 @@ async def state_enter_arg(event: Message) -> Message:
     return await event.reply(phrase.state.howto_enter)
 
 
-@func.new_command([r"/пополнить казну (.+)", r"/г пополнить (.+)", r"\+казна (.+)", r"г пополнить (.+)"])
+@func.new_command(
+    [
+        r"/пополнить казну (.+)",
+        r"/г пополнить (.+)",
+        r"\+казна (.+)",
+        r"г пополнить (.+)",
+    ]
+)
 async def state_add_money(event: Message) -> Message:
     state_name = states_helper.if_player(
         event.sender_id
@@ -487,7 +555,14 @@ async def state_add_money(event: Message) -> Message:
     )
 
 
-@func.new_command([r"/забрать из казны (.+)", r"/г снять (.+)", r"\-казна (.+)", r"г снять (.+)"])
+@func.new_command(
+    [
+        r"/забрать из казны (.+)",
+        r"/г снять (.+)",
+        r"\-казна (.+)",
+        r"г снять (.+)",
+    ]
+)
 async def state_rem_money(event: Message) -> Message:
     state_name = states_helper.if_author(event.sender_id)
     if not state_name:
@@ -517,7 +592,15 @@ async def state_rem_money(event: Message) -> Message:
     )
 
 
-@func.new_command([r"/г кик(.*)", r"/г кикнуть(.*)", r"/г изгнать(.*)", r"/г выгнать(.*)", r"/выгнать(.*)"])
+@func.new_command(
+    [
+        r"/г кик(.*)",
+        r"/г кикнуть(.*)",
+        r"/г изгнать(.*)",
+        r"/г выгнать(.*)",
+        r"/выгнать(.*)",
+    ]
+)
 async def state_kick_user(event: Message) -> Message:
     state_name = states_helper.if_author(event.sender_id)
     if not state_name:
@@ -556,7 +639,15 @@ async def state_kick_user(event: Message) -> Message:
     return await event.reply(phrase.state.kicked.format(target_name))
 
 
-@func.new_command([r"/г название (.+)", r"/г нейм (.+)", r"/г name (.+)", r"/г переназвать (.+)", r"/название госва (.+)"])
+@func.new_command(
+    [
+        r"/г название (.+)",
+        r"/г нейм (.+)",
+        r"/г name (.+)",
+        r"/г переназвать (.+)",
+        r"/название госва (.+)",
+    ]
+)
 async def state_rename(event: Message) -> Message:
     state_name = states_helper.if_author(event.sender_id)
     if not state_name:

@@ -42,7 +42,15 @@ async def do_ticket(event: Message):
     )
 
 
-@func.new_command([r"/чек(.*)", r"/ticket(.*)", r"/активировать(.*)", r"активировать(.*)", r"/activate(.*)"])
+@func.new_command(
+    [
+        r"/чек(.*)",
+        r"/ticket(.*)",
+        r"/активировать(.*)",
+        r"активировать(.*)",
+        r"/activate(.*)",
+    ]
+)
 async def get_ticket(event: Message):
     arg = event.pattern_match.group(1).strip()
     if arg == "":
