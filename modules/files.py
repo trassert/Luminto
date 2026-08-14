@@ -97,5 +97,5 @@ async def remove_file_async(filepath: Path):
     """Удаляет файл асинхронно."""
     if not filepath.exists():
         return False
-    await anyio.Path(filepath).remove()
+    await anyio.Path(filepath).unlink()
     return True
