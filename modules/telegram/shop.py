@@ -8,7 +8,7 @@ from telethon.tl.types import (
     ReplyInlineMarkup,
 )
 
-from .. import db, formatter, phrase, shop, task_gen
+from .. import formatter, phrase, shop, task_gen
 from . import func
 
 if TYPE_CHECKING:
