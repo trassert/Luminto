@@ -61,12 +61,28 @@ async def get_note(event: Message):
 
 @func.new_command([r"/notes$", r"/ноты$"])
 async def get_all_notes(event: Message):
+    allnotes = notes.get_all()
+    if allnotes == []:
+        return await event.reply(phrase.notes.empty)
     text = ""
     n = 1
-    for name in notes.get_all():
+    for name in allnotes:
         text += f"{n}. {name}\n"
         n += 1
     return await event.reply(phrase.notes.alltext.format(text))
+
+
+@func.new_command([r"/моиноты$", r"/mynotes$"], min_role=1)
+async def get_my_notes(event: Message):
+    info = await notes.get_by_author(event.sender_id)
+    if info == []:
+        return await event.reply(phrase.notes.my_notes_empty)
+    text = ""
+    n = 1
+    for name in info:
+        text += f"{n}. {name}\n"
+        n += 1
+    return await event.reply(phrase.notes.my_notes.format(text))
 
 
 @func.new_command(
