@@ -6,13 +6,6 @@ import anyio
 import orjson
 
 
-def load_json_sync(filepath: Path) -> dict:
-    """Загружает JSON файл синхронно."""
-    with filepath.open("rb") as f:
-        raw = f.read()
-    return orjson.loads(raw)
-
-
 def orjson_options(sort_keys: bool = False, indent: bool = False) -> int:
     opts = 0
     if sort_keys:
@@ -37,6 +30,13 @@ def save_json_sync(
     options = orjson_options(sort_keys=sort_keys, indent=indent)
     with filepath.open("wb") as f:
         f.write(orjson.dumps(data, option=options))
+
+
+def load_json_sync(filepath: Path) -> dict:
+    """Загружает JSON файл синхронно."""
+    with filepath.open("rb") as f:
+        raw = f.read()
+    return orjson.loads(raw)
 
 
 _file_locks: dict[str, asyncio.Lock] = {}
@@ -67,10 +67,35 @@ async def save_json_async(
     indent: bool = False,
 ):
     """Сохраняет JSON файл асинхронно."""
+    ensure_parent(filepath)
     lock = await get_lock(filepath)
     options = orjson_options(sort_keys=sort_keys, indent=indent)
     dump = orjson.dumps(data, option=options)
     async with lock:
-        ensure_parent(filepath)
         async with aiofiles.open(filepath, "wb") as f:
             return await f.write(dump)
+
+
+async def load_text_async(filepath: Path) -> str:
+    """Загружает текстовый файл асинхронно."""
+    lock = await get_lock(filepath)
+    async with lock:
+        async with aiofiles.open(filepath, "r", encoding="utf-8") as f:
+            return await f.read()
+
+
+async def save_text_async(filepath: Path, text: str):
+    """Сохраняет текстовый файл асинхронно."""
+    ensure_parent(filepath)
+    lock = await get_lock(filepath)
+    async with lock:
+        async with aiofiles.open(filepath, "w", encoding="utf-8") as f:
+            return await f.write(text)
+
+
+async def remove_file_async(filepath: Path):
+    """Удаляет файл асинхронно."""
+    if not filepath.exists():
+        return False
+    await anyio.Path(filepath).remove()
+    return True

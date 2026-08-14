@@ -1,14 +1,11 @@
 from typing import TYPE_CHECKING
-
 from loguru import logger
-
-from .. import db, phrase
+from .. import notes, phrase, db
 from . import func
 from .client import client
 
 if TYPE_CHECKING:
     from telethon.tl.custom import Message
-
 logger.info(f"Загружен модуль {__name__}!")
 
 
@@ -16,15 +13,12 @@ logger.info(f"Загружен модуль {__name__}!")
     [r"\+note (.+)\n([\s\S]+)", r"\+нот (.+)\n([\s\S]+)"], min_role=1
 )
 async def add_note(event: Message):
-    if (
-        db.Notes().create(
-            event.pattern_match.group(1).strip(),
-            event.text.split("\n", maxsplit=1)[1],
-        )
-        is True
+    name = event.pattern_match.group(1).strip()
+    if await notes.create(
+        event.sender_id, name, event.text.split("\n", maxsplit=1)[1]
     ):
         return await event.reply(
-            phrase.notes.new.format(event.pattern_match.group(1).strip()),
+            phrase.notes.new.format(name),
         )
     return await event.reply(phrase.notes.already_added)
 
@@ -41,9 +35,10 @@ async def add_note_noname(event: Message):
 
 @func.new_command(r"\.(.+)")
 async def get_note(event: Message):
-    note_text = db.Notes().get(event.pattern_match.group(1).strip().lower())
-    if note_text is None:
+    note_data = await notes.get(event.pattern_match.group(1).strip().lower())
+    if note_data is None:
         return None
+    note_text = note_data["text"]
     if event.reply_to_msg_id:
         reply_message: Message = await event.get_reply_message()
         if reply_message is None:
@@ -66,7 +61,7 @@ async def get_note(event: Message):
 async def get_all_notes(event: Message):
     text = ""
     n = 1
-    for name in db.Notes().get_all():
+    for name in notes.get_all():
         text += f"{n}. {name}\n"
         n += 1
     return await event.reply(phrase.notes.alltext.format(text))
@@ -76,7 +71,16 @@ async def get_all_notes(event: Message):
     [r"\-нот (.+)$", r"\-note (.+)$", r"\-text (.+)$"], min_role=1
 )
 async def del_note(event: Message):
-    if not db.Notes().remove(event.pattern_match.group(1).strip()):
+    name = event.pattern_match.group(1).strip()
+    note_data = await notes.get(name)
+    if note_data is None:
+        return await event.reply(phrase.notes.not_found)
+    if (
+        event.sender_id != note_data["author"]
+        and not await db.Roles().get(event.sender_id) >= 4
+    ):
+        return await event.reply(phrase.notes.not_author)
+    if not await notes.remove(name):
         return await event.reply(phrase.notes.not_found)
     return await event.reply(phrase.notes.deleted)
 

@@ -2,7 +2,6 @@ import asyncio
 from collections import defaultdict
 from copy import deepcopy
 from datetime import datetime, timedelta
-from pathlib import Path
 from random import choice, randint, sample
 from time import time
 from typing import TypedDict
@@ -600,42 +599,6 @@ Users = Mysql(
     db=config.tokens.mysql_users.database,
     table_name=config.tokens.mysql_users.table,
 )
-
-
-class Notes:
-    def __init__(self, storage_dir=pathes.notes):
-        self.storage_dir = Path(storage_dir)
-        self.storage_dir.mkdir(parents=True, exist_ok=True)
-
-    def _get_file_path(self, name: str) -> Path:
-        return self.storage_dir / f"{name}.txt"
-
-    def get(self, name: str):
-        file_path = self._get_file_path(name.lower())
-        if not file_path.exists():
-            return None
-        with file_path.open() as f:
-            return f.read()
-
-    def create(self, name: str, text: str):
-        file_path = self._get_file_path(name.lower())
-        if file_path.exists():
-            return False
-        with file_path.open("w") as f:
-            f.write(text)
-        return True
-
-    def remove(self, name: str):
-        file_path = self._get_file_path(name.lower())
-        if not file_path.exists():
-            return False
-        file_path.unlink()
-        return True
-
-    def get_all(self) -> list[str]:
-        if not self.storage_dir.exists():
-            return []
-        return [f.stem for f in self.storage_dir.iterdir() if f.is_file()]
 
 
 class CitiesGame:
