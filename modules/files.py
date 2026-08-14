@@ -80,7 +80,7 @@ async def load_text_async(filepath: Path) -> str:
     """Загружает текстовый файл асинхронно."""
     lock = await get_lock(filepath)
     async with lock:
-        async with aiofiles.open(filepath, "r", encoding="utf-8") as f:
+        async with aiofiles.open(filepath, encoding="utf-8") as f:
             return await f.read()
 
 

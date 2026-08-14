@@ -1,6 +1,8 @@
 from typing import TYPE_CHECKING
+
 from loguru import logger
-from .. import notes, phrase, db
+
+from .. import db, notes, phrase
 from . import func
 from .client import client
 
