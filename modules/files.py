@@ -95,7 +95,7 @@ async def save_text_async(filepath: Path, text: str):
 
 async def remove_file_async(filepath: Path):
     """Удаляет файл асинхронно."""
-    if not filepath.exists():
+    if not await anyio.Path(filepath).exists():
         return False
     await anyio.Path(filepath).unlink()
     return True

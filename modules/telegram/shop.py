@@ -8,7 +8,7 @@ from telethon.tl.types import (
     ReplyInlineMarkup,
 )
 
-from .. import db, formatter, phrase, task_gen
+from .. import db, formatter, phrase, shop, task_gen
 from . import func
 
 if TYPE_CHECKING:
@@ -20,9 +20,9 @@ logger.info(f"Загружен модуль {__name__}!")
 @func.new_command(
     [r"/shop", r"/шоп$", r"/магазин$", r"магазин$", r"shop$", r"шоп$"]
 )
-async def shop(event: Message):
-    shop_data = await db.get_shop()
-    version = await db.shop_version()
+async def shop_command(event: Message):
+    shop_data = await shop.get()
+    version = await shop.version()
     theme = shop_data.pop("theme")
     theme_data = phrase.shop_quotes[theme]
 

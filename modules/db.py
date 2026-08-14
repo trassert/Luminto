@@ -2,16 +2,15 @@ import asyncio
 from collections import defaultdict
 from copy import deepcopy
 from datetime import datetime, timedelta
-from random import choice, randint, sample
+from random import choice, randint
 from time import time
 from typing import TypedDict
 
-import aiofiles
 import asyncmy
 import orjson
 from loguru import logger
 
-from . import config, files, formatter, get_theme, nicks, pathes
+from . import config, files, formatter, nicks, pathes
 
 logger.info(f"Загружен модуль {__name__}!")
 
@@ -82,72 +81,6 @@ async def rollback_withdraw_limit(id: int, amount: int):
         current = data[id_str].get("withdrawn", 0)
         data[id_str]["withdrawn"] = max(0, current - amount)
         await files.save_json_async(pathes.wdraw, data, indent=True)
-
-
-async def update_shop():
-    """Обновляет магазин, возвращая новую тему."""
-    last_theme = (await files.load_json_async(pathes.shopc)).get("theme")
-    all_themes = await files.load_json_async(pathes.shop)
-    if not isinstance(all_themes, dict) or not all_themes:
-        logger.exception("Файл shop_all.json пуст или не содержит тем.")
-        return None
-    theme_names = list(all_themes.keys())
-    if last_theme in theme_names and len(theme_names) == 1:
-        logger.exception("Нет доступных альтернативных тем в shop_all.json")
-        return None
-    weights = config.cfg.ShopThemeWeights
-    new_theme = last_theme
-    attempts = 0
-    while new_theme == last_theme and attempts < 10:
-        new_theme = get_theme.weighted_choice(theme_names, weights)
-        attempts += 1
-    if new_theme == last_theme:
-        others = [t for t in theme_names if t != last_theme]
-        new_theme = choice(others) if others else last_theme
-    theme_items = all_themes.get(new_theme, {})
-    if not isinstance(theme_items, dict):
-        logger.exception(f"Тема '{new_theme}' не содержит предметов")
-        return None
-    item_names = list(theme_items.keys())
-    if len(item_names) < 5:
-        logger.exception(
-            f"В теме '{new_theme}' недостаточно предметов (минимум 5, найдено {len(item_names)})",
-        )
-        return None
-    selected_items = (
-        sample(item_names, 5) if len(item_names) > 5 else item_names[:5]
-    )
-    current_shop = {"theme": new_theme}
-    for item in selected_items:
-        item_data = theme_items[item].copy()
-        price = item_data.get("price")
-        if (
-            isinstance(price, list)
-            and len(price) == 2
-            and all(isinstance(p, int) for p in price)
-        ):
-            item_data["price"] = randint(price[0], price[1])
-        elif not isinstance(price, (int, float)):
-            logger.exception(
-                f"Некорректный формат цены для предмета '{item}': {price}"
-            )
-        current_shop[item] = item_data
-    await files.save_json_async(pathes.shopc, current_shop, indent=True)
-    return new_theme
-
-
-async def get_shop() -> dict:
-    return await files.load_json_async(pathes.shopc)
-
-
-async def shop_version(update=False) -> int:
-    async with aiofiles.open(pathes.shopver) as f:
-        ver = int(await f.read())
-    if update:
-        ver += 1
-        async with aiofiles.open(pathes.shopver, "w") as f:
-            await f.write(str(ver))
-    return ver
 
 
 async def ready_to_mine(id: str) -> bool:

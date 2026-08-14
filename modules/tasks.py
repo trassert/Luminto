@@ -5,7 +5,7 @@ from pathlib import Path
 
 from loguru import logger
 
-from . import config, db, formatter, nicks, pathes, phrase, states_helper
+from . import config, db, formatter, nicks, pathes, phrase, shop, states_helper
 from .telegram.client import client
 from .telegram.states import _check_and_update_tier
 
@@ -15,8 +15,8 @@ logger.info(f"Загружен модуль {__name__}!")
 async def update_shop():
     logger.info("Обновление магазина..")
     try:
-        await db.shop_version(update=True)
-        theme = await db.update_shop()
+        await shop.version(update=True)
+        theme = await shop.update()
 
         await client.send_message(
             config.chats.chat,

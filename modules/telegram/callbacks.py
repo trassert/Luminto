@@ -17,6 +17,7 @@ from .. import (
     nicks,
     pathes,
     phrase,
+    shop,
     states_helper,
 )
 from . import func
@@ -404,17 +405,17 @@ async def shop_callback(event: events.CallbackQuery.Event):
     data = event.data.decode("utf-8").split(".")
     sender_id = event.sender_id
 
-    if int(data[-1]) != await db.shop_version():
+    if int(data[-1]) != await shop.version():
         return await event.answer(phrase.shop.old, alert=True)
 
     nick = await nicks.get_byid(sender_id)
     if nick is None:
         return await event.answer(phrase.nick.not_append, alert=True)
 
-    shop = await db.get_shop()
-    del shop["theme"]
-    items = list(shop.keys())
-    item = shop[items[int(data[1])]]
+    shop_data = await shop.get()
+    del shop_data["theme"]
+    items = list(shop_data.keys())
+    item = shop_data[items[int(data[1])]]
 
     balance_check = await _check_and_deduct_balance(sender_id, item["price"])
     if balance_check is not True:
