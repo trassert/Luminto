@@ -133,11 +133,11 @@ async def profile(event: Message) -> Message:
     user_id: int = event.sender_id
     role: int = await db.Roles().get(user_id)
 
-    state_author: str | bool = states_helper.if_author(user_id)
+    state_author: str | bool = await states_helper.if_author(user_id)
     if state_author:
         state_info = f"**{state_author}, Глава**"
     else:
-        state_player: str | bool = states_helper.if_player(user_id)
+        state_player: str | bool = await states_helper.if_player(user_id)
         state_info = state_player or "Не состоит в государстве"
 
     nick: str = await nicks.get_byid(user_id) or "Не привязан"
@@ -197,7 +197,7 @@ async def mine_start(event: Message) -> Message:
     user_id: int = event.sender_id
 
     if not (
-        states_helper.if_player(user_id) or states_helper.if_author(user_id)
+        await states_helper.if_player(user_id) or await states_helper.if_author(user_id)
     ):
         return await event.reply(phrase.mine.not_in_state)
     if not await db.ready_to_mine(user_id):
@@ -600,9 +600,9 @@ async def check_info_by_nick(event: Message) -> Message:
     if user_id is None:
         return await event.reply(phrase.nick.not_find)
 
-    state: str | bool = states_helper.if_player(
+    state: str | bool = await states_helper.if_player(
         user_id
-    ) or states_helper.if_author(user_id)
+    ) or await states_helper.if_author(user_id)
     state_info = state or "Нет"
 
     return await event.reply(

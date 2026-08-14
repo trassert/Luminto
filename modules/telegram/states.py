@@ -60,7 +60,7 @@ async def _check_and_update_tier(
     ]
 )
 async def states_all(event: Message) -> Message:
-    data = states_helper.get_all()
+    data = await states_helper.get_all()
     if not data:
         return await event.reply(phrase.state.empty_list)
 
@@ -84,7 +84,7 @@ async def states_all(event: Message) -> Message:
     ]
 )
 async def states_all_top(event: Message) -> Message:
-    data = states_helper.get_all("money")
+    data = await states_helper.get_all("money")
     if not data:
         return await event.reply(phrase.state.empty_list)
 
@@ -113,11 +113,11 @@ async def state_make(event: Message) -> Message:
 
     if await nicks.get_byid(event.sender_id) is None:
         return await event.reply(phrase.state.not_connected)
-    if states_helper.if_author(event.sender_id):
+    if await states_helper.if_author(event.sender_id):
         return await event.reply(phrase.state.already_author)
-    if states_helper.if_player(event.sender_id):
+    if await states_helper.if_player(event.sender_id):
         return await event.reply(phrase.state.already_player)
-    if states_helper.exists(arg):
+    if await states_helper.exists(arg):
         return await event.reply(phrase.state.already_here)
 
     if await db.get_money(event.sender_id) < config.cfg.PriceForNewState:
@@ -144,7 +144,7 @@ async def state_make_empty(event: Message) -> Message:
 
 @func.new_command(r"/г налог(.*)")
 async def state_tax(event: Message) -> Message:
-    state_name = states_helper.if_author(event.sender_id)
+    state_name = await states_helper.if_author(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
 
@@ -172,7 +172,7 @@ async def state_tax(event: Message) -> Message:
     ]
 )
 async def state_collecttax(event: Message) -> Message:
-    state_name = states_helper.if_author(event.sender_id)
+    state_name = await states_helper.if_author(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
     state = db.State(state_name)
@@ -208,7 +208,7 @@ async def state_collecttax(event: Message) -> Message:
 
 @func.new_command(r"/г неуплата(.*)")
 async def state_tax_nonpayment(event: Message) -> Message:
-    state_name = states_helper.if_author(event.sender_id)
+    state_name = await states_helper.if_author(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
 
@@ -235,7 +235,7 @@ async def state_tax_nonpayment(event: Message) -> Message:
 
 @func.new_command(r"/г периодналогов(.*)")
 async def state_tax_period(event: Message) -> Message:
-    state_name = states_helper.if_author(event.sender_id)
+    state_name = await states_helper.if_author(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
 
@@ -261,14 +261,14 @@ async def state_enter(event: Message) -> Message:
     if not arg:
         return await event.reply(phrase.state.no_name)
 
-    if not states_helper.exists(arg):
+    if not await states_helper.exists(arg):
         return await event.reply(phrase.state.not_find)
 
     nick = await nicks.get_byid(event.sender_id)
     if not nick:
         return await event.reply(phrase.state.not_connected)
 
-    if states_helper.if_player(event.sender_id) or states_helper.if_author(
+    if await states_helper.if_player(event.sender_id) or await states_helper.if_author(
         event.sender_id
     ):
         return await event.reply(phrase.state.already_player)
@@ -313,9 +313,9 @@ async def state_get(event: Message):
         arg = ""
 
     if not arg:
-        state_name = states_helper.if_player(
+        state_name = await states_helper.if_player(
             event.sender_id
-        ) or states_helper.if_author(
+        ) or await states_helper.if_author(
             event.sender_id,
         )
         if not state_name:
@@ -323,7 +323,7 @@ async def state_get(event: Message):
     else:
         state_name = arg
 
-    if not states_helper.exists(state_name):
+    if not await states_helper.exists(state_name):
         return await event.reply(phrase.state.not_find)
 
     state = db.State(state_name)
@@ -383,7 +383,7 @@ async def state_get(event: Message):
     ]
 )
 async def state_leave(event: Message) -> Message:
-    state_name = states_helper.if_player(event.sender_id)
+    state_name = await states_helper.if_player(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_member)
 
@@ -417,7 +417,7 @@ async def state_leave(event: Message) -> Message:
     ]
 )
 async def state_rem(event: Message) -> Message:
-    state_name = states_helper.if_author(event.sender_id)
+    state_name = await states_helper.if_author(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
 
@@ -441,7 +441,7 @@ async def state_rem(event: Message) -> Message:
     ]
 )
 async def state_desc(event: Message) -> Message:
-    state_name = states_helper.if_author(event.sender_id)
+    state_name = await states_helper.if_author(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
 
@@ -457,7 +457,7 @@ async def state_desc(event: Message) -> Message:
 
 @func.new_command([r"/г корды\s(.+)", r"/г координаты\s(.+)"])
 async def state_coords(event: Message) -> Message:
-    state_name = states_helper.if_author(event.sender_id)
+    state_name = await states_helper.if_author(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
 
@@ -471,7 +471,7 @@ async def state_coords(event: Message) -> Message:
 
 @func.new_command([r"/г входы\s(.+)", r"/г вступления\s(.+)"])
 async def state_enter_arg(event: Message) -> Message:
-    state_name = states_helper.if_author(event.sender_id)
+    state_name = await states_helper.if_author(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
 
@@ -518,9 +518,9 @@ async def state_enter_arg(event: Message) -> Message:
     ]
 )
 async def state_add_money(event: Message) -> Message:
-    state_name = states_helper.if_player(
+    state_name = await states_helper.if_player(
         event.sender_id
-    ) or states_helper.if_author(
+    ) or await states_helper.if_author(
         event.sender_id,
     )
     if not state_name:
@@ -564,7 +564,7 @@ async def state_add_money(event: Message) -> Message:
     ]
 )
 async def state_rem_money(event: Message) -> Message:
-    state_name = states_helper.if_author(event.sender_id)
+    state_name = await states_helper.if_author(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
 
@@ -602,7 +602,7 @@ async def state_rem_money(event: Message) -> Message:
     ]
 )
 async def state_kick_user(event: Message) -> Message:
-    state_name = states_helper.if_author(event.sender_id)
+    state_name = await states_helper.if_author(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
 
@@ -649,12 +649,12 @@ async def state_kick_user(event: Message) -> Message:
     ]
 )
 async def state_rename(event: Message) -> Message:
-    state_name = states_helper.if_author(event.sender_id)
+    state_name = await states_helper.if_author(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
 
     new_name: str = event.pattern_match.group(1).strip()
-    if states_helper.exists(new_name.capitalize()):
+    if await states_helper.exists(new_name.capitalize()):
         return await event.reply(phrase.state.already_here)
 
     btn = [
@@ -672,7 +672,7 @@ async def state_rename(event: Message) -> Message:
 
 @func.new_command([r"/г pic$", r"/г картинка$", r"/г фото$"])
 async def state_pic(event: Message) -> Message:
-    state_name = states_helper.if_author(event.sender_id)
+    state_name = await states_helper.if_author(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
     if not event.photo:
@@ -684,7 +684,7 @@ async def state_pic(event: Message) -> Message:
 
 @func.new_command([r"/г конгресс$", r"/г заявка$"])
 async def state_congress(event: Message) -> Message:
-    state_name = states_helper.if_author(event.sender_id)
+    state_name = await states_helper.if_author(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.congress_no_state)
 
@@ -700,12 +700,12 @@ async def state_congress(event: Message) -> Message:
 
 @func.new_command(r"/г признать\s(.+)")
 async def state_recognize(event: Message) -> Message:
-    voter_state = states_helper.if_author(event.sender_id)
+    voter_state = await states_helper.if_author(event.sender_id)
     if not voter_state:
         return await event.reply(phrase.state.not_a_author)
 
     arg: str = event.pattern_match.group(1).strip().capitalize()
-    if not states_helper.exists(arg):
+    if not await states_helper.exists(arg):
         return await event.reply(phrase.state.not_find)
 
     if arg == voter_state:
@@ -734,7 +734,7 @@ async def state_recognize_empty(event: Message) -> Message:
 @func.new_command(r"/г статус\s(.+)")
 async def state_status(event: Message) -> Message:
     arg: str = event.pattern_match.group(1).strip().capitalize()
-    if not states_helper.exists(arg):
+    if not await states_helper.exists(arg):
         return await event.reply(phrase.state.not_find)
 
     state = db.State(arg)
@@ -772,7 +772,7 @@ async def state_status_empty(event: Message) -> Message:
 
 @func.new_command(r"/г передать(.*)")
 async def state_transfer(event: Message) -> Message:
-    state_name = states_helper.if_author(event.sender_id)
+    state_name = await states_helper.if_author(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
     try:
@@ -785,7 +785,7 @@ async def state_transfer(event: Message) -> Message:
     nick = await func.get_name(user_id, minecraft=True)
     if nick is None:
         return await event.reply(phrase.state.new_not_connected)
-    if states_helper.if_player(user_id) or states_helper.if_author(user_id):
+    if await states_helper.if_player(user_id) or await states_helper.if_author(user_id):
         return await event.reply(phrase.state.new_already_player)
     return await event.reply(
         phrase.state.transfer.format(

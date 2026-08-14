@@ -8,7 +8,6 @@ from telethon import Button, events, types
 from .. import (
     config,
     db,
-    dice,
     floodwait,
     formatter,
     log,
@@ -119,11 +118,11 @@ async def state_callback(event: events.CallbackQuery.Event):
                 return await event.answer(
                     phrase.state.not_connected, alert=True
                 )
-            if states_helper.if_player(sender_id) is not None:
+            if await states_helper.if_player(sender_id) is not None:
                 return await event.answer(
                     phrase.state.already_player, alert=True
                 )
-            if states_helper.if_author(sender_id) is not None:
+            if await states_helper.if_author(sender_id) is not None:
                 return await event.answer(
                     phrase.state.already_author, alert=True
                 )
@@ -183,7 +182,7 @@ async def state_callback(event: events.CallbackQuery.Event):
                 return await event.answer(phrase.not_for_you, alert=True)
 
             await db.add_money(state.author, state.money)
-            if not states_helper.remove(data[2]):
+            if not await states_helper.remove(data[2]):
                 return await event.answer(phrase.error, alert=True)
 
             await client.send_message(
@@ -209,10 +208,10 @@ async def state_callback(event: events.CallbackQuery.Event):
             if balance_check is not True:
                 return await event.answer(balance_check, alert=True)
 
-            if states_helper.exists(state_name):
+            if await states_helper.exists(state_name):
                 return await event.answer(phrase.state.already_here, alert=True)
 
-            states_helper.add(state_name, sender_id)
+            await states_helper.add(state_name, sender_id)
             await event.reply(
                 phrase.state.make_by_callback.format(
                     author=await func.get_name(sender_id),
@@ -230,10 +229,10 @@ async def state_callback(event: events.CallbackQuery.Event):
                 return await event.answer(phrase.not_for_you)
 
             new_name = data[2].capitalize()
-            if states_helper.exists(new_name):
+            if await states_helper.exists(new_name):
                 return await event.answer(phrase.state.already_here, alert=True)
 
-            state_name = states_helper.if_author(sender_id)
+            state_name = await states_helper.if_author(sender_id)
             if state_name is False:
                 return await event.answer(phrase.state.not_a_author, alert=True)
 
@@ -262,7 +261,7 @@ async def state_callback(event: events.CallbackQuery.Event):
             )
 
         case "mv":
-            state_name = states_helper.if_author(sender_id)
+            state_name = await states_helper.if_author(sender_id)
             if state_name != data[2]:
                 return await event.answer(phrase.state.not_a_author, alert=True)
             db.State(state_name).change("author", int(data[3]))
@@ -311,7 +310,7 @@ async def casino_callback(event: events.CallbackQuery.Event):
         reply_to=config.chats.topics.games,
     )
     fm = await event.reply(phrase.casino.wait)
-    pos = dice.get(media_dice.media.value)
+    pos = func.get_dice(media_dice.media.value)
 
     if pos[0] == pos[1] == pos[2]:
         await db.Users.add_win(sender_id)

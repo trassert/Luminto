@@ -191,3 +191,17 @@ def new_callback(pattern: str, checks=checks, min_role: int = 0):
         return func
 
     return decorator
+
+
+dice_mapping = {"0": "Бар", "1": "Ягода", "2": "Лимон", "3": "7"}
+
+
+def get_dice(value: int) -> list[str]:
+    """Возвращает список из 3 элементов,
+    каждый из которых является строкой,
+    представляющей результат броска кубика."""
+    return [
+        str((value - 1) & 3),
+        str(((value - 1) >> 2) & 3),
+        str(((value - 1) >> 4) & 3),
+    ]
