@@ -268,9 +268,9 @@ async def state_enter(event: Message) -> Message:
     if not nick:
         return await event.reply(phrase.state.not_connected)
 
-    if await states_helper.if_player(event.sender_id) or await states_helper.if_author(
+    if await states_helper.if_player(
         event.sender_id
-    ):
+    ) or await states_helper.if_author(event.sender_id):
         return await event.reply(phrase.state.already_player)
 
     state = db.State(arg)
@@ -785,7 +785,9 @@ async def state_transfer(event: Message) -> Message:
     nick = await func.get_name(user_id, minecraft=True)
     if nick is None:
         return await event.reply(phrase.state.new_not_connected)
-    if await states_helper.if_player(user_id) or await states_helper.if_author(user_id):
+    if await states_helper.if_player(user_id) or await states_helper.if_author(
+        user_id
+    ):
         return await event.reply(phrase.state.new_already_player)
     return await event.reply(
         phrase.state.transfer.format(

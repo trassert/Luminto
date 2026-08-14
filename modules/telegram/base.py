@@ -197,7 +197,8 @@ async def mine_start(event: Message) -> Message:
     user_id: int = event.sender_id
 
     if not (
-        await states_helper.if_player(user_id) or await states_helper.if_author(user_id)
+        await states_helper.if_player(user_id)
+        or await states_helper.if_author(user_id)
     ):
         return await event.reply(phrase.mine.not_in_state)
     if not await db.ready_to_mine(user_id):
