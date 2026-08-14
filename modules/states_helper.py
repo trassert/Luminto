@@ -49,7 +49,7 @@ def count() -> int:
 
 async def iter_states() -> AsyncIterator[tuple[str, dict[str, Any]]]:
     """Генератор пар (имя_государства, данные)."""
-    async for file in (def_dir / "*.json").glob():
+    async for file in def_dir.glob("*.json"):
         try:
             data = await files.load_json_async(file)
             yield file.stem, data
