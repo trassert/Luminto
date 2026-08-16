@@ -565,7 +565,7 @@ def render(
     text: str,
     out_path: Path,
     font_path: Path = pathes.font,
-    scale: int = 6,
+    scale: int = 12,
     shadow: bool = True,
     bg: (int, int, int) = (38, 38, 38),
     bg_image: Path = pathes.mini_pic_bg,
