@@ -5,6 +5,7 @@ from time import time
 from typing import TYPE_CHECKING, Any
 
 import aiofiles
+import anyio
 from loguru import logger
 from telethon import Button
 from telethon import errors as tgerrors
@@ -887,3 +888,4 @@ async def miniparser(event: Message) -> Message:
         reply_to=event.id,
         caption=phrase.minimessage.done,
     )
+    return await anyio.Path(out_path).unlink(missing_ok=True)
