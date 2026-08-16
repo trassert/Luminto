@@ -59,6 +59,7 @@ font = Path("fonts") / "minecraft.ttf"
 
 chart = Path("charts") / "chart.png"
 
-states_pic = Path("images") / "states"
-
 pic = Path("images")
+states_pic = pic / "states"
+mini_pic = pic / "minimessage"
+mini_pic_bg = mini_pic / "bg.png"

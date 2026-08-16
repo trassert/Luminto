@@ -27,6 +27,7 @@ from .. import (
     referrals,
     states_helper,
     sys,
+    minimessage
 )
 from . import func
 from .client import aio, client
@@ -871,4 +872,18 @@ async def get_last_hint(event: Message) -> Message:
             user=await func.get_name(hint["user"]),
         ),
         buttons=btns,
+    )
+
+
+@func.new_command(r"/minimessage (.+)")
+async def miniparser(event: Message) -> Message:
+    text = event.pattern_match.group(1)
+    out_path = pathes.mini_pic / f"{event.sender_id}.png"
+    if minimessage.render(text, out_path=out_path) is False:
+        return await event.reply(phrase.minimessage.too_long)
+    return await client.send_file(
+        entity=event.chat_id,
+        file=out_path,
+        reply_to=event.id,
+        caption=phrase.minimessage.done,
     )

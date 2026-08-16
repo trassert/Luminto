@@ -1,7 +1,5 @@
-import re
 import shutil
 from datetime import datetime, timedelta
-from pathlib import Path
 
 from loguru import logger
 
@@ -102,40 +100,30 @@ async def remove_states() -> None:
 
 
 async def backup_db() -> None:
-    """
-    Таск для создания бекапа папки db и удаления старых бекапов, оставляя только 3 последних.
-    """
-    src = pathes.db
-    if not src.exists():
+    """Создаёт бекап папки db, оставляет только 3 последних."""
+    if not pathes.db.exists():
         logger.warning("Папка db не найдена, пропускаю бекап")
         return
 
     backup_root = pathes.backup_db
     backup_root.mkdir(parents=True, exist_ok=True)
 
-    date_str: str = datetime.now().strftime("%Y-%m-%d")
-    dest: Path = backup_root / date_str
+    dest = backup_root / datetime.now().strftime("%Y-%m-%d")
     try:
-        shutil.copytree(src, dest, dirs_exist_ok=True)
+        shutil.copytree(pathes.db, dest, dirs_exist_ok=True)
         logger.info(f"Создан бекап DB: {dest}")
     except Exception:
         logger.exception("Ошибка при создании бекапа базы данных")
         return
-    date_pattern = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
     backups = sorted(
-        [
-            p
-            for p in backup_root.iterdir()
-            if p.is_dir() and date_pattern.match(p.name)
-        ],
-        key=lambda p: p.name,
+        [p for p in backup_root.iterdir() if p.is_dir() and len(p.name) == 10 and p.name[4] == '-' and p.name[7] == '-'],
+        key=lambda p: p.name
     )
-    if len(backups) > 3:
-        for old_backup in backups[:-3]:
-            try:
-                shutil.rmtree(old_backup)
-                logger.info(f"Удалён старый бекап: {old_backup}")
-            except Exception:
-                logger.exception(
-                    f"Не удалось удалить старый бекап: {old_backup}"
-                )
+    
+    for old_backup in backups[:-3]:
+        try:
+            shutil.rmtree(old_backup)
+            logger.info(f"Удалён старый бекап: {old_backup}")
+        except Exception:
+            logger.exception(f"Не удалось удалить старый бекап: {old_backup}")
