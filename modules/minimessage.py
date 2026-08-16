@@ -439,7 +439,7 @@ class Renderer:
     def render(self, flat: list) -> Image.Image:
         bank = self.bank
         s = bank.scale
-        pad = 2 * s
+        pad = 4 * s
         lines = [[]]
         for item in flat:
             if item is None:
