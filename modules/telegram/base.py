@@ -19,6 +19,7 @@ from .. import (
     floodwait,
     formatter,
     mcrcon,
+    minimessage,
     mining,
     nicks,
     pathes,
@@ -27,7 +28,6 @@ from .. import (
     referrals,
     states_helper,
     sys,
-    minimessage
 )
 from . import func
 from .client import aio, client

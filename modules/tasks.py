@@ -117,10 +117,17 @@ async def backup_db() -> None:
         return
 
     backups = sorted(
-        [p for p in backup_root.iterdir() if p.is_dir() and len(p.name) == 10 and p.name[4] == '-' and p.name[7] == '-'],
-        key=lambda p: p.name
+        [
+            p
+            for p in backup_root.iterdir()
+            if p.is_dir()
+            and len(p.name) == 10
+            and p.name[4] == "-"
+            and p.name[7] == "-"
+        ],
+        key=lambda p: p.name,
     )
-    
+
     for old_backup in backups[:-3]:
         try:
             shutil.rmtree(old_backup)
