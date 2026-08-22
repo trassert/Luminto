@@ -1,6 +1,7 @@
 from datetime import datetime
 from random import choice
 from typing import TYPE_CHECKING
+
 from loguru import logger
 from telethon import events
 from telethon.tl.custom import Button
@@ -10,6 +11,7 @@ from telethon.tl.types import (
     Message,
     ReplyInlineMarkup,
 )
+
 from .. import files, formatter, pathes, phrase, shop, task_gen
 from . import func
 
@@ -203,7 +205,7 @@ async def logshop_command(event: Message):
         message = phrase.shop.history_empty
     try:
         return await event.reply(
-            message, buttons=buttons if buttons else None, parse_mode="markdown"
+            message, buttons=buttons or None, parse_mode="markdown"
         )
     except Exception as e:
         logger.error(f"Ошибка при отправке сообщения logshop: {e}")
@@ -238,7 +240,7 @@ async def logshop_callback(event: events.CallbackQuery.Event):
     )
     try:
         await event.edit(
-            message, buttons=buttons if buttons else None, parse_mode="markdown"
+            message, buttons=buttons or None, parse_mode="markdown"
         )
         await event.answer()
     except Exception as e:
