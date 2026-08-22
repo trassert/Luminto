@@ -1,6 +1,6 @@
 from datetime import datetime
 from random import choice
-from typing import TYPE_CHECKING, dict, list, tuple
+from typing import TYPE_CHECKING
 
 from loguru import logger
 from telethon import events
