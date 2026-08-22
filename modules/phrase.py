@@ -247,6 +247,7 @@ class shop:
     stats = "📊 **Статистика покупок**\n\n📁 Файлов логов: {files}\n👥 Уникальных игроков: {players}\n📦 Всего покупок: {total}\n🎮 Уникальных предметов: {items}\n\n"
     stats_items = "**Предметы:**"
     stats_more = "\n  ... и ещё {count}"
+    incorrect_nick = "❌ Некорректный никнейм игрока."
 
 
 class perms:
