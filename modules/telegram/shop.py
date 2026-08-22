@@ -185,32 +185,36 @@ async def logshop_command(event: Message):
     except Exception:
         return await event.reply(msg, parse_mode="markdown")
 
-
 @func.new_callback("logshop", min_role=2)
 async def logshop_callback(event: events.CallbackQuery.Event):
-    data = event.data.decode().split(".")
-
-    if len(data) >= 2 and data[1] == "close":
-        await event.delete()
-        return
-
-    if len(data) < 4:
-        await event.answer(phrase.shop.error, alert=True)
-        return
-
     try:
+        data = event.data.decode().split(".")
+        logger.info(f"Callback data: {data}")
+        
+        if len(data) >= 2 and data[1] == "close":
+            await event.delete()
+            return
+        
+        if len(data) < 4:
+            await event.answer("❌ Неверные данные", alert=True)
+            return
+        
         nick = data[2]
         page = int(data[3])
-
-        msg, btns = create_pagination_message(
-            nick, group_purchases(await get_player_purchases(nick)), page
-        )
-
-        await event.edit(msg, buttons=btns or None, parse_mode="markdown")
+        
+        logger.info(f"Запрос для {nick}, страница {page}")
+        
+        purchases = await get_player_purchases(nick)
+        grouped = group_purchases(purchases)
+        msg, btns = create_pagination_message(nick, grouped, page)
+        
+        logger.info(f"Сообщение создано, кнопок: {len(btns) if btns else 0}")
+        
+        await event.edit(msg, buttons=btns if btns else None, parse_mode="markdown")
         await event.answer()
     except Exception as e:
         logger.error(f"Ошибка в logshop_callback: {e}")
-        await event.answer(phrase.shop.error, alert=True)
+        await event.answer(f"❌ Ошибка: {str(e)[:50]}", alert=True)
 
 
 @func.new_command([r"/logshopstats$", r"/статистикапокупок$"], min_role=2)
