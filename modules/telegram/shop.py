@@ -17,6 +17,7 @@ from . import func
 
 if TYPE_CHECKING:
     from telethon.tl.custom import Message
+
 logger.info(f"Загружен модуль {__name__}!")
 
 
@@ -30,6 +31,7 @@ async def shop_command(event: Message):
     theme_data = phrase.shop_quotes[theme]
     items = []
     btns = []
+
     for i, (name, info) in enumerate(list(shop_data.items())[:5]):
         val = info["value"]
         items.append(
@@ -40,6 +42,7 @@ async def shop_command(event: Message):
                 text=f"{i + 1}\u20e3", data=f"shop.{i}.{version}".encode()
             )
         )
+
     return await event.reply(
         phrase.shop.shop.format(
             quote=choice(theme_data["quotes"]),
@@ -71,23 +74,22 @@ async def get_player_purchases(nick: str, limit: int = 50) -> list[dict]:
     purchases = []
     if not pathes.shop_log.exists():
         return purchases
+
     for log_file in sorted(pathes.shop_log.glob("*.log")):
         try:
-            content = await files.load_text_async(
-                pathes.shop_log / log_file.name
-            )
+            content = await files.load_text_async(log_file)
             for line in content.splitlines():
                 player, item, count = parse_log_line(line)
                 if player and player.lower() == nick.lower():
-                    date_str = log_file.name.replace(".log", "")
+                    date_str = (
+                        log_file.stem
+                    )  # Аналог .name.replace(".log", ""), но надёжнее
                     purchases.append(
                         {
                             "date": datetime.strptime(date_str, "%Y.%m.%d")
                             if date_str
                             else datetime.now(),
-                            "date_str": date_str.replace(".", ".").replace(
-                                "2026.", "26."
-                            )[:10]
+                            "date_str": date_str.replace("2026.", "26.")[:10]
                             if date_str
                             else datetime.now().strftime("%d.%m.%Y"),
                             "item": item,
@@ -96,6 +98,7 @@ async def get_player_purchases(nick: str, limit: int = 50) -> list[dict]:
                     )
         except Exception as e:
             logger.error(f"Ошибка чтения {log_file.name}: {e}")
+
     return purchases[-limit:] if limit > 0 else purchases
 
 
@@ -111,6 +114,7 @@ def group_purchases(purchases: list[dict]) -> list[dict]:
                 "total_count": 0,
             }
         grouped[key]["total_count"] += p["count"]
+
     return sorted(grouped.values(), key=lambda x: x["date"], reverse=True)
 
 
@@ -142,9 +146,10 @@ def create_pagination_message(
         )
 
     buttons = []
-    nav_buttons = []
 
+    # Кнопки навигации добавляются только если есть куда переходить
     if pages > 1:
+        nav_buttons = []
         if page > 0:
             nav_buttons.append(
                 Button.inline(
@@ -173,11 +178,12 @@ async def logshop_command(event: Message):
     parts = event.raw_text.split(maxsplit=1)
     if len(parts) < 2:
         return await event.reply(phrase.shop.logshop_use)
-    msg, btns = create_pagination_message(
-        parts[1].strip(),
-        group_purchases(await get_player_purchases(parts[1].strip())),
-        0,
-    )
+
+    nick = parts[1].strip()
+    purchases = await get_player_purchases(nick)
+    grouped = group_purchases(purchases)
+    msg, btns = create_pagination_message(nick, grouped, 0)
+
     try:
         return await event.reply(
             msg, buttons=btns or None, parse_mode="markdown"
@@ -189,47 +195,67 @@ async def logshop_command(event: Message):
 @func.new_callback("logshop", min_role=2)
 async def logshop_callback(event: events.CallbackQuery.Event):
     try:
-        data = event.data.decode().split(".")
-        logger.info(f"Callback data: {data}")
+        data_str = event.data.decode()
+        logger.info(f"Callback data: {data_str}")
 
-        if len(data) >= 2 and data[1] == "close":
+        if data_str == "logshop.close":
             await event.delete()
             return
 
-        if len(data) < 4:
-            await event.answer("❌ Неверные данные", alert=True)
-            return
+        if data_str.startswith("logshop."):
+            # Надёжный поиск последней точки для отделения номера страницы от никнейма (даже если в нике есть точки)
+            last_dot_idx = data_str.rfind(".")
+            if last_dot_idx <= len("logshop."):
+                await event.answer(
+                    f"{phrase.shop.error}: Неверный формат", alert=True
+                )
+                return
 
-        nick = data[2]
-        page = int(data[3])
+            nick = data_str[len("logshop.") : last_dot_idx]
+            page_str = data_str[last_dot_idx + 1 :]
 
-        logger.info(f"Запрос для {nick}, страница {page}")
+            try:
+                page = int(page_str)
+            except ValueError:
+                await event.answer(
+                    f"{phrase.shop.error}: Неверная страница", alert=True
+                )
+                return
 
-        purchases = await get_player_purchases(nick)
-        grouped = group_purchases(purchases)
-        msg, btns = create_pagination_message(nick, grouped, page)
+            logger.info(f"Запрос для {nick}, страница {page}")
 
-        logger.info(f"Сообщение создано, кнопок: {len(btns) if btns else 0}")
+            purchases = await get_player_purchases(nick)
+            grouped = group_purchases(purchases)
+            msg, btns = create_pagination_message(nick, grouped, page)
 
-        await event.edit(msg, buttons=btns or None, parse_mode="markdown")
-        await event.answer()
+            logger.info(
+                f"Сообщение создано, рядов кнопок: {len(btns) if btns else 0}"
+            )
+
+            await event.edit(msg, buttons=btns or None, parse_mode="markdown")
+            await event.answer()
+        else:
+            await event.answer(
+                f"{phrase.shop.error}: Неверные данные", alert=True
+            )
+
     except Exception as e:
         logger.error(f"Ошибка в logshop_callback: {e}")
-        await event.answer(f"❌ Ошибка: {str(e)[:50]}", alert=True)
+        await event.answer(f"{phrase.shop.error}: {str(e)[:50]}", alert=True)
 
 
 @func.new_command([r"/logshopstats$", r"/статистикапокупок$"], min_role=2)
 async def logshop_stats_command(event: Message):
     if not pathes.shop_log.exists():
         return await event.reply(phrase.shop.history_empty)
+
     total, players, items = 0, set(), set()
     files_count = 0
+
     for log_file in pathes.shop_log.glob("*.log"):
         files_count += 1
         try:
-            for line in (
-                await files.load_text_async(pathes.shop_log / log_file.name)
-            ).splitlines():
+            for line in (await files.load_text_async(log_file)).splitlines():
                 player, item, count = parse_log_line(line)
                 if player and item:
                     total += count
@@ -237,6 +263,7 @@ async def logshop_stats_command(event: Message):
                     items.add(item)
         except Exception:
             continue
+
     msg = phrase.shop.stats.format(
         files=files_count, players=len(players), total=total, items=len(items)
     )
@@ -248,4 +275,5 @@ async def logshop_stats_command(event: Message):
         )
         if len(items) > 10:
             msg += phrase.shop.stats_more.format(count=len(items) - 10)
+
     return await event.reply(msg, parse_mode="markdown")
