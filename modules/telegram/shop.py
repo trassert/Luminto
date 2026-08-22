@@ -1,7 +1,7 @@
-import re
 from datetime import datetime
 from random import choice
 from typing import TYPE_CHECKING, dict, list, tuple
+
 from loguru import logger
 from telethon import events
 from telethon.tl.custom import Button
@@ -11,7 +11,8 @@ from telethon.tl.types import (
     Message,
     ReplyInlineMarkup,
 )
-from .. import formatter, phrase, shop, task_gen, pathes, files
+
+from .. import files, formatter, pathes, phrase, shop, task_gen
 from . import func
 
 if TYPE_CHECKING:
@@ -178,7 +179,9 @@ def create_pagination_message(
     return message, buttons
 
 
-@func.new_command([r"/logshop (\S+)", r"/логшоп (\S+)", r"/покупки (\S+)"], min_role=2)
+@func.new_command(
+    [r"/logshop (\S+)", r"/логшоп (\S+)", r"/покупки (\S+)"], min_role=2
+)
 async def logshop_command(event: Message):
     """
     Команда для просмотра покупок игрока
@@ -234,7 +237,11 @@ async def logshop_stats_command(event: Message):
     total_purchases = 0
     unique_players = set()
     unique_items = set()
-    log_files = [f for f in pathes.shop_log.iterdir() if f.is_file() and f.name.endswith(".log")]
+    log_files = [
+        f
+        for f in pathes.shop_log.iterdir()
+        if f.is_file() and f.name.endswith(".log")
+    ]
     for log_file in log_files:
         file_path = pathes.shop_log / log_file
         try:
