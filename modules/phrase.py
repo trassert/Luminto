@@ -232,14 +232,21 @@ class shop:
     )
     buy = "✅ : Товар {} успешно куплен!"
     update = "**{emo} : Странствующий торговец пришёл с новыми товарами!**\nТема: {theme}"
-
     old = "❌ : Странствующий торговец уже обновил свои товары!"
     timeout = "❌ : Странствующий торговец чем то занят.."
     history = "📦 : **История покупок игрока {player_nick}**\n\n"
     history_empty = "❌ Покупок не найдено"
     page = "📄 Страница {page} из {total_pages}\n"
     total_items = "📊 Всего записей: {total_items}\n\n"
+    item_line = "  • {item} — {count} шт.\n"
     logshop_use = "❌ : Использование: /logshop <ник игрока>"
+    btn_back = "◀️ Назад"
+    btn_forward = "Вперёд ▶️"
+    btn_close = "❌ Закрыть"
+    error = "❌ Ошибка"
+    stats = "📊 **Статистика покупок**\n\n📁 Файлов логов: {files}\n👥 Уникальных игроков: {players}\n📦 Всего покупок: {total}\n🎮 Уникальных предметов: {items}\n\n"
+    stats_items = "**Предметы:**"
+    stats_more = "\n  ... и ещё {count}"
 
 
 class perms:
