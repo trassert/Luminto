@@ -113,44 +113,59 @@ def group_purchases(purchases: list[dict]) -> list[dict]:
         grouped[key]["total_count"] += p["count"]
     return sorted(grouped.values(), key=lambda x: x["date"], reverse=True)
 
-def create_pagination_message(nick: str, items: list[dict], page: int = 0, per_page: int = 5) -> tuple:
+
+def create_pagination_message(
+    nick: str, items: list[dict], page: int = 0, per_page: int = 5
+) -> tuple:
     total = len(items)
     pages = (total + per_page - 1) // per_page if total > 0 else 1
     page = max(0, min(page, pages - 1))
-    
+
     msg = phrase.shop.history.format(player_nick=nick)
     if not items:
         return msg + phrase.shop.history_empty, []
-    
+
     start = page * per_page
     end = min(start + per_page, total)
     page_items = items[start:end]
-    
-    msg += phrase.shop.page.format(page=page+1, total_pages=pages)
+
+    msg += phrase.shop.page.format(page=page + 1, total_pages=pages)
     msg += phrase.shop.total_items.format(total_items=total)
-    
+
     cur_date = None
     for item in page_items:
         if cur_date != item["date_str"]:
             cur_date = item["date_str"]
             msg += f"\n📆 **{cur_date}:**\n"
-        msg += phrase.shop.item_line.format(item=item['item'], count=item['total_count'])
-    
+        msg += phrase.shop.item_line.format(
+            item=item["item"], count=item["total_count"]
+        )
+
     buttons = []
     nav_buttons = []
-    
+
     if pages > 1:
         if page > 0:
-            nav_buttons.append(Button.inline(phrase.shop.btn_back, f"logshop.{nick}.{page-1}"))
+            nav_buttons.append(
+                Button.inline(
+                    phrase.shop.btn_back, f"logshop.{nick}.{page - 1}"
+                )
+            )
         if page < pages - 1:
-            nav_buttons.append(Button.inline(phrase.shop.btn_forward, f"logshop.{nick}.{page+1}"))
-        
+            nav_buttons.append(
+                Button.inline(
+                    phrase.shop.btn_forward, f"logshop.{nick}.{page + 1}"
+                )
+            )
+
         if nav_buttons:
             buttons.append(nav_buttons)
-    
+
     buttons.append([Button.inline(phrase.shop.btn_close, "logshop.close")])
-    
+
     return msg, buttons
+
+
 @func.new_command(
     [r"/logshop (\S+)", r"/логшоп (\S+)", r"/покупки (\S+)"], min_role=2
 )
@@ -170,33 +185,33 @@ async def logshop_command(event: Message):
     except Exception:
         return await event.reply(msg, parse_mode="markdown")
 
+
 @func.new_callback("logshop", min_role=2)
 async def logshop_callback(event: events.CallbackQuery.Event):
     data = event.data.decode().split(".")
-    
+
     if len(data) >= 2 and data[1] == "close":
         await event.delete()
         return
-    
+
     if len(data) < 4:
         await event.answer(phrase.shop.error, alert=True)
         return
-    
+
     try:
         nick = data[2]
         page = int(data[3])
-        
+
         msg, btns = create_pagination_message(
-            nick, 
-            group_purchases(await get_player_purchases(nick)), 
-            page
+            nick, group_purchases(await get_player_purchases(nick)), page
         )
-        
-        await event.edit(msg, buttons=btns if btns else None, parse_mode="markdown")
+
+        await event.edit(msg, buttons=btns or None, parse_mode="markdown")
         await event.answer()
     except Exception as e:
         logger.error(f"Ошибка в logshop_callback: {e}")
         await event.answer(phrase.shop.error, alert=True)
+
 
 @func.new_command([r"/logshopstats$", r"/статистикапокупок$"], min_role=2)
 async def logshop_stats_command(event: Message):
