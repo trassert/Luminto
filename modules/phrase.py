@@ -235,6 +235,11 @@ class shop:
 
     old = "❌ : Странствующий торговец уже обновил свои товары!"
     timeout = "❌ : Странствующий торговец чем то занят.."
+    history = "📦 : **История покупок игрока {player_nick}**\n\n"
+    history_empty = "❌ Покупок не найдено"
+    page = "📄 Страница {page} из {total_pages}\n"
+    total_items = "📊 Всего записей: {total_items}\n\n"
+    logshop_use = "❌ : Использование: /logshop <ник игрока>"
 
 
 class perms:
