@@ -1,7 +1,6 @@
 from datetime import datetime
 from random import choice
 from typing import TYPE_CHECKING
-
 from loguru import logger
 from telethon import events
 from telethon.tl.custom import Button
@@ -11,7 +10,6 @@ from telethon.tl.types import (
     Message,
     ReplyInlineMarkup,
 )
-
 from .. import files, formatter, pathes, phrase, shop, task_gen
 from . import func
 
@@ -91,13 +89,18 @@ async def get_player_purchases(player_nick: str, limit: int = 50) -> list[dict]:
     log_files = list(pathes.shop_log.glob("*.log"))
     log_files.sort()
     for log_file in log_files:
-        file_path = pathes.shop_log / log_file
+        file_path = pathes.shop_log / log_file.name
         try:
-            f = await files.load_json_async(file_path)
-            for line in f:
+            if not file_path.exists():
+                logger.warning(f"Файл не найден: {file_path}")
+                continue
+            lines = await files.load_text_async(file_path)
+            if not lines:
+                continue
+            for line in lines:
                 player, item, count = parse_log_line(line)
                 if player and player.lower() == player_nick.lower():
-                    date_str = log_file.replace(".log", "")
+                    date_str = log_file.name.replace(".log", "")
                     try:
                         date = datetime.strptime(date_str, "%Y.%m.%d")
                     except ValueError:
@@ -111,7 +114,9 @@ async def get_player_purchases(player_nick: str, limit: int = 50) -> list[dict]:
                         }
                     )
         except Exception as e:
-            logger.error(f"Ошибка чтения {log_file}: {e}")
+            logger.error(f"Ошибка чтения {log_file.name}: {e}")
+    if limit > 0 and len(purchases) > limit:
+        purchases = purchases[-limit:]
     return purchases
 
 
@@ -194,7 +199,15 @@ async def logshop_command(event: Message):
     purchases = await get_player_purchases(player_nick)
     grouped_items = group_purchases(purchases)
     message, buttons = create_pagination_message(player_nick, grouped_items, 0)
-    return await event.reply(message, buttons=buttons, parse_mode="markdown")
+    if not message:
+        message = phrase.shop.history_empty
+    try:
+        return await event.reply(
+            message, buttons=buttons if buttons else None, parse_mode="markdown"
+        )
+    except Exception as e:
+        logger.error(f"Ошибка при отправке сообщения logshop: {e}")
+        return await event.reply(message, parse_mode="markdown")
 
 
 @func.new_callback("logshop", min_role=2)
@@ -223,8 +236,14 @@ async def logshop_callback(event: events.CallbackQuery.Event):
     message, buttons = create_pagination_message(
         player_nick, grouped_items, page
     )
-    await event.edit(message, buttons=buttons, parse_mode="markdown")
-    await event.answer()
+    try:
+        await event.edit(
+            message, buttons=buttons if buttons else None, parse_mode="markdown"
+        )
+        await event.answer()
+    except Exception as e:
+        logger.error(f"Ошибка при редактировании сообщения logshop: {e}")
+        await event.answer("❌ Ошибка при обновлении", alert=True)
 
 
 @func.new_command([r"/logshopstats$", r"/статистикапокупок$"], min_role=2)
@@ -239,16 +258,19 @@ async def logshop_stats_command(event: Message):
     unique_items = set()
     log_files = list(pathes.shop_log.glob("*.log"))
     for log_file in log_files:
-        file_path = pathes.shop_log / log_file
+        file_path = pathes.shop_log / log_file.name
         try:
-            f = await files.load_text_async(file_path)
-            for line in f:
+            if not file_path.exists():
+                continue
+            lines = await files.load_text_async(file_path)
+            for line in lines:
                 player, item, count = parse_log_line(line)
                 if player and item:
                     total_purchases += count
                     unique_players.add(player)
                     unique_items.add(item)
-        except Exception:
+        except Exception as e:
+            logger.error(f"Ошибка чтения {log_file.name}: {e}")
             continue
     message = "📊 **Статистика покупок**\n\n"
     message += f"📁 Файлов логов: {len(log_files)}\n"
