@@ -191,7 +191,7 @@ async def logshop_command(event: Message):
     if len(parts) < 2:
         return await event.reply(phrase.shop.logshop_use)
     player_nick = parts[1].strip()
-    purchases = get_player_purchases(player_nick)
+    purchases = await get_player_purchases(player_nick)
     grouped_items = group_purchases(purchases)
     message, buttons = create_pagination_message(player_nick, grouped_items, 0)
     return await event.reply(message, buttons=buttons, parse_mode="markdown")
