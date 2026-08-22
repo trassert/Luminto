@@ -80,7 +80,7 @@ def parse_log_line(line: str) -> tuple[str, str, int]:
     return player, item, count
 
 
-def get_player_purchases(player_nick: str, limit: int = 50) -> list[dict]:
+async def get_player_purchases(player_nick: str, limit: int = 50) -> list[dict]:
     """
     Собирает все покупки игрока из всех лог-файлов
     Возвращает список словарей с данными о покупках
@@ -218,7 +218,7 @@ async def logshop_callback(event: events.CallbackQuery.Event):
         page = int(data[3])
     except ValueError:
         page = 0
-    purchases = get_player_purchases(player_nick)
+    purchases = await get_player_purchases(player_nick)
     grouped_items = group_purchases(purchases)
     message, buttons = create_pagination_message(
         player_nick, grouped_items, page
