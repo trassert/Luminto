@@ -88,7 +88,7 @@ async def get_player_purchases(player_nick: str, limit: int = 50) -> list[dict]:
     purchases = []
     if not pathes.shop_log.exists():
         return purchases
-    log_files = [f for f in pathes.shop_log.iterdir() if f.endswith(".log")]
+    log_files = list(pathes.shop_log.glob("*.log"))
     log_files.sort()
     for log_file in log_files:
         file_path = pathes.shop_log / log_file
@@ -237,11 +237,7 @@ async def logshop_stats_command(event: Message):
     total_purchases = 0
     unique_players = set()
     unique_items = set()
-    log_files = [
-        f
-        for f in pathes.shop_log.iterdir()
-        if f.is_file() and f.name.endswith(".log")
-    ]
+    log_files = list(pathes.shop_log.glob("*.log"))
     for log_file in log_files:
         file_path = pathes.shop_log / log_file
         try:
