@@ -55,7 +55,9 @@ NAMED_COLORS = {
 COLOR_ALIASES = {"grey": "gray", "dark_grey": "dark_gray"}
 DECORATIONS = {
     "bold": "bold",
+    "b": "bold",
     "italic": "italic",
+    "i": "italic",
     "underlined": "underlined",
     "underline": "underlined",
     "strikethrough": "strikethrough",
