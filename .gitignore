@@ -5,6 +5,8 @@ backup/*
 images/*
 charts/*
 log/*
+configs/*
+
 
 mappings
 
@@ -17,6 +19,3 @@ venv
 .vscode
 uv.lock
 .ruff_cache
-
-tokens.yml
-chats.yml

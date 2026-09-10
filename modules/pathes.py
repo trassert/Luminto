@@ -4,6 +4,7 @@ ai = Path("db") / "ai" / "history.json"
 
 # Конфиг
 config = Path("configs")
+defaults = Path("defaults")
 db = Path("db")
 
 # Директории и файлы в db/crocodile/

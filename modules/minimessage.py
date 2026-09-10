@@ -1,6 +1,7 @@
 """
 minimessage.py — рендерер MiniMessage (Adventure) в PNG.
-Вход:  строка MiniMessage, напр. "<gradient:#54daf4:#545eb6>Birdflop</gradient>"
+
+Вход: строка MiniMessage, напр. "<gradient:#54daf4:#545eb6>Пример</gradient>"
 Выход: PNG-картинка в стиле Minecraft (шрифт fonts/minecraft.ttf, тень, декорации).
 Поддерживается:
     • цвета: <red>, <dark_aqua>, ..., <white>, <#RRGGBB>, <color:#RRGGBB>, <colour:red>
@@ -453,7 +454,10 @@ class Renderer:
             w = 0.0
             for it in line:
                 font = bank.get(it["font"])
-                w += self.char_advance(font, it["ref"])
+                adv = self.char_advance(font, it["ref"])
+                if "bold" in it["deco"]:
+                    adv += s
+                w += adv
             widths.append(w)
         max_w = math.ceil(max(widths)) if widths else 0
         d_asc, d_desc = self.metric(bank.default_font)
@@ -481,6 +485,8 @@ class Renderer:
             for it in line:
                 font = bank.get(it["font"])
                 adv = self.char_advance(font, it["ref"])
+                if "bold" in it["deco"]:
+                    adv += s
                 chars.append((it, font, adv, x))
                 x += adv
             if self.shadow:
@@ -569,7 +575,7 @@ def render(
     font_path: Path = pathes.font,
     scale: int = 12,
     shadow: bool = True,
-    bg: (int, int, int) = (38, 38, 38),
+    bg: tuple = (38, 38, 38),
     bg_image: Path = pathes.mini_pic_bg,
     extra_fonts=None,
     max_len: int = 32,

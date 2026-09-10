@@ -101,7 +101,7 @@ class Generator:
         """Рабочий для ежедневных задач."""
         while True:
             current_time = time.time()
-
+            # мои яйца убийцы..
             wait_time = self._next_run_timestamp - current_time
             if wait_time > 0:
                 await asyncio.sleep(wait_time)
