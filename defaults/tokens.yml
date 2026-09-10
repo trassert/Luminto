@@ -1,0 +1,56 @@
+bot:
+  id: 123456
+  hash: bot_hash
+  creator: 123456789
+  token: bot:token
+
+gh: actions_password
+vipaction: vip_password
+
+proxy:
+  enabled: false
+  host: "1.1.1.1"
+  port: 8080
+  auth: true
+  login: "login"
+  password: "password"
+
+mtproxy:
+  enable: false
+  server: "1.1.1.1"
+  port: 443
+  secret: "secret"
+
+modes:
+  vanilla:
+    host: 127.0.0.1
+    password: rcon_password
+    port: 25575
+    query_port: 25565
+
+mysql_users:
+  host: localhost
+  user: user
+  password: password
+  database: database
+  table: table
+
+hotmc: password
+mcservers: password
+chattohttp: password
+bankplugin: password
+
+ai:
+  proxy:
+    enabled: false
+    proxy_str: "socks5://user:password@ip:port"
+  token: "token"
+
+#! For scripts
+
+mysql_map:
+  host: host
+  user: user
+  password: password
+  database: database
+  table: AUTH
