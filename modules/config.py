@@ -6,90 +6,87 @@ cfg = ConfigManager("config.yml")
 print(cfg.some_variable)
 ```
 """
-
-from pathlib import Path
-
 import yaml
 from loguru import logger
 
 from . import pathes
+from pathlib import Path
 
 logger.info(f"Загружен модуль {__name__}!")
 
 
 class ConfigSection(dict):
-    def __init__(s, d, def_=None):
-        super().__init__(d)
-        s._default = def_ or {}
-        for k, v in d.items():
-            s[k] = (
-                ConfigSection(v, s._default.get(k))
-                if isinstance(v, dict)
-                else [
-                    ConfigSection(i, s._default.get(k))
-                    if isinstance(i, dict)
-                    else i
-                    for i in v
-                ]
-                if isinstance(v, list)
-                else v
-            )
+    "Конфиг-секции для менеджера. Dict -> ConfigSection."
 
-    def __getattr__(s, k):
-        if k in s:
-            return s[k]
-        if k in s._default:
-            v = s._default[k]
-            return ConfigSection(v) if isinstance(v, dict) else v
-        msg = f"'{type(s).__name__}' has no attribute '{k}'"
-        raise AttributeError(msg)
+    def __init__(self, data, default=None):
+        super().__init__(data)
+        self._default = default
+        for key, value in data.items():
+            if isinstance(value, dict):
+                default_value = None
+                if default and key in default:
+                    default_value = default[key]
+                self[key] = ConfigSection(value, default_value)
+            elif isinstance(value, list):
+                self[key] = [
+                    ConfigSection(i) if isinstance(i, dict) else i
+                    for i in value
+                ]
+
+    def __getattr__(self, key):
+        if key in self:
+            return self.get(key)
+        if self._default and key in self._default:
+            default_value = self._default[key]
+            if isinstance(default_value, dict):
+                return ConfigSection(default_value)
+            return default_value
+        raise AttributeError(f"'{type(self).__name__}' object has no attribute '{key}'")
 
 
 class ConfigManager:
-    def __init__(s, path, defaults=None):
+    """Root. Вызывается.
+    Пример: config.cfg.bot.token
+    """
+
+    def __init__(self, path: Path | str, defaults: Path | str = None):
         if isinstance(path, str):
             path = Path(path)
-        elif not isinstance(path, Path):
-            msg = f"path must be Path, got {type(path)}"
-            raise TypeError(msg)
+        if isinstance(path, Path):
+            path = path
+        else:
+            raise TypeError(f"path must be Path, got {type(path)}")
         logger.info(f"Зарегистрирован конфиг {path}")
-        def_data = s._load_yaml(defaults) if defaults else None
+
+        default_data = None
+        if defaults is not None:
+            if isinstance(defaults, str):
+                defaults = Path(defaults)
+            try:
+                default_data = yaml.safe_load(defaults.read_text())
+            except FileNotFoundError:
+                logger.warning(f"Файл дефолтных настроек {defaults} не найден.")
+
         try:
-            raw = path.read_text()
+            data = path.read_text()
         except FileNotFoundError:
-            logger.warning(f"Конфиг {path} не найден.")
+            logger.warning(f"Файл конфигурации {path} не найден.")
             if defaults is None:
-                msg = "'defaults' required when config file missing"
-                raise ValueError(msg)
-            raw = s._resolve_default(defaults, path)
-        s._data = ConfigSection(yaml.safe_load(raw), def_data)
+                raise ValueError("defaults must be provided if config file does not exist.")
+            if isinstance(defaults, str):
+                path.write_text(defaults)
+                data = defaults
+            if isinstance(defaults, Path):
+                data = defaults.read_text()
+                path.write_text(data)
+            else:
+                raise ValueError(f"defaults must be Path | str, got {type(defaults)}")
 
-    @staticmethod
-    def _load_yaml(src):
-        p = Path(src) if isinstance(src, str) else src
-        try:
-            return yaml.safe_load(p.read_text())
-        except FileNotFoundError:
-            logger.warning(f"Дефолтный конфиг {p} не найден.")
-            return None
+        loaded_data = yaml.safe_load(data)
+        self._data = ConfigSection(loaded_data, default_data)
 
-    @staticmethod
-    def _resolve_default(defaults, target):
-        data = (
-            defaults
-            if isinstance(defaults, str)
-            else defaults.read_text()
-            if isinstance(defaults, Path)
-            else None
-        )
-        if data is None:
-            msg = f"'defaults' must be Path | str, got {type(defaults)}"
-            raise ValueError(msg)
-        target.write_text(data)
-        return data
-
-    def __getattr__(s, k):
-        return getattr(s._data, k)
+    def __getattr__(self, key):
+        return getattr(self._data, key)
 
 
 cfg = ConfigManager(
