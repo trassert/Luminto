@@ -902,10 +902,10 @@ async def check_host(event: Message) -> Message:
         res = r[0]
         if res[0] == 1:
             text.append(
-                f"{func.cc_to_flag(data['info']['nodes'][node][0])} : {node} - ✅ - Пинг {round(res[1] * 1000)} мс\n"
+                f"{func.cc_to_flag(data['info']['nodes'][node][0])} : {node} - ✅ - Пинг {round(res[1] * 1000)} мс"
             )
         else:
             text.append(
-                f"{func.cc_to_flag(data['info']['nodes'][node][0])} : {node} - ❌ - {res[2]}\n"
+                f"{func.cc_to_flag(data['info']['nodes'][node][0])} : {node} - ❌ - {res[2]}"
             )
     return await event.reply("\n".join(text))
