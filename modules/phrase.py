@@ -1,3 +1,5 @@
+from tabnanny import check
+
 from loguru import logger
 
 from . import config
@@ -827,6 +829,11 @@ class qr:
 class minimessage:
     too_long = "❌ : Максимум 32 символа для рендеринга."
     done = "✅ : Вот так выглядит ваше сообщение"
+
+
+class check_host:
+    invalid_url = "❌ : Неверный адрес сайта."
+    checking = "🔍 : Проверка сайта **{domain}**..."
 
 
 get_map = "🗺 : **[Кликни, чтобы открыть карту сервера](https://lumintomc.ru/map)**\n\n• Используйте внешний браузер"

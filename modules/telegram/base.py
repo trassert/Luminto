@@ -5,14 +5,13 @@ from time import time
 from typing import TYPE_CHECKING, Any
 
 import aiofiles
+import aiohost
 import anyio
 from loguru import logger
 from telethon import Button
 from telethon import errors as tgerrors
 from telethon.tl import types
-from telethon.tl.types import (
-    KeyboardButtonCallback,
-)
+from telethon.tl.types import KeyboardButtonCallback
 
 from .. import (
     config,
@@ -889,3 +888,21 @@ async def miniparser(event: Message) -> Message:
         caption=phrase.minimessage.done,
     )
     return await anyio.Path(out_path).unlink(missing_ok=True)
+
+
+@func.new_command(r"/сайт (.+)")
+async def check_host(event: Message) -> Message:
+    domain = func.extract_domain(event.pattern_match.group(1))
+    if not domain:
+        return await event.reply(phrase.check_host.invalid_url)
+
+    data = await aiohost.check(
+        "http", domain)
+    text = [phrase.check_host.checking.format(domain=domain)]
+    for node, r in data["result"].items():
+        res = r[0]
+        if res[0] == 1:
+            text.append(f"{func.cc_to_flag([node][0])} : {node} - ✅ - Пинг {round(res[1]*1000)} мс\n")
+        else:
+            text.append(f"{func.cc_to_flag([node][0])} : {node} - ❌ - {res[2]}\n")
+    return await event.reply("\n".join(text))

@@ -6,11 +6,13 @@ cfg = ConfigManager("config.yml")
 print(cfg.some_variable)
 ```
 """
+
+from pathlib import Path
+
 import yaml
 from loguru import logger
 
 from . import pathes
-from pathlib import Path
 
 logger.info(f"Загружен модуль {__name__}!")
 
@@ -41,7 +43,9 @@ class ConfigSection(dict):
             if isinstance(default_value, dict):
                 return ConfigSection(default_value)
             return default_value
-        raise AttributeError(f"'{type(self).__name__}' object has no attribute '{key}'")
+        raise AttributeError(
+            f"'{type(self).__name__}' object has no attribute '{key}'"
+        )
 
 
 class ConfigManager:
@@ -72,7 +76,9 @@ class ConfigManager:
         except FileNotFoundError:
             logger.warning(f"Файл конфигурации {path} не найден.")
             if defaults is None:
-                raise ValueError("defaults must be provided if config file does not exist.")
+                raise ValueError(
+                    "defaults must be provided if config file does not exist."
+                )
             if isinstance(defaults, str):
                 path.write_text(defaults)
                 data = defaults
@@ -80,7 +86,9 @@ class ConfigManager:
                 data = defaults.read_text()
                 path.write_text(data)
             else:
-                raise ValueError(f"defaults must be Path | str, got {type(defaults)}")
+                raise ValueError(
+                    f"defaults must be Path | str, got {type(defaults)}"
+                )
 
         loaded_data = yaml.safe_load(data)
         self._data = ConfigSection(loaded_data, default_data)

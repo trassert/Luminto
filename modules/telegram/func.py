@@ -1,5 +1,6 @@
 import re
 from typing import TYPE_CHECKING
+from urllib.parse import urlparse
 
 from loguru import logger
 from telethon import events
@@ -205,3 +206,21 @@ def get_dice(value: int) -> list[str]:
         str(((value - 1) >> 2) & 3),
         str(((value - 1) >> 4) & 3),
     ]
+
+
+def cc_to_flag(cc: str) -> str:
+    return "".join(chr(127397 + ord(c.upper())) for c in cc)
+
+
+def extract_domain(url: str) -> str | bool:
+    """Извлекает домен из URL.
+    Возвращает домен или False в случае ошибки.
+    Вход: https://example.com/some-shit
+    Выход: example.com
+    """
+
+    try:
+        h = urlparse(url if "://" in url else "http://" + url.strip()).hostname
+    except Exception:
+        return False
+    return h if h and re.fullmatch(r"([a-z0-9-]+\.)+[a-z]{2,}", h) else False
