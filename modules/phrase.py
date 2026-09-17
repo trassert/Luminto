@@ -1,5 +1,3 @@
-from tabnanny import check
-
 from loguru import logger
 
 from . import config
