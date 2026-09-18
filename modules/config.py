@@ -43,9 +43,8 @@ class ConfigSection(dict):
             if isinstance(default_value, dict):
                 return ConfigSection(default_value)
             return default_value
-        raise AttributeError(
-            f"'{type(self).__name__}' object has no attribute '{key}'"
-        )
+        msg = f"'{type(self).__name__}' object has no attribute '{key}'"
+        raise AttributeError(msg)
 
 
 class ConfigManager:
@@ -59,7 +58,8 @@ class ConfigManager:
         if isinstance(path, Path):
             path = path
         else:
-            raise TypeError(f"path must be Path, got {type(path)}")
+            msg = f"path must be Path | str, got {type(path)}"
+            raise TypeError(msg)
         logger.info(f"Зарегистрирован конфиг {path}")
 
         default_data = None
@@ -76,9 +76,8 @@ class ConfigManager:
         except FileNotFoundError:
             logger.warning(f"Файл конфигурации {path} не найден.")
             if defaults is None:
-                raise ValueError(
-                    "defaults must be provided if config file does not exist."
-                )
+                msg = "defaults must be provided if config file does not exist."
+                raise ValueError(msg)
             if isinstance(defaults, str):
                 path.write_text(defaults)
                 data = defaults
@@ -86,9 +85,8 @@ class ConfigManager:
                 data = defaults.read_text()
                 path.write_text(data)
             else:
-                raise ValueError(
-                    f"defaults must be Path | str, got {type(defaults)}"
-                )
+                msg = f"defaults must be Path | str, got {type(defaults)}"
+                raise TypeError(msg)
 
         loaded_data = yaml.safe_load(data)
         self._data = ConfigSection(loaded_data, default_data)
