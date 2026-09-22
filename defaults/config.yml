@@ -8,6 +8,7 @@ TopBets: 1.5
 WordRequest: 2
 LinkGift: 5
 ActiveGift: 20
+VoteGift: 15
 PercentForRandomLetter: 0.3
 
 CasinoWinRatio: 8

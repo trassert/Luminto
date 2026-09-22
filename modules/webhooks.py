@@ -39,6 +39,10 @@ def is_local_request(request: aiohttp.web.Request) -> bool:
         return ip.is_loopback or ip.is_private
 
 
+async def status(request: aiohttp.web.Request):
+    return aiohttp.web.Response(text="ok")
+
+
 async def github(request: aiohttp.web.Request) -> aiohttp.web.Response:
     sig = request.headers.get("X-Hub-Signature-256")
     if not sig or "=" not in sig:
@@ -140,146 +144,144 @@ async def github(request: aiohttp.web.Request) -> aiohttp.web.Response:
         return aiohttp.web.Response(text="Bad request", status=400)
 
 
-async def server():
-    async def status(request: aiohttp.web.Request):
-        return aiohttp.web.Response(text="ok")
-
-    async def hotmc(request: aiohttp.web.Request):
-        load = await request.post()
-        nick = load["nick"]
-        sign = load["sign"]
-        time = load["time"]
-        logger.success(f"{nick} проголосовал в {time} с хешем {sign}")
-        hash = sha1(f"{nick}{time}{config.tokens.hotmc}".encode()).hexdigest()
-        if sign != hash:
-            logger.warning("Хеш не совпал!")
-            logger.warning(f"Должен быть: {sign}")
-            logger.warning(f"Имеется: {hash}")
-            return aiohttp.web.Response(
-                text="Переданные данные не прошли проверку.",
-                status=401,
-            )
-        tg_id = await nicks.get_byname(nick)
-        if tg_id is not None:
-            await db.add_money(tg_id, 10)
-            await db.add_votes(tg_id, 1)
-            give = phrase.vote_money.format(
-                formatter.value_to_str(10, phrase.currency),
-            )
-        else:
-            give = ""
-        await client.send_message(
-            config.chats.chat,
-            phrase.hotmc.format(nick=nick, money=give),
-            link_preview=False,
+async def hotmc(request: aiohttp.web.Request):
+    load = await request.post()
+    nick = load["nick"]
+    sign = load["sign"]
+    time = load["time"]
+    logger.success(f"{nick} проголосовал в {time} с хешем {sign}")
+    hash = sha1(f"{nick}{time}{config.tokens.hotmc}".encode()).hexdigest()
+    if sign != hash:
+        logger.warning("Хеш не совпал!")
+        logger.warning(f"- Должен быть: {sign}")
+        logger.warning(f"- Имеется: {hash}")
+        return aiohttp.web.Response(
+            text="Unauthorized",
+            status=401,
         )
-        return aiohttp.web.Response(text="ok")
-
-    async def mcservers(request: aiohttp.web.Request):
-        load = await request.post()
-        username = load["username"]
-        sign = load["sign"]
-        time = load["time"]
-        logger.success(f"{username} проголосовал в {time} с хешем {sign}")
-        hash = md5(
-            f"{username}|{time}|{config.tokens.mcservers}".encode(),
-        ).hexdigest()
-        if sign != hash:
-            logger.warning("Хеш не совпал!")
-            logger.warning(f"Должен быть: {sign}")
-            logger.warning(f"Имеется: {hash}")
-            return aiohttp.web.Response(
-                text="Переданные данные не прошли проверку.",
-                status=401,
-            )
-        tg_id = await nicks.get_byname(username)
-        if tg_id is not None:
-            await db.add_money(tg_id, 10)
-            await db.add_votes(tg_id, 1)
-            give = phrase.vote_money.format(
-                formatter.value_to_str(10, phrase.currency),
-            )
-        else:
-            give = ""
-        await client.send_message(
-            config.chats.chat,
-            phrase.servers.format(nick=username, money=give),
-            link_preview=False,
+    tg_id = await nicks.get_byname(nick)
+    if tg_id is not None:
+        await db.add_money(tg_id, config.cfg.VoteGift)
+        await db.add_votes(tg_id, 1)
+        give = phrase.vote_money.format(
+            formatter.value_to_str(config.cfg.VoteGift, phrase.currency),
         )
-        return aiohttp.web.Response(text="ok")
+    else:
+        give = ""
+    await client.send_message(
+        config.chats.chat,
+        phrase.hotmc.format(nick=nick, money=give),
+        link_preview=False,
+    )
+    return aiohttp.web.Response(text="ok")
 
-    async def minecraft(request: aiohttp.web.Request):
-        if not is_local_request(request):
-            return aiohttp.web.Response(text="Forbidden", status=403)
-        data = await request.post()
-        if data.get("password") != config.tokens.chattohttp:
-            logger.info("Неверный пароль (C2HTTP)")
-            return aiohttp.web.Response(
-                text="Password is not valid", status=401
-            )
-        nick = data.get("nick")
-        if not formatter.is_valid_mc_nick(nick):
-            return aiohttp.web.Response(text="Nick is not valid", status=406)
-        await db.Statistic().add(nick)
-        logger.debug(f"+ соо. от {nick}")
-        return aiohttp.web.Response(text="ok")
 
-    async def own_actions(request: aiohttp.web.Request):
-        if not is_local_request(request):
-            return aiohttp.web.Response(text="Forbidden", status=403)
-        data = await request.json()
-        action = data.get("action")
-        if action == "vip":
-            if data.get("password") != config.tokens.vipaction:
-                logger.info("Неверный пароль (vip-action)")
-                return aiohttp.web.Response(
-                    text="Password is not valid", status=401
-                )
-            tgid = await nicks.get_byname(data.get("player"))
-            if tgid is None:
-                logger.warning("Неверный игрок (vip-action)")
-                return aiohttp.web.Response(text="Uncorrect player", status=401)
-            roles = db.Roles()
-            user = await roles.get(tgid)
-            if user > roles.VIP:
-                logger.warning("Игрок уже имеет VIP или выше (vip-action)")
-                return aiohttp.web.Response(
-                    text="Player already has VIP or higher", status=401
-                )
-            if user == roles.BLACKLIST:
-                logger.warning("Игрок в черном списке (vip-action)")
-                return aiohttp.web.Response(
-                    text="Player is blacklisted", status=401
-                )
-            await roles.set(tgid, roles.VIP)
-            return aiohttp.web.Response(text="ok")
-        return aiohttp.web.Response(text="Incorrect action", status=400)
+async def mcservers(request: aiohttp.web.Request):
+    load = await request.post()
+    username = load["username"]
+    sign = load["sign"]
+    time = load["time"]
+    logger.success(f"{username} проголосовал в {time} с хешем {sign}")
+    hash = md5(
+        f"{username}|{time}|{config.tokens.mcservers}".encode(),
+    ).hexdigest()
+    if sign != hash:
+        logger.warning("Хеш не совпал!")
+        logger.warning(f"- Должен быть: {sign}")
+        logger.warning(f"- Имеется: {hash}")
+        return aiohttp.web.Response(
+            text="Переданные данные не прошли проверку.",
+            status=401,
+        )
+    tg_id = await nicks.get_byname(username)
+    if tg_id is not None:
+        await db.add_money(tg_id, config.cfg.VoteGift)
+        await db.add_votes(tg_id, 1)
+        give = phrase.vote_money.format(
+            formatter.value_to_str(config.cfg.VoteGift, phrase.currency),
+        )
+    else:
+        give = ""
+    await client.send_message(
+        config.chats.chat,
+        phrase.servers.format(nick=username, money=give),
+        link_preview=False,
+    )
+    return aiohttp.web.Response(text="ok")
 
-    async def bank(request: aiohttp.web.Request):
-        if not is_local_request(request):
-            return aiohttp.web.Response(text="Forbidden", status=403)
-        if request.query.get("key") != config.tokens.bankplugin:
-            logger.warning("Неверный пароль (BankPlugin)")
-            return aiohttp.web.Response(text="Uncorrect key", status=401)
-        playerid = await nicks.get_byname(request.query.get("player"))
-        if playerid is None:
-            logger.warning("Неверный игрок (BankPlugin)")
+
+async def minecraft(request: aiohttp.web.Request):
+    if not is_local_request(request):
+        return aiohttp.web.Response(text="Forbidden", status=403)
+    data = await request.post()
+    if data.get("password") != config.tokens.chattohttp:
+        logger.info("Неверный пароль (C2HTTP)")
+        return aiohttp.web.Response(text="Unauthorized", status=401)
+    nick = data.get("nick")
+    if not formatter.is_valid_mc_nick(nick):
+        return aiohttp.web.Response(text="Nick is not valid", status=406)
+    await db.Statistic().add(nick)
+    logger.debug(f"+ соо. от {nick}")
+    return aiohttp.web.Response(text="ok")
+
+
+async def own_actions(request: aiohttp.web.Request):
+    if not is_local_request(request):
+        return aiohttp.web.Response(text="Forbidden", status=403)
+    data = await request.json()
+    action = data.get("action")
+    if action == "vip":
+        if data.get("password") != config.tokens.vipaction:
+            logger.info("Неверный пароль (vip-action)")
+            return aiohttp.web.Response(text="Unauthorized", status=401)
+        tgid = await nicks.get_byname(data.get("player"))
+        if tgid is None:
+            logger.warning("Неверный игрок (vip-action)")
             return aiohttp.web.Response(text="Uncorrect player", status=401)
-        amount = int(request.query.get("amount"))
-        if not (0 < amount < 67):
-            logger.warning("Неверное количество (BankPlugin)")
-            return aiohttp.web.Response(text="Uncorrect amount", status=401)
-        await client.send_message(
-            config.chats.chat,
-            phrase.mcadd_money.format(
-                player=await func.get_name(playerid, minecraft=True),
-                amount=formatter.value_to_str(amount, phrase.currency),
-            ),
-        )
-        await db.add_money(playerid, amount)
-        logger.info(f"[Bank] Переведено {amount} на счет {playerid}")
+        roles = db.Roles()
+        user = await roles.get(tgid)
+        if user > roles.VIP:
+            logger.warning("Игрок уже имеет VIP или выше (vip-action)")
+            return aiohttp.web.Response(
+                text="Player already has VIP or higher", status=401
+            )
+        if user == roles.BLACKLIST:
+            logger.warning("Игрок в черном списке (vip-action)")
+            return aiohttp.web.Response(
+                text="Player is blacklisted", status=401
+            )
+        await roles.set(tgid, roles.VIP)
         return aiohttp.web.Response(text="ok")
+    return aiohttp.web.Response(text="Incorrect action", status=400)
 
+
+async def bank(request: aiohttp.web.Request):
+    if not is_local_request(request):
+        return aiohttp.web.Response(text="Forbidden", status=403)
+    if request.query.get("key") != config.tokens.bankplugin:
+        logger.warning("Неверный пароль (BankPlugin)")
+        return aiohttp.web.Response(text="Unauthorized", status=401)
+    playerid = await nicks.get_byname(request.query.get("player"))
+    if playerid is None:
+        logger.warning("Неверный игрок (BankPlugin)")
+        return aiohttp.web.Response(text="Uncorrect player", status=401)
+    amount = int(request.query.get("amount"))
+    if not (0 < amount < 67):
+        logger.warning("Неверное количество (BankPlugin)")
+        return aiohttp.web.Response(text="Uncorrect amount", status=401)
+    await client.send_message(
+        config.chats.chat,
+        phrase.mcadd_money.format(
+            player=await func.get_name(playerid, minecraft=True),
+            amount=formatter.value_to_str(amount, phrase.currency),
+        ),
+    )
+    await db.add_money(playerid, amount)
+    logger.info(f"[Bank] Переведено {amount} на счет {playerid}")
+    return aiohttp.web.Response(text="ok")
+
+
+async def server():
     app = aiohttp.web.Application()
     app.add_routes(
         [
