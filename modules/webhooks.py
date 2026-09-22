@@ -2,6 +2,7 @@ import asyncio
 import hmac
 import ipaddress
 from hashlib import md5, sha1, sha256
+from urllib.parse import quote
 
 import aiohttp
 import aiohttp.web
@@ -61,81 +62,84 @@ async def github(request: aiohttp.web.Request) -> aiohttp.web.Response:
         logger.info(f"GitHub webhook: event={event}, action={action}")
 
         repo = data["repository"]
-        repo_name = repo["name"]
-        repo_url = repo["html_url"]
+        repo_name = phrase.esc(repo["name"])
+        repo_url = phrase.href(repo["html_url"])
         is_private = repo["private"]
 
-        repo_cfg = repos.get(repo_name, {})
+        repo_cfg = repos.get(repo["name"], {})
         chat_id = repo_cfg.get("chat", config.chats.chat)
         topic_id = repo_cfg.get("topic", config.chats.topics.updates)
+
+        async def send(text: str, *, reply: bool = True) -> None:
+            await client.send_message(
+                chat_id,
+                text,
+                link_preview=False,
+                parse_mode="html",
+                reply_to=topic_id if reply else None,
+            )
 
         if event == "star" and action != "deleted":
             logger.info(f"Звезда! Репо {repo_name}")
             sender = data["sender"]
-            await client.send_message(
-                chat_id,
+            await send(
                 phrase.github.star.format(
                     repo=repo_name,
                     repo_url=repo_url,
-                    author=sender["login"],
-                    author_url=sender["html_url"],
+                    author=phrase.esc(sender["login"]),
+                    author_url=phrase.href(sender["html_url"]),
                 ),
-                link_preview=False,
+                reply=False,
             )
         elif event == "push" and data.get("commits"):
             logger.info(f"Обновление! Репо {repo_name}")
             branch = data["ref"].split("/")[-1]
 
             for commit in data["commits"]:
-                author_name = (
-                    commit["author"]["name"].replace("[", " ").replace("]", " ")
-                )
-                await client.send_message(
-                    chat_id,
+                author_name = commit["author"]["name"]
+                await send(
                     phrase.github.update.format(
-                        branch=f" ({branch})"
+                        repo=repo_name,
+                        repo_url=repo_url,
+                        branch=f" ({phrase.esc(branch)})"
                         if branch not in ("master", "main")
                         else "",
-                        author=f"[{author_name}](https://github.com/{author_name})",
-                        message=commit["message"],
-                        changes=f"**[Что изменилось?]({commit['url']})**"
-                        if not is_private
-                        else "",
-                        repo=f"[{repo_name}]({repo_url})",
-                    ),
-                    link_preview=False,
-                    reply_to=topic_id,
+                        author=(
+                            f'<a href="https://github.com/{phrase.href(quote(author_name))}">'
+                            f"{phrase.esc(author_name)}</a>"
+                        ),
+                        message=phrase.esc(commit["message"]),
+                        changes=(
+                            f'<b><a href="{phrase.href(commit["url"])}">Что изменилось?</a></b>'
+                            if not is_private
+                            else ""
+                        ),
+                    )
                 )
         elif (event == "repository" and action == "created") or (
             event == "ping" and data["hook"]["type"] == "Repository"
         ):
             logger.info(f"Новое репо ({event}) - {repo_name}")
             sender = data["sender"]
-            await client.send_message(
-                chat_id,
+            await send(
                 phrase.github.new.format(
                     repo=repo_name,
+                    repo_url=repo_url,
                     type="Приватный" if is_private else "Публичный",
-                    url=repo_url,
-                    author=sender["login"],
-                    author_url=sender["html_url"],
-                ),
-                link_preview=False,
-                reply_to=topic_id,
+                    author=phrase.esc(sender["login"]),
+                    author_url=phrase.href(sender["html_url"]),
+                )
             )
         elif event == "issues" and action == "labeled":
             logger.info(f"Выдан тип! Репо {repo_name}")
             issue = data["issue"]
             label = data["label"]
-            await client.send_message(
-                chat_id,
+            await send(
                 phrase.github.issue_labeled.format(
-                    issue=issue["title"],
-                    issue_url=issue["html_url"],
-                    label=label["name"],
-                ),
-                link_preview=False,
-                reply_to=topic_id,
+                    issue=phrase.esc(issue["title"]),
+                    issue_url=phrase.href(issue["html_url"]),
+                    label=phrase.esc(label["name"]),
+                )
             )
         elif event == "issues" and action == "opened":
             logger.info(f"Открыт топик! Репо {repo_name}")
@@ -144,16 +148,12 @@ async def github(request: aiohttp.web.Request) -> aiohttp.web.Response:
             body_text = (
                 issue_body.strip() if issue_body else "Описание отсутствует"
             )
-
-            await client.send_message(
-                chat_id,
+            await send(
                 phrase.github.issue_opened.format(
-                    issue=issue["title"],
-                    url=issue["html_url"],
-                    body=body_text,
-                ),
-                link_preview=False,
-                reply_to=topic_id,
+                    issue=phrase.esc(issue["title"]),
+                    url=phrase.href(issue["html_url"]),
+                    body=phrase.esc(body_text),
+                )
             )
         elif event == "issues" and action == "closed":
             logger.info(f"Закрыт топик! Репо {repo_name}")
@@ -161,16 +161,13 @@ async def github(request: aiohttp.web.Request) -> aiohttp.web.Response:
             emoji, reason = phrase.github.close_reasons.get(
                 issue["state_reason"], ("❌", "Без причины")
             )
-            await client.send_message(
-                chat_id,
+            await send(
                 phrase.github.issue_closed.format(
                     emoji=emoji,
-                    issue=issue["title"],
-                    url=issue["html_url"],
+                    issue=phrase.esc(issue["title"]),
+                    url=phrase.href(issue["html_url"]),
                     reason=reason,
-                ),
-                link_preview=False,
-                reply_to=topic_id,
+                )
             )
 
         return aiohttp.web.Response(text="ok")

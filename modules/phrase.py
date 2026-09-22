@@ -746,26 +746,26 @@ class cities:
 
 class github:
     star = (
-        "**⭐️ : [{repo}]({repo_url}) получил новую звезду!**\n"
-        "Спасибо, **[{author}]({author_url})**!"
+        "<b>⭐️ : <a href=\"{repo_url}\">{repo}</a> получил новую звезду!</b>\n"
+        "Спасибо, <b><a href=\"{author_url}\">{author}</a></b>!"
     )
     update = (
-        "**🎉 : {repo}{branch} получил обновление!**\n"
+        "🎉 : <b><a href=\"{repo_url}\">{repo}</a>{branch}</b> получил обновление!\n"
         "\n"
-        "👨🏻‍💻 : Автор: **{author}**\n"
+        "👨🏻‍💻 : Автор: <b>{author}</b>\n"
         "💬 : {message}\n"
         "\n"
         "{changes}"
     )
     new = (
-        "**🆕 : Новый проект - [{repo}]({url})**\n"
+        "<b>🆕 : Новый проект - <a href=\"{repo_url}\">{repo}</a></b>\n"
         "\n"
-        "👨🏻‍💻 : Автор: **[{author}]({author_url})**\n"
-        "🗂 : Тип: **{type}**"
+        "👨🏻‍💻 : Автор: <b><a href=\"{author_url}\">{author}</a></b>\n"
+        "🗂 : Тип: <b>{type}</b>"
     )
-    issue_labeled = "🏷 : Топику [{issue}]({issue_url}) выдан тип - **{label}**"
-    issue_opened = '💬 : Открыт новый топик **"[{issue}]({url})"**\n\n{body}'
-    issue_closed = "{emoji} : Топик [{issue}]({url}) закрыт - **{reason}**"
+    issue_labeled = "🏷 : Топику <a href=\"{issue_url}\">{issue}</a> выдан тип - <b>{label}</b>"
+    issue_opened = '💬 : Открыт новый топик <b>"<a href="{url}">{issue}</a>"</b>\n\n{body}'
+    issue_closed = '{emoji} : Топик <a href="{url}">{issue}</a> закрыт - <b>{reason}</b>'
     close_reasons = {
         "completed": ("✅", "Выполнено"),
         "not_planned": ("🚫", "Не запланировано"),
