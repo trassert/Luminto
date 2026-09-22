@@ -161,7 +161,7 @@ async def rm_closed_topics() -> None:
             try:
                 await client(
                     functions.messages.DeleteTopicHistoryRequest(
-                        peer=config.chats.forum, topic_id=int(topic_id)
+                        peer=config.chats.forum, top_msg_id=int(topic_id)
                     )
                 )
             except Exception as e:
