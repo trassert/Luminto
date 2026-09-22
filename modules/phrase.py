@@ -763,6 +763,8 @@ class github:
         "👨🏻‍💻 : Автор: **[{author}]({author_url})**\n"
         "🗂 : Тип: **{type}**"
     )
+    issue_labeled = "🏷 : Топику [{issue}]({issue_url}) выдан тип - **{label}**"
+    issue_opened = '💬 : Открыт новый топик **"[{issue}]({url})"**\n\n{body}'
 
 
 class port:
