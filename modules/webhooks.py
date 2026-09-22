@@ -39,13 +39,10 @@ def is_local_request(request: aiohttp.web.Request) -> bool:
         return ip.is_loopback or ip.is_private
 
 
-import orjson
-import hmac
 import logging
-from hashlib import sha256
-import aiohttp.web
 
 logger = logging.getLogger(__name__)
+
 
 async def github(request: aiohttp.web.Request) -> aiohttp.web.Response:
     sig = request.headers.get("X-Hub-Signature-256")
@@ -61,12 +58,12 @@ async def github(request: aiohttp.web.Request) -> aiohttp.web.Response:
         data = orjson.loads(body)
         event = request.headers.get("X-GitHub-Event")
         action = data.get("action")
-        
+
         logger.info(f"GitHub webhook: event={event}, action={action}")
 
         repo = data.get("repository", {})
         repo_name = repo.get("name", "unknown")
-        
+
         repo_cfg = repos.get(repo_name, {})
         chat_id = repo_cfg.get("chat", config.chats.chat)
         topic_id = repo_cfg.get("topic", config.chats.topics.updates)
@@ -88,16 +85,22 @@ async def github(request: aiohttp.web.Request) -> aiohttp.web.Response:
             logger.info(f"Обновление! Репо {repo_name}")
             branch = data.get("ref", "").split("/")[-1]
             is_private = repo.get("private", False)
-            
+
             for commit in data["commits"]:
-                author_name = commit["author"]["name"].replace("[", " ").replace("]", " ")
+                author_name = (
+                    commit["author"]["name"].replace("[", " ").replace("]", " ")
+                )
                 await client.send_message(
                     chat_id,
                     phrase.github.update.format(
-                        branch=f" ({branch})" if branch not in ("master", "main") else "",
+                        branch=f" ({branch})"
+                        if branch not in ("master", "main")
+                        else "",
                         author=f"[{author_name}](https://github.com/{author_name})",
                         message=commit["message"],
-                        changes=f"**[Что изменилось?]({commit['url']})**" if not is_private else "",
+                        changes=f"**[Что изменилось?]({commit['url']})**"
+                        if not is_private
+                        else "",
                         repo=f"[{repo_name}](https://github.com/{repo.get('full_name', repo_name)})",
                     ),
                     link_preview=False,
@@ -118,7 +121,9 @@ async def github(request: aiohttp.web.Request) -> aiohttp.web.Response:
                 link_preview=False,
                 reply_to=topic_id,
             )
-        elif event == "ping" and data.get("hook", {}).get("type") == "Repository":
+        elif (
+            event == "ping" and data.get("hook", {}).get("type") == "Repository"
+        ):
             logger.info(f"Ping для репо - {repo_name}")
             sender = data.get("sender", {})
             await client.send_message(
