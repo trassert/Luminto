@@ -777,9 +777,7 @@ class github:
     issue_opened = (
         '💬 : Открыт новый топик <b>«<a href="{url}">{issue}</a>»</b>\n\n{body}'
     )
-    issue_closed = (
-        '{emoji} : Топик <b>«<a href="{url}">{issue}</a>»</b> закрыт - <b>{reason}</b>'
-    )
+    issue_closed = '{emoji} : Топик <b>«<a href="{url}">{issue}</a>»</b> закрыт - <b>{reason}</b>'
     close_reasons = {
         "completed": ("✅", "Выполнено"),
         "not_planned": ("🚫", "Не запланировано"),
