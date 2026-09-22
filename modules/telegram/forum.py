@@ -89,7 +89,7 @@ async def delete_topic_command(event: Message):
     topic_id = event.reply_to_msg_id
     await client(
         functions.messages.DeleteTopicHistoryRequest(
-            peer=config.chats.forum, topic_id=int(topic_id)
+            peer=config.chats.forum, top_msg_id=int(topic_id)
         )
     )
     return await event.reply("topic deleted (test fn)")
