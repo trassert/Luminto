@@ -82,14 +82,3 @@ async def delete_topic(event: Message):
     return await event.reply(
         phrase.forum.closed.format(reason=reason or "Без причины")
     )
-
-
-@func.new_command("/удалитьтопик", chats=config.chats.forum, min_role=4)
-async def delete_topic_command(event: Message):
-    topic_id = event.reply_to_msg_id
-    await client(
-        functions.messages.DeleteTopicHistoryRequest(
-            peer=config.chats.forum, top_msg_id=int(topic_id)
-        )
-    )
-    return await event.reply("topic deleted (test fn)")
