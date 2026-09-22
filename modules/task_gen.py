@@ -54,7 +54,9 @@ class Generator:
             self._next_run_timestamp = now + interval
         else:
             self._next_run_timestamp = last_run + interval
-        self._task = asyncio.create_task(self._worker(func, lambda: time.time() + interval))
+        self._task = asyncio.create_task(
+            self._worker(func, lambda: time.time() + interval)
+        )
 
     async def _create_daily_task(self, func: Callable, time_str: str) -> None:
         """Создает задачу с ежедневным выполнением."""
@@ -67,9 +69,13 @@ class Generator:
         last_run = (await self._get_task_data()).get("last_run")
         if last_run is None or last_run < self._next_run_timestamp - 86400:
             asyncio.create_task(self._safe_execute(func))
-        self._task = asyncio.create_task(self._worker(func, lambda: self._get_next_daily_run(target_time)))
+        self._task = asyncio.create_task(
+            self._worker(func, lambda: self._get_next_daily_run(target_time))
+        )
 
-    async def _worker(self, func: Callable, next_run: Callable[[], float]) -> None:
+    async def _worker(
+        self, func: Callable, next_run: Callable[[], float]
+    ) -> None:
         """Рабочий для периодических задач."""
         while True:
             wait = self._next_run_timestamp - time.time()
@@ -103,7 +109,7 @@ class Generator:
         """Получает все данные из файла."""
         try:
             return await files.load_json_async(Path(self.filename))
-        except (FileNotFoundError, ValueError):
+        except FileNotFoundError, ValueError:
             return {}
 
     async def _get_task_data(self) -> dict[str, Any]:
@@ -134,7 +140,9 @@ class Generator:
             next_run = last_run + task_param * 3600
         elif task_type == "daily" and isinstance(task_param, str):
             try:
-                next_run = self._get_next_daily_run(datetime.strptime(task_param, "%H:%M").time())
+                next_run = self._get_next_daily_run(
+                    datetime.strptime(task_param, "%H:%M").time()
+                )
             except ValueError:
                 return None
         else:
