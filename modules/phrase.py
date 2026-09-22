@@ -1,3 +1,4 @@
+import html
 from loguru import logger
 
 from . import config
@@ -8,7 +9,12 @@ currency = "аметист"
 currency_emoji = "[🟣](emoji/6280806319351927135)"
 wait_emoji = "[📚](emoji/6285105023269475598)"
 
+def esc(s) -> str:
+    return html.escape(str(s), quote=False)
 
+
+def href(url: str) -> str:
+    return html.escape(url, quote=True)
 class ai:
     not_in_chat = "💬 : Ии доступен только в чате."
     wait = f"{wait_emoji} : Генерирую.."
