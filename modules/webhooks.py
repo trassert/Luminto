@@ -39,11 +39,6 @@ def is_local_request(request: aiohttp.web.Request) -> bool:
         return ip.is_loopback or ip.is_private
 
 
-import logging
-
-logger = logging.getLogger(__name__)
-
-
 async def github(request: aiohttp.web.Request) -> aiohttp.web.Response:
     sig = request.headers.get("X-Hub-Signature-256")
     if not sig or "=" not in sig:
