@@ -578,7 +578,7 @@ def render(
     bg: tuple = (38, 38, 38),
     bg_image: Path = pathes.mini_pic_bg,
     extra_fonts=None,
-    max_len: int = 32,
+    max_len: int = 16,
 ):
     """
     Рендерит MiniMessage в PNG.
