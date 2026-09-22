@@ -2,10 +2,10 @@ import asyncio
 import hmac
 import ipaddress
 from hashlib import md5, sha1, sha256
-from typing import cast
 
 import aiohttp
 import aiohttp.web
+import orjson
 from loguru import logger
 
 from . import config, db, formatter, log, nicks, phrase
@@ -13,6 +13,7 @@ from .telegram import func
 from .telegram.client import client
 
 logger.info(f"Загружен модуль {__name__}!")
+
 repos = {
     "LumintoGold": {"chat": -1003408993511, "topic": 72},
     "TrassertTools": {"chat": -1003408993511, "topic": 72},
@@ -36,6 +37,86 @@ def is_local_request(request: aiohttp.web.Request) -> bool:
         return False
     else:
         return ip.is_loopback or ip.is_private
+
+
+async def github(request: aiohttp.web.Request) -> aiohttp.web.Response:
+    sig = request.headers.get("X-Hub-Signature-256")
+    if not sig or "=" not in sig:
+        return aiohttp.web.Response(text="Unauthorized", status=401)
+
+    body = await request.read()
+    expected = hmac.new(config.tokens.gh.encode(), body, sha256).hexdigest()
+    if not hmac.compare_digest(expected, sig.split("=", 1)[1]):
+        return aiohttp.web.Response(text="Unauthorized", status=401)
+
+    try:
+        data = orjson.loads(body)
+        event = request.headers.get("X-GitHub-Event")
+        repo = data.get("repository", {})
+        repo_name = repo.get("name", "unknown")
+
+        repo_cfg = repos.get(repo_name, {})
+        chat_id = repo_cfg.get("chat", config.chats.chat)
+        topic_id = repo_cfg.get("topic", config.chats.topics.updates)
+
+        if event == "star" and data.get("action") != "deleted":
+            logger.info(f"Звезда! Репо {repo_name}")
+            sender = data["sender"]
+            await client.send_message(
+                chat_id,
+                phrase.github.star.format(
+                    repo=repo_name,
+                    repo_url=repo["html_url"],
+                    author=sender["login"],
+                    author_url=sender["html_url"],
+                ),
+                link_preview=False,
+            )
+        elif event == "push" and data.get("commits"):
+            logger.info(f"Обновление! Репо {repo_name}")
+            branch = data.get("ref", "").split("/")[-1]
+            is_private = repo.get("private", False)
+
+            for commit in data["commits"]:
+                author_name = (
+                    commit["author"]["name"].replace("[", " ").replace("]", " ")
+                )
+                await client.send_message(
+                    chat_id,
+                    phrase.github.update.format(
+                        branch=f" ({branch})"
+                        if branch not in ("master", "main")
+                        else "",
+                        author=f"[{author_name}](https://github.com/{author_name})",
+                        message=commit["message"],
+                        changes=f"**[Что изменилось?]({commit['url']})**"
+                        if not is_private
+                        else "",
+                        repo=f"[{repo_name}](https://github.com/{repo.get('full_name', repo_name)})",
+                    ),
+                    link_preview=False,
+                    reply_to=topic_id,
+                )
+        elif event == "repository" and data.get("action") == "created":
+            logger.info(f"Новое репо - {repo_name}")
+            sender = data.get("sender", {})
+            await client.send_message(
+                chat_id,
+                phrase.github.new.format(
+                    repo=repo_name,
+                    type="Приватный" if repo.get("private") else "Публичный",
+                    url=repo["html_url"],
+                    author=sender.get("login", "unknown"),
+                    author_url=sender.get("html_url", "#"),
+                ),
+                link_preview=False,
+                reply_to=topic_id,
+            )
+
+        return aiohttp.web.Response(text="ok")
+    except (orjson.JSONDecodeError, KeyError, TypeError, AttributeError) as e:
+        logger.warning(f"Невалидный payload от GitHub: {e}")
+        return aiohttp.web.Response(text="Bad request", status=400)
 
 
 async def server():
@@ -177,98 +258,6 @@ async def server():
         await db.add_money(playerid, amount)
         logger.info(f"[Bank] Переведено {amount} на счет {playerid}")
         return aiohttp.web.Response(text="ok")
-
-    async def github(request: aiohttp.web.Request):
-        signature_header = request.headers.get("X-Hub-Signature-256")
-        if not signature_header:
-            return aiohttp.web.Response(text="Non authorized", status=401)
-        try:
-            _, github_signature = signature_header.split("=", 1)
-        except ValueError:
-            return aiohttp.web.Response(text="Non authorized", status=401)
-        body = await request.read()
-        if not hmac.compare_digest(
-            hmac.new(
-                config.tokens.gh.encode("utf-8"), msg=body, digestmod=sha256
-            ).hexdigest(),
-            github_signature,
-        ):
-            return aiohttp.web.Response(text="Non authorized", status=401)
-        load: dict[str] = cast(dict[str], await request.json())
-        if request.headers.get("X-Github-Event") == "star":
-            if load.get("action") == "deleted":
-                return aiohttp.web.Response(text="ok")
-            logger.info(f"Звезда! Репо {load['repository']['name']}")
-            await client.send_message(
-                repos.get(load["repository"]["name"], {}).get(
-                    "chat",
-                    config.chats.chat,
-                ),
-                phrase.github.star.format(
-                    repo=load["repository"]["name"],
-                    repo_url=load["repository"]["html_url"],
-                    author=load["sender"]["login"],
-                    author_url=load["sender"]["html_url"],
-                ),
-                link_preview=False,
-            )
-            return aiohttp.web.Response(text="ok")
-        commits = load.get("commits", None)
-        if commits is not None:
-            for head in commits:
-                logger.info(f"Обновление! Репо {load['repository']['name']}")
-                branch = load.get("ref").split("/")[-1]
-                await client.send_message(
-                    repos.get(load["repository"]["name"], {}).get(
-                        "chat",
-                        config.chats.chat,
-                    ),
-                    phrase.github.update.format(
-                        branch=f" ({branch})"
-                        if branch not in ["master", "main"]
-                        else "",
-                        author=f"[{head['author']['name'].replace('[', ' ').replace(']', ' ')}](https://github.com/{head['author']['name']})",
-                        message=head["message"],
-                        changes=f"**[Что изменилось?]({head['url']})**"
-                        if load["repository"]["private"] is False
-                        else "",
-                        repo=f"[{load['repository']['name']}](https://github.com/{load['repository']['full_name']})",
-                    ),
-                    link_preview=False,
-                    reply_to=repos.get(load["repository"]["name"], {}).get(
-                        "topic",
-                        config.chats.topics.updates,
-                    ),
-                )
-            return aiohttp.web.Response(text="ok")
-        hook = load.get("hook", None)
-        if hook is not None:
-            if hook.get("type", None) == "Repository":
-                repo = load.get("repository")
-                sender = load.get("sender")
-                logger.info(f"Новое репо - {load['repository']['name']}")
-                await client.send_message(
-                    repos.get(load["repository"]["name"], {}).get(
-                        "chat",
-                        config.chats.chat,
-                    ),
-                    phrase.github.new.format(
-                        repo=repo.get("name"),
-                        type="Приватный"
-                        if repo.get("private") is True
-                        else "Публичный",
-                        url=repo.get("html_url"),
-                        author=sender.get("login"),
-                        author_url=sender.get("html_url"),
-                    ),
-                    link_preview=False,
-                    reply_to=repos.get(load["repository"]["name"], {}).get(
-                        "topic",
-                        config.chats.topics.updates,
-                    ),
-                )
-            return aiohttp.web.Response(text="ok")
-        return aiohttp.web.Response(text="Incorrect request", status=400)
 
     app = aiohttp.web.Application()
     app.add_routes(
