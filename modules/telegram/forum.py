@@ -5,7 +5,7 @@ from loguru import logger
 from telethon.errors.rpcbaseerrors import BadRequestError
 from telethon.tl import functions
 
-from .. import config, db, phrase, files, pathes
+from .. import config, db, files, pathes, phrase
 from . import func
 from .client import client
 
@@ -87,8 +87,9 @@ async def delete_topic(event: Message):
 @func.new_command("/удалитьтопик", chats=config.chats.forum, min_role=4)
 async def delete_topic_command(event: Message):
     topic_id = event.reply_to_top_id or event.reply_to_msg_id
-    await client(functions.messages.DeleteTopicHistoryRequest(
-        peer=config.chats.forum,
-        topic_id=int(topic_id)
-    ))
-    return await event.reply('topic deleted (test fn)')
+    await client(
+        functions.messages.DeleteTopicHistoryRequest(
+            peer=config.chats.forum, topic_id=int(topic_id)
+        )
+    )
+    return await event.reply("topic deleted (test fn)")

@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Any, Literal
 
 from loguru import logger
-from telethon.tl.functions.messages import DeleteTopicHistoryRequest
 
 from . import files, pathes
 

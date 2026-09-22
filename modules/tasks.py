@@ -1,15 +1,23 @@
 import shutil
 import time
-
 from datetime import datetime, timedelta
-from telethon.tl import functions
 
 from loguru import logger
+from telethon.tl import functions
 
-from . import config, db, formatter, nicks, pathes, phrase, shop, states_helper
+from . import (
+    config,
+    db,
+    files,
+    formatter,
+    nicks,
+    pathes,
+    phrase,
+    shop,
+    states_helper,
+)
 from .telegram.client import client
 from .telegram.states import _check_and_update_tier
-from . import files
 
 logger.info(f"Загружен модуль {__name__}!")
 
@@ -151,12 +159,15 @@ async def rm_closed_topics() -> None:
     for topic_id, closed_time in data.items():
         if time.time() - closed_time > ttl_seconds:
             try:
-                await client(functions.messages.DeleteTopicHistoryRequest(
-                    peer=config.chats.forum,
-                    topic_id=int(topic_id)
-                ))
+                await client(
+                    functions.messages.DeleteTopicHistoryRequest(
+                        peer=config.chats.forum, topic_id=int(topic_id)
+                    )
+                )
             except Exception as e:
-                return logger.warning(f"Ошибка при удалении топика {topic_id}: {e}")
+                return logger.warning(
+                    f"Ошибка при удалении топика {topic_id}: {e}"
+                )
             logger.info(f"Удалён топик {topic_id}")
             data.pop(topic_id, None)
             changed = True
