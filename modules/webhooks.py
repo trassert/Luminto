@@ -20,6 +20,7 @@ repos = {
 }
 
 
+
 def is_local_request(request: aiohttp.web.Request) -> bool:
     "Check if the request is from a local or private IP address, true or false"
     real_ip = request.headers.get("X-Real-IP")
@@ -151,6 +152,21 @@ async def github(request: aiohttp.web.Request) -> aiohttp.web.Response:
                     issue=issue["title"],
                     url=issue["html_url"],
                     body=body_text,
+                ),
+                link_preview=False,
+                reply_to=topic_id,
+            )
+        elif event == "issues" and action == "closed":
+            logger.info(f"Закрыт топик! Репо {repo_name}")
+            issue = data["issue"]
+            emoji, reason = phrase.github.close_reasons.get(issue["state_reason"], ("❌", "Без причины"))
+            await client.send_message(
+                chat_id,
+                phrase.github.issue_closed.format(
+                    emoji=emoji,
+                    issue=issue["title"],
+                    url=issue["html_url"],
+                    reason=reason,
                 ),
                 link_preview=False,
                 reply_to=topic_id,

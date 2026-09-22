@@ -743,7 +743,6 @@ class cities:
         "Синтаксис: `+города город1 город2 город3`"
     )
 
-
 class github:
     star = (
         "**⭐️ : [{repo}]({repo_url}) получил новую звезду!**\n"
@@ -765,6 +764,12 @@ class github:
     )
     issue_labeled = "🏷 : Топику [{issue}]({issue_url}) выдан тип - **{label}**"
     issue_opened = '💬 : Открыт новый топик **"[{issue}]({url})"**\n\n{body}'
+    issue_closed = '{emoji} : Топик [{issue}]({url}) закрыт - **{reason}**'
+    close_reasons = {
+        "completed": ("✅", "Выполнено"),
+        "not_planned": ("🚫", "Не запланировано"),
+        "duplicate": ("👥", "Дубликат"),
+    }
 
 
 class port:
