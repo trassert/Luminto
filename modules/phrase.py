@@ -773,12 +773,12 @@ class github:
         '👨🏻‍💻 : Автор: <b><a href="{author_url}">{author}</a></b>\n'
         "🗂 : Тип: <b>{type}</b>"
     )
-    issue_labeled = '🏷 : Топику <a href="{issue_url}">{issue}</a> выдан тип - <b>{label}</b>'
+    issue_labeled = '🏷 : Топику <b>«<a href="{issue_url}">{issue}</a>»</b> выдан тип - <b>{label}</b>'
     issue_opened = (
-        '💬 : Открыт новый топик <b>"<a href="{url}">{issue}</a>"</b>\n\n{body}'
+        '💬 : Открыт новый топик <b>«<a href="{url}">{issue}</a>»</b>\n\n{body}'
     )
     issue_closed = (
-        '{emoji} : Топик <a href="{url}">{issue}</a> закрыт - <b>{reason}</b>'
+        '{emoji} : Топик <b>«<a href="{url}">{issue}</a>»</b> закрыт - <b>{reason}</b>'
     )
     close_reasons = {
         "completed": ("✅", "Выполнено"),
