@@ -56,6 +56,9 @@ CitiesBet: 5
 # Время, которое нужно ждать до удаления игрока
 CitiesTimeout: 50
 
+# Дней, после которых закрытые топики удаляются
+ClosedTopicsTTL: 7
+
 Mining:
   Timeout: 500
   InitialGems: 5

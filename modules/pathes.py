@@ -27,6 +27,7 @@ hellomsg = Path("db") / "users" / "hellomsg.json"
 votes = Path("db") / "users" / "votes.json"
 mine_stat = Path("db") / "users" / "mine.json"
 topics = Path("db") / "users" / "topics.json"
+rmtopics = Path("db") / "timings" / "rmtopics.json"
 
 # Корневые файлы в db/
 items = Path("db") / "items.json"

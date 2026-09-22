@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 from loguru import logger
+from telethon.tl.functions.messages import DeleteTopicHistoryRequest
 
 from . import files, pathes
 
@@ -169,3 +170,4 @@ RewardsTask = Generator("Rewards")
 RemoveStatesTask = Generator("RemoveStates")
 BackupDBTask = Generator("BackupDB")
 TaxTask = Generator("Tax")
+DeleteTopicsTask = Generator("DeleteTopics")

@@ -1,11 +1,15 @@
 import shutil
+import time
+
 from datetime import datetime, timedelta
+from telethon.tl import functions
 
 from loguru import logger
 
 from . import config, db, formatter, nicks, pathes, phrase, shop, states_helper
 from .telegram.client import client
 from .telegram.states import _check_and_update_tier
+from . import files
 
 logger.info(f"Загружен модуль {__name__}!")
 
@@ -134,3 +138,28 @@ async def backup_db() -> None:
             logger.info(f"Удалён старый бекап: {old_backup}")
         except Exception:
             logger.exception(f"Не удалось удалить старый бекап: {old_backup}")
+
+
+async def rm_closed_topics() -> None:
+    """Удаляет старые топики, которые были закрыты ботом."""
+    try:
+        data = await files.load_json_async(pathes.rmtopics)
+    except Exception:
+        return None
+    ttl_seconds = config.cfg.ClosedTopicsTTL * 24 * 60 * 60
+    changed = False
+    for topic_id, closed_time in data.items():
+        if time.time() - closed_time > ttl_seconds:
+            try:
+                await client(functions.messages.DeleteTopicHistoryRequest(
+                    peer=config.chats.forum,
+                    topic_id=int(topic_id)
+                ))
+            except Exception as e:
+                return logger.warning(f"Ошибка при удалении топика {topic_id}: {e}")
+            logger.info(f"Удалён топик {topic_id}")
+            data.pop(topic_id, None)
+            changed = True
+    if changed:
+        return await files.save_json_async(pathes.rmtopics, data)
+    return None

@@ -1,10 +1,11 @@
+import time
 from typing import TYPE_CHECKING
 
 from loguru import logger
 from telethon.errors.rpcbaseerrors import BadRequestError
 from telethon.tl import functions
 
-from .. import config, db, phrase
+from .. import config, db, phrase, files, pathes
 from . import func
 from .client import client
 
@@ -12,6 +13,15 @@ if TYPE_CHECKING:
     from telethon.tl.custom import Message
 
 logger.info(f"Загружен модуль {__name__}!")
+
+
+async def addwait_rm_topic(topic_id: int):
+    try:
+        data = await files.load_json_async(pathes.rmtopics)
+    except Exception:
+        data = {}
+    data[str(topic_id)] = time.time()
+    await files.save_json_async(pathes.rmtopics, data)
 
 
 @func.new_command(r"\+топик (.+)", chats=config.chats.forum)
@@ -41,7 +51,7 @@ async def create_topic(event: Message):
 @func.new_command(r"\-топик(.*)", chats=config.chats.forum)
 async def delete_topic(event: Message):
     reason: str = event.pattern_match.group(1).strip()
-    topic_id = event.reply_to_msg_id
+    topic_id = event.reply_to_top_id or event.reply_to_msg_id
     if not topic_id:
         return await event.reply(phrase.forum.topic_no_id)
     author_topics = await db.Topics().get_byid(event.sender_id)
@@ -68,6 +78,17 @@ async def delete_topic(event: Message):
     except BadRequestError as e:
         logger.error(f"Ошибка закрытия топика: {e}")
         return await event.reply(phrase.forum.already_closed)
+    await addwait_rm_topic(topic_id)
     return await event.reply(
         phrase.forum.closed.format(reason=reason or "Без причины")
     )
+
+
+@func.new_command("/удалитьтопик", chats=config.chats.forum, min_role=4)
+async def delete_topic_command(event: Message):
+    topic_id = event.reply_to_top_id or event.reply_to_msg_id
+    await client(functions.messages.DeleteTopicHistoryRequest(
+        peer=config.chats.forum,
+        topic_id=int(topic_id)
+    ))
+    return await event.reply('topic deleted (test fn)')
