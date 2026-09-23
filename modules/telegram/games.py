@@ -3,15 +3,13 @@ import contextlib
 from random import choice, random
 from typing import TYPE_CHECKING
 
-import aiofiles
-import orjson
 from loguru import logger
 from telethon import events
 from telethon.tl.types import (
     KeyboardButtonCallback,
 )
 
-from .. import config, crocostat, db, formatter, pathes, phrase, files
+from .. import config, crocostat, db, files, formatter, pathes, phrase
 from . import func
 from .client import client
 

@@ -16,6 +16,7 @@ from telethon.tl.types import KeyboardButtonCallback
 from .. import (
     config,
     db,
+    files,
     floodwait,
     formatter,
     mcrcon,
@@ -28,7 +29,6 @@ from .. import (
     referrals,
     states_helper,
     sys,
-    files
 )
 from . import func
 from .client import aio, client
@@ -683,7 +683,9 @@ async def cities_requests(event: Message) -> Message:
     status_msg = await event.reply(phrase.cities.checker)
 
     existing = set((await files.load_text_async(pathes.chk_city)).splitlines())
-    blacklisted = set((await files.load_text_async(pathes.bl_city)).splitlines())
+    blacklisted = set(
+        (await files.load_text_async(pathes.bl_city)).splitlines()
+    )
 
     output_lines: list[str] = []
     pending_to_admin: list[str] = []

@@ -1,13 +1,13 @@
 import asyncio
 from random import choice, randint, random
 
-import aiofiles
 from loguru import logger
 from telethon import Button, events, types
 
 from .. import (
     config,
     db,
+    files,
     floodwait,
     formatter,
     log,
@@ -18,7 +18,6 @@ from .. import (
     phrase,
     shop,
     states_helper,
-    files
 )
 from . import func
 from .client import client
