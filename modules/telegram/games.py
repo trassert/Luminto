@@ -11,7 +11,7 @@ from telethon.tl.types import (
     KeyboardButtonCallback,
 )
 
-from .. import config, crocostat, db, formatter, pathes, phrase
+from .. import config, crocostat, db, formatter, pathes, phrase, files
 from . import func
 from .client import client
 
@@ -223,10 +223,9 @@ async def crocodile_hint(event: Message):
                 )
 
     try:
-        async with aiofiles.open(pathes.crocomap, "rb") as f:
-            mapping = orjson.loads(await f.read())
-            if word in mapping:
-                return await event.reply(choice(mapping[word]))
+        mapping = await files.load_json_async(pathes.crocomap)
+        if word in mapping:
+            return await event.reply(choice(mapping[word]))
     except Exception as e:
         logger.error(f"Ошибка чтения карты подсказок: {e}")
 

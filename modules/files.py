@@ -99,3 +99,12 @@ async def remove_file_async(filepath: Path):
         return False
     await anyio.Path(filepath).unlink()
     return True
+
+
+async def append_text_async(filepath: Path, text: str):
+    """Добавляет текст в конец файла асинхронно."""
+    ensure_parent(filepath)
+    lock = await get_lock(filepath)
+    async with lock:
+        async with aiofiles.open(filepath, "a", encoding="utf-8") as f:
+            return await f.write(text)

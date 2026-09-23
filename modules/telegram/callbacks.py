@@ -18,6 +18,7 @@ from .. import (
     phrase,
     shop,
     states_helper,
+    files
 )
 from . import func
 from .client import client
@@ -65,16 +66,14 @@ async def _handle_suggestion(
 
     match data[1]:
         case "yes":
-            async with aiofiles.open(accept_file) as aiof:
-                if word in (await aiof.read()).split("\n"):
-                    return await client.edit_message(
-                        sender_id,
-                        event.message_id,
-                        exists_phrase,
-                    )
+            if word in (await files.load_text_async(accept_file)).split("\n"):
+                return await client.edit_message(
+                    sender_id,
+                    event.message_id,
+                    exists_phrase,
+                )
 
-            async with aiofiles.open(accept_file, "a") as aiof:
-                await aiof.write(f"\n{word}")
+            await files.append_text_async(accept_file, f"\n{word}")
 
             await db.add_money(sender_id, config.cfg.WordRequest)
             await client.send_message(
@@ -93,8 +92,7 @@ async def _handle_suggestion(
             )
 
         case "no":
-            async with aiofiles.open(reject_file, "a") as aiof:
-                await aiof.write(f"\n{word}")
+            await files.append_text_async(reject_file, f"\n{word}")
             await client.send_message(
                 config.chats.chat,
                 reject_phrase.format(word=word, user=user_name),

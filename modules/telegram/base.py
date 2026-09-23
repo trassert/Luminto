@@ -28,6 +28,7 @@ from .. import (
     referrals,
     states_helper,
     sys,
+    files
 )
 from . import func
 from .client import aio, client
@@ -681,10 +682,8 @@ async def cities_requests(event: Message) -> Message:
 
     status_msg = await event.reply(phrase.cities.checker)
 
-    async with aiofiles.open(pathes.chk_city) as aiof:
-        existing = set((await aiof.read()).splitlines())
-    async with aiofiles.open(pathes.bl_city) as aiof:
-        blacklisted = set((await aiof.read()).splitlines())
+    existing = set((await files.load_text_async(pathes.chk_city)).splitlines())
+    blacklisted = set((await files.load_text_async(pathes.bl_city)).splitlines())
 
     output_lines: list[str] = []
     pending_to_admin: list[str] = []
@@ -742,15 +741,14 @@ async def cities_remove(event: Message) -> Message:
         )
 
     word: str = event.pattern_match.group(1).strip().lower()
-    async with aiofiles.open(pathes.chk_city) as aiof:
-        lines = (await aiof.read()).splitlines()
+    lines = (await files.load_text_async(pathes.chk_city)).splitlines()
 
     if word not in lines:
         return await event.reply(phrase.cities.not_exists)
 
     lines.remove(word)
-    async with aiofiles.open(pathes.chk_city, "w") as aiof:
-        await aiof.write("\n".join(lines))
+
+    await files.save_text_async(pathes.chk_city, "\n".join(lines))
     return await event.reply(phrase.cities.deleted.format(word))
 
 
