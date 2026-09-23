@@ -38,7 +38,7 @@ async def _check_and_update_tier(
         new_type, label = 0, "Княжество"
 
     if new_type is not None:
-        state.change("type", new_type)
+        await state.change("type", new_type)
         msg_template = (
             phrase.state.up if new_type > state.type else phrase.state.down
         )
@@ -155,8 +155,8 @@ async def state_tax(event: Message) -> Message:
         return await event.reply(phrase.state.howto_tax)
 
     amount = int(arg)
-    state = db.State(state_name)
-    state.change("tax", max(amount, 0))
+    state = await states_helper.State(state_name)
+    await state.change("tax", max(amount, 0))
     if amount <= 0:
         return await event.reply(phrase.state.tax_disabled)
     return await event.reply(phrase.state.tax_set.format(amount))
@@ -175,7 +175,7 @@ async def state_collecttax(event: Message) -> Message:
     state_name = await states_helper.if_author(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
-    state = db.State(state_name)
+    state = await states_helper.State(state_name)
     if state.tax <= 0:
         return await event.reply(phrase.state.tax_disabled)
     ptx_result = await state.pay_tax()
@@ -225,7 +225,9 @@ async def state_tax_nonpayment(event: Message) -> Message:
     if action is None:
         return await event.reply(phrase.state.howto_tax_nonpayment)
 
-    db.State(state_name).change("tax_nonpayment", action)
+    await (await states_helper.State(state_name)).change(
+        "tax_nonpayment", action
+    )
     return await event.reply(
         phrase.state.tax_nonpayment_set.format(
             "ничего" if action == "nothing" else "кик",
@@ -249,7 +251,7 @@ async def state_tax_period(event: Message) -> Message:
     if period <= 0:
         period = 7
 
-    db.State(state_name).change("tax_period", period)
+    await (await states_helper.State(state_name)).change("tax_period", period)
     return await event.reply(phrase.state.tax_period_set.format(period))
 
 
@@ -273,7 +275,7 @@ async def state_enter(event: Message) -> Message:
     ) or await states_helper.if_author(event.sender_id):
         return await event.reply(phrase.state.already_player)
 
-    state = db.State(arg)
+    state = await states_helper.State(arg)
     if not state.enter:
         return await event.reply(phrase.state.enter_exit)
 
@@ -291,7 +293,7 @@ async def state_enter(event: Message) -> Message:
 
     players = state.players
     players.append(event.sender_id)
-    state.change("players", players)
+    await state.change("players", players)
 
     await client.send_message(
         entity=config.chats.chat,
@@ -326,7 +328,7 @@ async def state_get(event: Message):
     if not await states_helper.exists(state_name):
         return await event.reply(phrase.state.not_find)
 
-    state = db.State(state_name)
+    state = await states_helper.State(state_name)
     enter_val = "Свободный" if state.enter else "Закрыт"
     if state.price > 0:
         enter_val = formatter.value_to_str(state.price, phrase.currency)
@@ -387,9 +389,9 @@ async def state_leave(event: Message) -> Message:
     if not state_name:
         return await event.reply(phrase.state.not_a_member)
 
-    state = db.State(state_name)
+    state = await states_helper.State(state_name)
     state.players.remove(event.sender_id)
-    state.change("players", state.players)
+    await state.change("players", state.players)
 
     name_cap = state.name.capitalize()
     await client.send_message(
@@ -451,7 +453,7 @@ async def state_desc(event: Message) -> Message:
             phrase.state.max_len.format(config.cfg.DescriptionsMaxLen),
         )
 
-    db.State(state_name).change("desc", new_desc)
+    await (await states_helper.State(state_name)).change("desc", new_desc)
     return await event.reply(phrase.state.change_desc)
 
 
@@ -465,7 +467,9 @@ async def state_coords(event: Message) -> Message:
     coords = [str(int(x)) for x in arg.split()]
     if len(coords) != 3:
         return await event.reply(phrase.state.howto_change_coords)
-    db.State(state_name).change("coordinates", ", ".join(coords))
+    await (await states_helper.State(state_name)).change(
+        "coordinates", ", ".join(coords)
+    )
     return await event.reply(phrase.state.change_coords)
 
 
@@ -475,12 +479,12 @@ async def state_enter_arg(event: Message) -> Message:
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
 
-    state = db.State(state_name)
+    state = await states_helper.State(state_name)
     arg: str = event.pattern_match.group(1).strip().lower()
 
     if arg in ("да", "+", "разрешить", "открыть", "true", "ok", "ок", "можно"):
-        state.change("price", 0)
-        state.change("enter", True)
+        await state.change("price", 0)
+        await state.change("enter", True)
         return await event.reply(phrase.state.enter_open)
 
     if arg in (
@@ -493,13 +497,13 @@ async def state_enter_arg(event: Message) -> Message:
         "нельзя",
         "закрыто",
     ):
-        state.change("enter", False)
+        await state.change("enter", False)
         return await event.reply(phrase.state.enter_close)
 
     if arg.isdigit():
         price = int(arg)
-        state.change("price", price)
-        state.change("enter", True)
+        await state.change("price", price)
+        await state.change("enter", True)
         return await event.reply(
             phrase.state.enter_price.format(
                 formatter.value_to_str(price, phrase.currency),
@@ -546,8 +550,8 @@ async def state_add_money(event: Message) -> Message:
         )
 
     await db.add_money(event.sender_id, -amount)
-    state = db.State(state_name)
-    state.change("money", state.money + amount)
+    state = await states_helper.State(state_name)
+    await state.change("money", state.money + amount)
     return await event.reply(
         phrase.state.add_treasury.format(
             formatter.value_to_str(amount, phrase.currency),
@@ -568,7 +572,7 @@ async def state_rem_money(event: Message) -> Message:
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
 
-    state = db.State(state_name)
+    state = await states_helper.State(state_name)
     arg: str = event.pattern_match.group(1).strip().lower()
 
     if arg in ("все", "всё", "все деньги", "на все"):
@@ -583,7 +587,7 @@ async def state_rem_money(event: Message) -> Message:
     if state.money < amount:
         return await event.reply(phrase.state.too_low)
 
-    state.change("money", state.money - amount)
+    await state.change("money", state.money - amount)
     await db.add_money(event.sender_id, amount)
     return await event.reply(
         phrase.state.rem_treasury.format(
@@ -616,12 +620,12 @@ async def state_kick_user(event: Message) -> Message:
             return await event.reply(phrase.state.player_not_in)
         user_id = await func.get_author_by_msgid(event.chat_id, msg_id)
 
-    state = db.State(state_name)
+    state = await states_helper.State(state_name)
     if user_id not in state.players:
         return await event.reply(phrase.state.player_not_in)
 
     state.players.remove(user_id)
-    state.change("players", state.players)
+    await state.change("players", state.players)
 
     target_name = await func.get_name(user_id, minecraft=True)
     await client.send_message(
@@ -688,13 +692,13 @@ async def state_congress(event: Message) -> Message:
     if not state_name:
         return await event.reply(phrase.state.congress_no_state)
 
-    state = db.State(state_name)
+    state = await states_helper.State(state_name)
     if state.is_recognized:
         return await event.reply(phrase.state.congress_already_recognized)
     if state.recognition_pending:
         return await event.reply(phrase.state.congress_already)
 
-    state.change("recognition_pending", True)
+    await state.change("recognition_pending", True)
     return await event.reply(phrase.state.congress_sent.format(name=state_name))
 
 
@@ -711,7 +715,7 @@ async def state_recognize(event: Message) -> Message:
     if arg == voter_state:
         return await event.reply(phrase.state.recognize_self)
 
-    target = db.State(arg)
+    target = await states_helper.State(arg)
     if not target.recognition_pending:
         return await event.reply(phrase.state.recognize_no_pending)
     if voter_state in target.recognition_votes:
@@ -719,7 +723,7 @@ async def state_recognize(event: Message) -> Message:
 
     votes = target.recognition_votes
     votes.append(voter_state)
-    target.change("recognition_votes", votes)
+    await target.change("recognition_votes", votes)
 
     return await event.reply(
         phrase.state.recognize_ok.format(voter=voter_state, target=arg),
@@ -737,7 +741,7 @@ async def state_status(event: Message) -> Message:
     if not await states_helper.exists(arg):
         return await event.reply(phrase.state.not_find)
 
-    state = db.State(arg)
+    state = await states_helper.State(arg)
     total = states_helper.count()
     other_count = max(total - 1, 1)
 

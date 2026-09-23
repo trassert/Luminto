@@ -124,16 +124,16 @@ async def state_callback(event: events.CallbackQuery.Event):
                     phrase.state.already_author, alert=True
                 )
 
-            state = db.State(data[2])
+            state = await states_helper.State(data[2])
             balance_check = await _check_and_deduct_balance(
                 sender_id, state.price
             )
             if balance_check is not True:
                 return await event.answer(balance_check, alert=True)
 
-            state.change("money", state.money + state.price)
+            await state.change("money", state.money + state.price)
             players = [*state.players, sender_id]
-            state.change("players", players)
+            await state.change("players", players)
 
             await client.send_message(
                 entity=config.chats.chat,
@@ -151,7 +151,7 @@ async def state_callback(event: events.CallbackQuery.Event):
                     ),
                     reply_to=config.chats.topics.rp,
                 )
-                state.change("type", 1)
+                await state.change("type", 1)
 
             elif state.type == 1 and len(players) >= config.cfg.Type2Players:
                 await client.send_message(
@@ -161,7 +161,7 @@ async def state_callback(event: events.CallbackQuery.Event):
                     ),
                     reply_to=config.chats.topics.rp,
                 )
-                state.change("type", 2)
+                await state.change("type", 2)
 
             return await event.answer(
                 phrase.state.admit.format(state.name), alert=True
@@ -169,7 +169,7 @@ async def state_callback(event: events.CallbackQuery.Event):
 
         case "remove":
             try:
-                state = db.State(data[2])
+                state = await states_helper.State(data[2])
             except FileNotFoundError:
                 return await event.answer(
                     phrase.state.already_deleted, alert=True
@@ -178,7 +178,6 @@ async def state_callback(event: events.CallbackQuery.Event):
             if not _ensure_owner(sender_id, state.author):
                 return await event.answer(phrase.not_for_you, alert=True)
 
-            await db.add_money(state.author, state.money)
             if not await states_helper.remove(data[2]):
                 return await event.answer(phrase.error, alert=True)
 
@@ -240,7 +239,9 @@ async def state_callback(event: events.CallbackQuery.Event):
             if balance_check is not True:
                 return await event.answer(balance_check, alert=True)
 
-            if db.State(state_name).rename(new_name) is False:
+            if not await (await states_helper.State(state_name)).rename(
+                new_name
+            ):
                 return await event.answer(phrase.state.already_here, alert=True)
 
             await event.reply(
@@ -261,7 +262,9 @@ async def state_callback(event: events.CallbackQuery.Event):
             state_name = await states_helper.if_author(sender_id)
             if state_name != data[2]:
                 return await event.answer(phrase.state.not_a_author, alert=True)
-            db.State(state_name).change("author", int(data[3]))
+            await (await states_helper.State(state_name)).change(
+                "author", int(data[3])
+            )
             await event.answer(
                 phrase.state.transfer_ok.format(
                     new_leader=await nicks.get_byid(int(data[3])),

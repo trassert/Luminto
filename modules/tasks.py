@@ -71,22 +71,22 @@ async def pay_state_taxes() -> None:
 
     for state_name in states.keys():
         logger.info(f"Проверяем налоги государства {state_name}..")
-        state = db.State(state_name)
+        state = await states_helper.State(state_name)
         if state.tax <= 0:
             logger.info(f"Налог государства {state_name} отключён")
             continue
-        ptx_result = state.pay_tax()
+        ptx_result = await state.pay_tax()
         for kicked_player in ptx_result["kicked"]:
             await client.send_message(
                 entity=config.chats.chat,
                 message=phrase.state.tax_kicked.format(
-                    player=func.get_name(kicked_player, minecraft=True),
+                    player=await func.get_name(kicked_player, minecraft=True),
                     state=state_name.capitalize(),
                 ),
                 reply_to=config.chats.topics.rp,
             )
         await _check_and_update_tier(
-            state_name, len(state.players), state.name.capitalize()
+            state, len(state.players), state.name.capitalize()
         )
 
 
@@ -101,7 +101,6 @@ async def remove_states() -> None:
             today - datetime(state_date[0], state_date[1], state_date[2])
             > timedelta(days=config.cfg.DaysToStatesRemove)
         ):
-            await db.add_money(state_info["author"], state_info["money"])
             await states_helper.remove(state)
             logger.warning(f"Государство {state} распалось")
             await client.send_message(
