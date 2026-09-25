@@ -55,26 +55,26 @@ class Generator:
         else:
             self._next_run_timestamp = last_run + interval
         self._task = asyncio.create_task(
-            self._worker(func, lambda: time.time() + interval)
+            self._worker(func, lambda: time.time() + interval),
         )
 
     async def _create_daily_task(self, func: Callable, time_str: str) -> None:
         """Создает задачу с ежедневным выполнением."""
         try:
             target_time = datetime.strptime(time_str, "%H:%M").time()
-        except ValueError:
+        except ValueError as e:
             msg = "Неверный формат времени. Используйте 'HH:MM'."
-            raise ValueError(msg)
+            raise ValueError(msg) from e
         self._next_run_timestamp = self._get_next_daily_run(target_time)
         last_run = (await self._get_task_data()).get("last_run")
         if last_run is None or last_run < self._next_run_timestamp - 86400:
             asyncio.create_task(self._safe_execute(func))
         self._task = asyncio.create_task(
-            self._worker(func, lambda: self._get_next_daily_run(target_time))
+            self._worker(func, lambda: self._get_next_daily_run(target_time)),
         )
 
     async def _worker(
-        self, func: Callable, next_run: Callable[[], float]
+        self, func: Callable, next_run: Callable[[], float],
     ) -> None:
         """Рабочий для периодических задач."""
         while True:
@@ -141,7 +141,7 @@ class Generator:
         elif task_type == "daily" and isinstance(task_param, str):
             try:
                 next_run = self._get_next_daily_run(
-                    datetime.strptime(task_param, "%H:%M").time()
+                    datetime.strptime(task_param, "%H:%M").time(),
                 )
             except ValueError:
                 return None

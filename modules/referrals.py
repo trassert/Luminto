@@ -50,14 +50,14 @@ async def new(referral_id: int, new_user_id: int) -> bool:
     data = await _load()
     if new_user_id in data["referrers"]:
         logger.info(
-            f"Пользователь {new_user_id} уже привязан к {data['referrers'][new_user_id]}. Пропускаем.."
+            f"Пользователь {new_user_id} уже привязан к {data['referrers'][new_user_id]}. Пропускаем..",
         )
         return False
     if referral_id not in data["referrals"]:
         data["referrals"][referral_id] = []
     if new_user_id in data["referrals"][referral_id]:
         logger.info(
-            f"Пользователь {new_user_id} уже есть в списке рефералов {referral_id}. Пропускаем.."
+            f"Пользователь {new_user_id} уже есть в списке рефералов {referral_id}. Пропускаем..",
         )
         return False
     if await nicks.get_byid(int(new_user_id)) is not None:
@@ -67,7 +67,7 @@ async def new(referral_id: int, new_user_id: int) -> bool:
     data["referrers"][new_user_id] = referral_id
     await files.save_json_async(pathes.referrals, data, sort_keys=True)
     logger.info(
-        f"Пользователь {new_user_id} перешёл по рефералке {referral_id}"
+        f"Пользователь {new_user_id} перешёл по рефералке {referral_id}",
     )
     return True
 
@@ -94,7 +94,7 @@ async def get_top() -> dict[int, list[int]]:
     """
     data = await _load()
     sorted_items = sorted(
-        data["referrals"].items(), key=lambda item: len(item[1]), reverse=True
+        data["referrals"].items(), key=lambda item: len(item[1]), reverse=True,
     )
     return {int(k): [int(user_id) for user_id in v] for k, v in sorted_items}
 

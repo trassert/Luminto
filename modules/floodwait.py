@@ -13,9 +13,11 @@ class FloodWaitBase:
         name="FloodWaitSys",
         timer=5,
         exit_multiplier=3,
-        lasttime=time(),
+        lasttime=None,
     ) -> None:
         logger.info(f"ФлудВайт: {name} инициализирован")
+        if lasttime is None:
+            lasttime = time()
         self.time = lasttime
         self.timer = timer
         self.exit_multiplier = exit_multiplier

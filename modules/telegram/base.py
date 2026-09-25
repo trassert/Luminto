@@ -53,7 +53,7 @@ async def host(event: Message) -> Message:
         r"/commands$",
         r"команды$",
         r"бот помощь$",
-    ]
+    ],
 )
 async def help(event: Message) -> Message:
     """Выводит список доступных команд."""
@@ -83,13 +83,13 @@ async def ping(event: Message) -> Message:
         try:
             async with mcrcon.Vanilla as rcon:
                 pings = formatter.parse_pings_strict(
-                    formatter.rm_colors(await rcon.send("ping @a"))
+                    formatter.rm_colors(await rcon.send("ping @a")),
                 )
             if pings == []:
                 extra_pings.append("🧍 : Игроков не найдено")
             else:
                 extra_pings.append(
-                    f"🧍 : Пинг игроков ↑|≈|↓ - {max(pings)} | {sum(pings) // len(pings)} | {min(pings)} мс"
+                    f"🧍 : Пинг игроков ↑|≈|↓ - {max(pings)} | {sum(pings) // len(pings)} | {min(pings)} мс",
                 )
         except Exception:
             extra_pings.append("🧍 : Не удалось получить пинг игроков")
@@ -128,7 +128,7 @@ async def start(event: Message):
 
 
 @func.new_command(
-    [r"/обо мне$", r"/я$", r"/i$", r"/profile", r"/профиль$", r"/myprofile"]
+    [r"/обо мне$", r"/я$", r"/i$", r"/profile", r"/профиль$", r"/myprofile"],
 )
 async def profile(event: Message) -> Message:
     """Выводит детальную информацию об игроке, его роли, государстве и статистике."""
@@ -187,12 +187,12 @@ async def profile(event: Message) -> Message:
 async def msktime(event: Message) -> Message:
     """Показывает текущее московское время."""
     return await event.reply(
-        phrase.time.format(datetime.now().strftime("%H:%M:%S"))
+        phrase.time.format(datetime.now().strftime("%H:%M:%S")),
     )
 
 
 @func.new_command(
-    [r"(/г )?(шахта|майнить|копать)$", r"/mine", r"/(шахта|майнить|копать)$"]
+    [r"(/г )?(шахта|майнить|копать)$", r"/mine", r"/(шахта|майнить|копать)$"],
 )
 async def mine_start(event: Message) -> Message:
     """Запускает сессию майнинга (шахты)."""
@@ -224,7 +224,7 @@ async def mine_start(event: Message) -> Message:
 
     msg_text: str = (
         phrase.mine.done.format(
-            formatter.value_to_str(initial, phrase.currency)
+            formatter.value_to_str(initial, phrase.currency),
         )
         + phrase.mine.q
     )
@@ -272,14 +272,14 @@ async def check_nick(event: Message) -> Message:
         r"/дать(.*)",
         r"/перевести(.*)",
         r"перевести(.*)",
-    ]
+    ],
 )
 async def swap_money(event: Message) -> Message:
     """Переводит валюту другому игроку."""
     args: list[str] = event.pattern_match.group(1).strip().split()
     if not args:
         return await event.reply(
-            phrase.money.no_count + phrase.money.swap_balance_use
+            phrase.money.no_count + phrase.money.swap_balance_use,
         )
 
     sender_id: int = event.sender_id
@@ -293,7 +293,7 @@ async def swap_money(event: Message) -> Message:
 
     if recipient_id is None:
         return await event.reply(
-            phrase.money.no_people + phrase.money.swap_balance_use
+            phrase.money.no_people + phrase.money.swap_balance_use,
         )
 
     if sender_id == recipient_id:
@@ -305,7 +305,7 @@ async def swap_money(event: Message) -> Message:
             return await event.reply(phrase.money.bot)
     except Exception:
         return await event.reply(
-            phrase.money.no_people + phrase.money.swap_balance_use
+            phrase.money.no_people + phrase.money.swap_balance_use,
         )
 
     if args[0].lower() in {"все", "всё", "all", "весь"}:
@@ -316,7 +316,7 @@ async def swap_money(event: Message) -> Message:
             amount = int(args[0])
         except ValueError:
             return await event.reply(
-                phrase.money.nan_count + phrase.money.swap_balance_use
+                phrase.money.nan_count + phrase.money.swap_balance_use,
             )
 
     if amount <= 0:
@@ -336,7 +336,7 @@ async def swap_money(event: Message) -> Message:
 
     return await event.reply(
         phrase.money.swap_money.format(
-            formatter.value_to_str(amount, phrase.currency)
+            formatter.value_to_str(amount, phrase.currency),
         ),
     )
 
@@ -350,7 +350,7 @@ async def swap_money(event: Message) -> Message:
         r"/вмаин (.+)",
         r"/в маин (.+)",
         r"вывести (.+)",
-    ]
+    ],
 )
 async def money_to_server(event: Message) -> Message:
     user_id: int = event.sender_id
@@ -372,13 +372,13 @@ async def money_to_server(event: Message) -> Message:
         return await event.reply(phrase.bank.daily_limit)
 
     success, remaining = await db.check_and_update_withdraw_limit(
-        user_id, amount
+        user_id, amount,
     )
 
     if not success:
         return await event.reply(
             phrase.bank.limit.format(
-                formatter.value_to_str(remaining, phrase.currency)
+                formatter.value_to_str(remaining, phrase.currency),
             ),
         )
 
@@ -388,7 +388,7 @@ async def money_to_server(event: Message) -> Message:
         await db.rollback_withdraw_limit(user_id, amount)
         return await event.reply(
             phrase.money.not_enough.format(
-                formatter.value_to_str(balance, phrase.currency)
+                formatter.value_to_str(balance, phrase.currency),
             ),
         )
 
@@ -407,7 +407,7 @@ async def money_to_server(event: Message) -> Message:
 
     return await event.reply(
         phrase.bank.withdraw.format(
-            formatter.value_to_str(amount, phrase.currency)
+            formatter.value_to_str(amount, phrase.currency),
         ),
     )
 
@@ -421,7 +421,7 @@ async def money_to_server(event: Message) -> Message:
         r"/вмаин$",
         r"/в маин$",
         r"вывести$",
-    ]
+    ],
 )
 async def money_to_server_empty(event: Message) -> Message:
     return await event.reply(phrase.money.no_count)
@@ -436,14 +436,14 @@ async def money_to_server_empty(event: Message) -> Message:
         r"wallet$",
         r"/мой баланс$",
         r"мой баланс$",
-    ]
+    ],
 )
 async def get_balance(event: Message) -> Message:
     """Показывает баланс аметистов игрока."""
     balance: int = await db.get_money(event.sender_id)
     return await event.reply(
         phrase.money.wallet.format(
-            formatter.value_to_str(balance, phrase.currency)
+            formatter.value_to_str(balance, phrase.currency),
         ),
     )
 
@@ -455,7 +455,7 @@ async def get_balance(event: Message) -> Message:
         r"привязать (.+)",
         r"/новый ник (.+)",
         r"/линкник (.+)",
-    ]
+    ],
 )
 async def link_nick(event: Message) -> Message:
     nick: str = event.pattern_match.group(1).strip()
@@ -470,7 +470,7 @@ async def link_nick(event: Message) -> Message:
     if current_linked_nick is not None:
         btn = [
             KeyboardButtonCallback(
-                "✅ Сменить", f"nick.{nick}.{event.sender_id}".encode()
+                "✅ Сменить", f"nick.{nick}.{event.sender_id}".encode(),
             ),
         ]
         price_str = formatter.value_to_str(
@@ -504,7 +504,7 @@ async def link_nick(event: Message) -> Message:
             await client.send_message(
                 referral,
                 phrase.ref.used.format(
-                    user=sender_name, amount=config.cfg.RefGift
+                    user=sender_name, amount=config.cfg.RefGift,
                 ),
             )
         except Exception:
@@ -522,16 +522,16 @@ async def link_nick(event: Message) -> Message:
 
     try:
         return await aio.approve_chat_join_request(
-            chat_id=config.chats.chat, user_id=event.sender_id
+            chat_id=config.chats.chat, user_id=event.sender_id,
         )
     except Exception:
         logger.info(
-            f"Игрок {event.sender_id} привязал ник, но заявки нет. Пропускаю..."
+            f"Игрок {event.sender_id} привязал ник, но заявки нет. Пропускаю...",
         )
 
 
 @func.new_command(
-    [r"/linknick$", r"/привязать$", r"привязать$", r"/новый ник$", r"/линкник$"]
+    [r"/linknick$", r"/привязать$", r"привязать$", r"/новый ник$", r"/линкник$"],
 )
 async def link_nick_empty(event: Message) -> Message:
     return await event.reply(phrase.nick.not_select)
@@ -572,7 +572,7 @@ async def getmap(event: Message) -> Message:
         r"/голос$",
         r"/голосование$",
         r"/проголосовать$",
-    ]
+    ],
 )
 async def vote(event: Message) -> Message:
     """Выводит ссылку на мониторинги для голосования."""
@@ -593,7 +593,7 @@ async def vote(event: Message) -> Message:
         r"игрок (.+)",
         r"нпоиск (.+)",
         r"пник (.+)",
-    ]
+    ],
 )
 async def check_info_by_nick(event: Message) -> Message:
     """Ищет Telegram-профиль и статус игрока по его Minecraft нику."""
@@ -604,7 +604,7 @@ async def check_info_by_nick(event: Message) -> Message:
         return await event.reply(phrase.nick.not_find)
 
     state: str | bool = await states_helper.if_player(
-        user_id
+        user_id,
     ) or await states_helper.if_author(user_id)
     state_info = state or "Нет"
 
@@ -626,7 +626,7 @@ async def check_info_by_nick(event: Message) -> Message:
         r"игрок$",
         r"нпоиск$",
         r"пник$",
-    ]
+    ],
 )
 async def check_info_by_nick_empty(event: Message) -> Message:
     return await event.reply(phrase.nick.empty)
@@ -684,7 +684,7 @@ async def cities_requests(event: Message) -> Message:
 
     existing = set((await files.load_text_async(pathes.chk_city)).splitlines())
     blacklisted = set(
-        (await files.load_text_async(pathes.bl_city)).splitlines()
+        (await files.load_text_async(pathes.bl_city)).splitlines(),
     )
 
     output_lines: list[str] = []
@@ -738,7 +738,7 @@ async def cities_remove(event: Message) -> Message:
     if await roles.get(event.sender_id) < roles.ADMIN:
         return await event.reply(
             phrase.roles.no_perms.format(
-                level=roles.ADMIN, name=phrase.roles.admin
+                level=roles.ADMIN, name=phrase.roles.admin,
             ),
         )
 
@@ -762,7 +762,7 @@ async def cities_remove(event: Message) -> Message:
         r"/правила сервера$",
         r"rules",
         r"правила$",
-    ]
+    ],
 )
 async def rules(event: Message) -> Message:
     """Выводит правила сервера/чата."""
@@ -815,7 +815,7 @@ async def add_new_hint(event: Message) -> Message:
 
                 hint_cap = text.capitalize()
                 pending_id = await db.add_pending_hint(
-                    event.sender_id, hint_cap, word
+                    event.sender_id, hint_cap, word,
                 )
 
                 admin_btns = [
@@ -834,7 +834,7 @@ async def add_new_hint(event: Message) -> Message:
                     buttons=admin_btns,
                 )
                 return await conv.send_message(
-                    phrase.newhints.sent.format(pending_id)
+                    phrase.newhints.sent.format(pending_id),
                 )
         except TimeoutError:
             return await event.reply(phrase.newhints.timeout)
@@ -850,7 +850,7 @@ async def get_last_hint(event: Message) -> Message:
     if await roles.get(event.sender_id) < roles.ADMIN:
         return await event.reply(
             phrase.roles.no_perms.format(
-                level=roles.ADMIN, name=phrase.roles.admin
+                level=roles.ADMIN, name=phrase.roles.admin,
             ),
         )
 
@@ -902,10 +902,10 @@ async def check_host(event: Message) -> Message:
         res = r[0]
         if res[0] == 1:
             text.append(
-                f"{func.cc_to_flag(data['info']['nodes'][node][0])} : {node} - ✅ - Пинг {round(res[1] * 1000)} мс"
+                f"{func.cc_to_flag(data['info']['nodes'][node][0])} : {node} - ✅ - Пинг {round(res[1] * 1000)} мс",
             )
         else:
             text.append(
-                f"{func.cc_to_flag(data['info']['nodes'][node][0])} : {node} - ❌ - {res[2]}"
+                f"{func.cc_to_flag(data['info']['nodes'][node][0])} : {node} - ❌ - {res[2]}",
             )
     return await event.reply("\n".join(text))

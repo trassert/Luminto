@@ -42,7 +42,7 @@ async def create_topic(event: Message):
         link = f"https://t.me/c/{str(config.chats.forum)[4:]}/{topic_id}"
         await db.Topics().add(event.sender_id, topic_id)
         await event.reply(
-            phrase.forum.topic_created.format(link=link, title=title)
+            phrase.forum.topic_created.format(link=link, title=title),
         )
     except Exception:
         logger.exception("Ошибка создания топика")
@@ -66,19 +66,19 @@ async def delete_topic(event: Message):
                 peer=config.chats.forum,
                 topic_id=topic_id,
                 icon_emoji_id=phrase.forum.done_id,
-            )
+            ),
         )
         await client(
             functions.messages.EditForumTopicRequest(
                 peer=config.chats.forum,
                 topic_id=topic_id,
                 closed=True,
-            )
+            ),
         )
     except BadRequestError as e:
         logger.error(f"Ошибка закрытия топика: {e}")
         return await event.reply(phrase.forum.already_closed)
     await addwait_rm_topic(topic_id)
     return await event.reply(
-        phrase.forum.closed.format(reason=reason or "Без причины")
+        phrase.forum.closed.format(reason=reason or "Без причины"),
     )

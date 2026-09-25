@@ -168,6 +168,6 @@ class CustomMarkdown:
                 )
             elif isinstance(e, types.MessageEntitySpoiler):
                 filtered[i] = types.MessageEntityTextUrl(
-                    e.offset, e.length, "spoiler"
+                    e.offset, e.length, "spoiler",
                 )
         return markdown.unparse(text, filtered)

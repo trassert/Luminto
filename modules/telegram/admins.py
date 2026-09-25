@@ -142,14 +142,14 @@ async def give_money(event: Message):
     args = event.pattern_match.group(1).strip().split()
     if not args:
         return await event.reply(
-            phrase.money.no_count + phrase.money.give_money_use
+            phrase.money.no_count + phrase.money.give_money_use,
         )
 
     try:
         count = int(args[0])
     except ValueError:
         return await event.reply(
-            phrase.money.nan_count + phrase.money.give_money_use
+            phrase.money.nan_count + phrase.money.give_money_use,
         )
 
     if count <= 0:
@@ -158,7 +158,7 @@ async def give_money(event: Message):
     user = await func.swap_resolve_recipient(event, args)
     if user is None:
         return await event.reply(
-            phrase.money.no_people + phrase.money.give_money_use
+            phrase.money.no_people + phrase.money.give_money_use,
         )
 
     try:
@@ -167,13 +167,13 @@ async def give_money(event: Message):
             return await event.reply(phrase.money.bot)
     except Exception:
         return await event.reply(
-            phrase.money.no_people + phrase.money.swap_balance_use
+            phrase.money.no_people + phrase.money.swap_balance_use,
         )
 
     await db.add_money(user, count)
     return await event.reply(
         phrase.money.give_money.format(
-            formatter.value_to_str(count, phrase.currency)
+            formatter.value_to_str(count, phrase.currency),
         ),
     )
 

@@ -33,7 +33,7 @@ class State:
         self._data.setdefault("tax_period", s.DefaultTaxPeriod)
         self._data.setdefault("tax_nonpayment", s.DefaultTaxNonpayment)
         self._data.setdefault(
-            "tax_last_date", datetime.now().strftime("%Y.%m.%d")
+            "tax_last_date", datetime.now().strftime("%Y.%m.%d"),
         )
         self._data.setdefault("recognition_votes", [])
         self._data.setdefault("recognition_pending", s.RecognitionPending)
@@ -89,7 +89,7 @@ class State:
             for pid in kicked:
                 nick = await nicks.get_byid(pid) or pid
                 logger.info(
-                    f"{nick} ({pid}) кикнут из {self.name} за неуплату налогов."
+                    f"{nick} ({pid}) кикнут из {self.name} за неуплату налогов.",
                 )
         await self._save()
         return {"kicked": kicked, "payed": payed, "collected": collected}

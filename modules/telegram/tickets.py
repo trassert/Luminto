@@ -49,7 +49,7 @@ async def do_ticket(event: Message):
         r"/активировать(.*)",
         r"активировать(.*)",
         r"/activate(.*)",
-    ]
+    ],
 )
 async def get_ticket(event: Message):
     arg = event.pattern_match.group(1).strip()

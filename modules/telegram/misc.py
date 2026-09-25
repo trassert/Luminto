@@ -18,7 +18,7 @@ async def average(event: Message) -> Message:
             map(
                 float,
                 event.pattern_match.group(1).strip().replace(",", ".").split(),
-            )
+            ),
         )
         if not numbers:
             return await event.reply(phrase.average_no_numbers)

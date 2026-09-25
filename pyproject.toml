@@ -8,7 +8,6 @@ dependencies = [
     "aiofiles>=25.1.0",
     "aiogram>=3.30.0",
     "aiohttp>=3.14.3",
-    "aioping>=0.4.0",
     "asyncmy>=0.2.11",
     "cryptg>=0.6.0",
     "cryptography>=49.0.0",
@@ -26,8 +25,19 @@ dependencies = [
     "uvloop>=0.22.1",
     "pydantic>=2.13.4",
     "pillow>=12.0.0",
+    "aioping>=0.4.0",
     "aiohost>=1.0.0",
+    "sycm>=0.1.0",
 ]
+
+[tool.ty.rules]
+invalid-argument-type = "ignore"
+invalid-return-type = "ignore"
+invalid-type-arguments = "ignore"
+unresolved-attribute = "ignore"
+possibly-missing-attribute = "ignore"
+invalid-assignment = "ignore"
+no-matching-overload = "ignore"
 
 [tool.ruff]
 exclude = ["depr", "scripts", ".venv"]
@@ -38,25 +48,13 @@ target-version = "py314"
 
 [tool.ruff.lint]
 select = [
-    "E4",
-    "E7",
-    "E9",
-    "W",
-    "F",
-    "Q",
-    "I",
-    "UP",
-    "PERF",
-    "ASYNC",
-    "C4",
-    "ISC",
-    "RET",
-    "FURB",
-    "FLY",
-    "TRY",
-    "PTH",
+    "E4", "E7", "E9", "W", "F", "Q", "I", "UP",
+    "PERF", "ASYNC", "C4", "ISC", "RET", "FURB", "FLY", "TRY", "PTH",
+    "B", "SIM", "PIE", "RSE", "LOG"
 ]
+
 ignore = []
+
 fixable = ["ALL"]
 unfixable = []
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
@@ -68,12 +66,3 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 docstring-code-format = false
 docstring-code-line-length = "dynamic"
-
-[tool.ty.rules]
-invalid-argument-type = "ignore"
-invalid-return-type = "ignore"
-invalid-type-arguments = "ignore"
-unresolved-attribute = "ignore"
-possibly-missing-attribute = "ignore"
-invalid-assignment = "ignore"
-no-matching-overload = "ignore"

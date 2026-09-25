@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 from typing import TYPE_CHECKING
 
 from loguru import logger
@@ -26,7 +27,7 @@ async def ai_handler(event: Message):
         message: Message = await event.reply(phrase.ai.wait)
     else:
         message: Message = await event.reply(
-            phrase.ai.wait_until.format(fw_request)
+            phrase.ai.wait_until.format(fw_request),
         )
         await asyncio.sleep(fw_request)
     try:
@@ -56,8 +57,6 @@ async def ai_handler(event: Message):
             except MessageNotModifiedError:
                 pass
     if message and len(text) > last_edit_len:
-        try:
+        with contextlib.suppress(MessageNotModifiedError):
             await message.edit(text)
-        except MessageNotModifiedError:
-            pass
     return None

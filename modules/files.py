@@ -54,9 +54,8 @@ async def get_lock(filepath: Path) -> asyncio.Lock:
 async def load_json_async(filepath: Path) -> dict:
     """Загружает JSON файл асинхронно."""
     lock = await get_lock(filepath)
-    async with lock:
-        async with aiofiles.open(filepath, "rb") as f:
-            raw = await f.read()
+    async with lock, aiofiles.open(filepath, "rb") as f:
+        raw = await f.read()
     return orjson.loads(raw)
 
 
@@ -71,26 +70,23 @@ async def save_json_async(
     lock = await get_lock(filepath)
     options = orjson_options(sort_keys=sort_keys, indent=indent)
     dump = orjson.dumps(data, option=options)
-    async with lock:
-        async with aiofiles.open(filepath, "wb") as f:
-            return await f.write(dump)
+    async with lock, aiofiles.open(filepath, "wb") as f:
+        return await f.write(dump)
 
 
 async def load_text_async(filepath: Path) -> str:
     """Загружает текстовый файл асинхронно."""
     lock = await get_lock(filepath)
-    async with lock:
-        async with aiofiles.open(filepath, encoding="utf-8") as f:
-            return await f.read()
+    async with lock, aiofiles.open(filepath, encoding="utf-8") as f:
+        return await f.read()
 
 
 async def save_text_async(filepath: Path, text: str):
     """Сохраняет текстовый файл асинхронно."""
     ensure_parent(filepath)
     lock = await get_lock(filepath)
-    async with lock:
-        async with aiofiles.open(filepath, "w", encoding="utf-8") as f:
-            return await f.write(text)
+    async with lock, aiofiles.open(filepath, "w", encoding="utf-8") as f:
+        return await f.write(text)
 
 
 async def remove_file_async(filepath: Path):
@@ -105,6 +101,5 @@ async def append_text_async(filepath: Path, text: str):
     """Добавляет текст в конец файла асинхронно."""
     ensure_parent(filepath)
     lock = await get_lock(filepath)
-    async with lock:
-        async with aiofiles.open(filepath, "a", encoding="utf-8") as f:
-            return await f.write(text)
+    async with lock, aiofiles.open(filepath, "a", encoding="utf-8") as f:
+        return await f.write(text)

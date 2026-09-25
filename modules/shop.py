@@ -9,7 +9,7 @@ logger.info(f"Загружен модуль {__name__}!")
 
 
 def _weighted_choice(
-    strings: list[str], weights: dict[str, int | float]
+    strings: list[str], weights: dict[str, int | float],
 ) -> str | None:
     """
     Выбирает строку из списка с учетом весов.
@@ -116,7 +116,7 @@ async def update() -> str | None:
     item_names = list(theme_items.keys())
     if len(item_names) < 5:
         logger.exception(
-            f"В теме '{new_theme}' недостаточно предметов (минимум 5, найдено {len(item_names)})"
+            f"В теме '{new_theme}' недостаточно предметов (минимум 5, найдено {len(item_names)})",
         )
         return None
     selected_items = (

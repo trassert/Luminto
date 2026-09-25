@@ -20,7 +20,7 @@ logger.info(f"Загружен модуль {__name__}!")
         r"/актив сервера(.*)",
         r"/мчат(.*)",
         r"/мстат(.*)",
-    ]
+    ],
 )
 async def active_check(event: Message):
     arg = event.pattern_match.group(1).strip()
@@ -35,7 +35,7 @@ async def active_check(event: Message):
     players = "\n".join(
         f"{i}. {name} - {count}"
         for i, (name, count) in enumerate(
-            all_data[: config.cfg.MaxStatPlayers], 1
+            all_data[: config.cfg.MaxStatPlayers], 1,
         )
     )
 
@@ -53,7 +53,7 @@ async def active_check(event: Message):
             caption=phrase.stat.chat.format(time=time_str, text=players),
         )
     return await event.respond(
-        phrase.stat.chat.format(time=time_str, text=players)
+        phrase.stat.chat.format(time=time_str, text=players),
     )
 
 
@@ -64,7 +64,7 @@ async def active_check(event: Message):
         r"/стат крокодил$",
         r"/стат слова$",
         r"топ крокодила$",
-    ]
+    ],
 )
 async def crocodile_wins(event: Message):
     all_data = await crocostat.get_all()
@@ -73,7 +73,7 @@ async def crocodile_wins(event: Message):
             f"{i}. **{await func.get_name(pid)}**: {wins} побед"
             for i, (pid, wins) in enumerate(all_data.items(), 1)
             if i <= config.cfg.MaxStatPlayers
-        ]
+        ],
     )
     return await event.reply(phrase.crocodile.stat.format(text), silent=True)
 
@@ -82,8 +82,8 @@ async def crocodile_wins(event: Message):
 async def all_money(event: Message):
     return await event.reply(
         phrase.money.all_money.format(
-            formatter.value_to_str(await db.get_all_money(), phrase.currency)
-        )
+            formatter.value_to_str(await db.get_all_money(), phrase.currency),
+        ),
     )
 
 
@@ -95,7 +95,7 @@ async def all_money(event: Message):
         r"/playtimetop(.*)",
         r"/bestplayers(.*)",
         r"/toppt(.*)",
-    ]
+    ],
 )
 async def server_top_list(event: Message):
     arg = event.pattern_match.group(1).strip()
@@ -124,7 +124,7 @@ async def server_top_list(event: Message):
         r"/topmine",
         r"/minetop",
         r"/bestminers",
-    ]
+    ],
 )
 async def server_top_mine(event: Message):
     top = [
@@ -133,5 +133,5 @@ async def server_top_mine(event: Message):
         if i <= config.cfg.MaxStatPlayers
     ]
     return await event.reply(
-        phrase.stat.mine.format("\n".join(top)), silent=True
+        phrase.stat.mine.format("\n".join(top)), silent=True,
     )

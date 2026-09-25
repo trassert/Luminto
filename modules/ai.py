@@ -41,7 +41,7 @@ class AI:
             {
                 "role": "assistant" if role == "assistant" else "user",
                 "content": content,
-            }
+            },
         )
         sys = self.history[0].get("role") == "system"
         start = 1 if sys else 0
@@ -50,7 +50,7 @@ class AI:
             total -= self._tokens(self.history.pop(start).get("content", ""))
         if total > self.max_history_tokens:
             logger.warning(
-                "История слишком большая. Очищаю до системного промпта."
+                "История слишком большая. Очищаю до системного промпта.",
             )
             self.history = self.history[:start]
 
@@ -116,5 +116,5 @@ class AI:
 Ai = AI(
     proxy_str=config.tokens.ai.proxy.string
     if config.tokens.ai.proxy.enabled
-    else None
+    else None,
 )

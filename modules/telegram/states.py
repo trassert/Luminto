@@ -22,7 +22,7 @@ logger.info(f"Загружен модуль {__name__}!")
 
 
 async def _check_and_update_tier(
-    state, players_len: int, name_cap: str
+    state, players_len: int, name_cap: str,
 ) -> None:
     """Обновляет статус (Княжество/Государство/Империя) при изменении состава."""
     new_type = None
@@ -57,7 +57,7 @@ async def _check_and_update_tier(
         r"/государства$",
         r"государства$",
         r"список госв$",
-    ]
+    ],
 )
 async def states_all(event: Message) -> Message:
     data = await states_helper.get_all()
@@ -81,7 +81,7 @@ async def states_all(event: Message) -> Message:
         r"/ктоп$",
         r"казна топ$",
         r"казтоп$",
-    ]
+    ],
 )
 async def states_all_top(event: Message) -> Message:
     data = await states_helper.get_all("money")
@@ -98,7 +98,7 @@ async def states_all_top(event: Message) -> Message:
 
 
 @func.new_command(
-    [r"/создать госво\s(.+)", r"\+госво\s(.+)", r"\+государство\s(.+)"]
+    [r"/создать госво\s(.+)", r"\+госво\s(.+)", r"\+государство\s(.+)"],
 )
 async def state_make(event: Message) -> Message:
     arg: str = event.pattern_match.group(1).strip().capitalize()
@@ -131,7 +131,7 @@ async def state_make(event: Message) -> Message:
             ),
         ]
         return await event.reply(
-            phrase.state.warn_make.format(arg), buttons=[button]
+            phrase.state.warn_make.format(arg), buttons=[button],
         )
     except tgerrors.ButtonDataInvalidError:
         return await event.reply(phrase.state.too_long)
@@ -169,7 +169,7 @@ async def state_tax(event: Message) -> Message:
         r"/госво собратьналоги$",
         r"/госво собратьналог$",
         r"/collecttax$",
-    ]
+    ],
 )
 async def state_collecttax(event: Message) -> Message:
     state_name = await states_helper.if_author(event.sender_id)
@@ -201,7 +201,7 @@ async def state_collecttax(event: Message) -> Message:
             ", ".join(kicked_players),
         )
         await _check_and_update_tier(
-            state, len(state.players), state.name.capitalize()
+            state, len(state.players), state.name.capitalize(),
         )
     return await event.reply(message)
 
@@ -226,7 +226,7 @@ async def state_tax_nonpayment(event: Message) -> Message:
         return await event.reply(phrase.state.howto_tax_nonpayment)
 
     await (await states_helper.State(state_name)).change(
-        "tax_nonpayment", action
+        "tax_nonpayment", action,
     )
     return await event.reply(
         phrase.state.tax_nonpayment_set.format(
@@ -256,7 +256,7 @@ async def state_tax_period(event: Message) -> Message:
 
 
 @func.new_command(
-    [r"/вступить(.*)", r"вступить(.*)", r"/г вступить(.*)", r"/г войти(.*)"]
+    [r"/вступить(.*)", r"вступить(.*)", r"/г вступить(.*)", r"/г войти(.*)"],
 )
 async def state_enter(event: Message) -> Message:
     arg: str = event.pattern_match.group(1).strip().capitalize()
@@ -271,7 +271,7 @@ async def state_enter(event: Message) -> Message:
         return await event.reply(phrase.state.not_connected)
 
     if await states_helper.if_player(
-        event.sender_id
+        event.sender_id,
     ) or await states_helper.if_author(event.sender_id):
         return await event.reply(phrase.state.already_player)
 
@@ -306,7 +306,7 @@ async def state_enter(event: Message) -> Message:
 
 
 @func.new_command(
-    [r"/state$", r"/state@luminto_chatbot$", r"/госво(.*)", r"/государство(.*)"]
+    [r"/state$", r"/state@luminto_chatbot$", r"/госво(.*)", r"/государство(.*)"],
 )
 async def state_get(event: Message):
     try:
@@ -316,7 +316,7 @@ async def state_get(event: Message):
 
     if not arg:
         state_name = await states_helper.if_player(
-            event.sender_id
+            event.sender_id,
         ) or await states_helper.if_author(
             event.sender_id,
         )
@@ -382,7 +382,7 @@ async def state_get(event: Message):
         r"выйти из госва",
         r"/г покинуть",
         r"/г выйти",
-    ]
+    ],
 )
 async def state_leave(event: Message) -> Message:
     state_name = await states_helper.if_player(event.sender_id)
@@ -416,7 +416,7 @@ async def state_leave(event: Message) -> Message:
         r"удалить государство",
         r"/г уничтожить",
         r"/г удалить",
-    ]
+    ],
 )
 async def state_rem(event: Message) -> Message:
     state_name = await states_helper.if_author(event.sender_id)
@@ -440,7 +440,7 @@ async def state_rem(event: Message) -> Message:
         r"/г описание\s([\s\S]+)",
         r"/о госве\s([\s\S]+)",
         r"/г о госве\s([\s\S]+)",
-    ]
+    ],
 )
 async def state_desc(event: Message) -> Message:
     state_name = await states_helper.if_author(event.sender_id)
@@ -468,7 +468,7 @@ async def state_coords(event: Message) -> Message:
     if len(coords) != 3:
         return await event.reply(phrase.state.howto_change_coords)
     await (await states_helper.State(state_name)).change(
-        "coordinates", ", ".join(coords)
+        "coordinates", ", ".join(coords),
     )
     return await event.reply(phrase.state.change_coords)
 
@@ -519,11 +519,11 @@ async def state_enter_arg(event: Message) -> Message:
         r"/г пополнить (.+)",
         r"\+казна (.+)",
         r"г пополнить (.+)",
-    ]
+    ],
 )
 async def state_add_money(event: Message) -> Message:
     state_name = await states_helper.if_player(
-        event.sender_id
+        event.sender_id,
     ) or await states_helper.if_author(
         event.sender_id,
     )
@@ -565,7 +565,7 @@ async def state_add_money(event: Message) -> Message:
         r"/г снять (.+)",
         r"\-казна (.+)",
         r"г снять (.+)",
-    ]
+    ],
 )
 async def state_rem_money(event: Message) -> Message:
     state_name = await states_helper.if_author(event.sender_id)
@@ -603,7 +603,7 @@ async def state_rem_money(event: Message) -> Message:
         r"/г изгнать(.*)",
         r"/г выгнать(.*)",
         r"/выгнать(.*)",
-    ]
+    ],
 )
 async def state_kick_user(event: Message) -> Message:
     state_name = await states_helper.if_author(event.sender_id)
@@ -638,7 +638,7 @@ async def state_kick_user(event: Message) -> Message:
     )
 
     await _check_and_update_tier(
-        state, len(state.players), state.name.capitalize()
+        state, len(state.players), state.name.capitalize(),
     )
     return await event.reply(phrase.state.kicked.format(target_name))
 
@@ -650,7 +650,7 @@ async def state_kick_user(event: Message) -> Message:
         r"/г name (.+)",
         r"/г переназвать (.+)",
         r"/название госва (.+)",
-    ]
+    ],
 )
 async def state_rename(event: Message) -> Message:
     state_name = await states_helper.if_author(event.sender_id)
@@ -790,7 +790,7 @@ async def state_transfer(event: Message) -> Message:
     if nick is None:
         return await event.reply(phrase.state.new_not_connected)
     if await states_helper.if_player(user_id) or await states_helper.if_author(
-        user_id
+        user_id,
     ):
         return await event.reply(phrase.state.new_already_player)
     return await event.reply(

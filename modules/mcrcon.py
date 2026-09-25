@@ -80,7 +80,7 @@ class MinecraftClient:
                 packet = await self._reader.read(length - len(data))
             except Exception as e:
                 msg = f"Connection error: {e}"
-                raise ClientError(msg)
+                raise ClientError(msg) from e
 
             if not packet:
                 msg = "Connection closed by server (empty packet)"

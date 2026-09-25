@@ -68,14 +68,14 @@ async def crocodile(event: Message):
 
     is_running = await CrocodileGame.is_running()
     stop_btn = KeyboardButtonCallback(
-        text="❌ Остановить игру", data=b"crocodile.stop"
+        text="❌ Остановить игру", data=b"crocodile.stop",
     )
 
     if not is_running:
         keyboard = [
             [
                 KeyboardButtonCallback(
-                    text="✅ Играть", data=b"crocodile.start"
+                    text="✅ Играть", data=b"crocodile.start",
                 ),
                 stop_btn,
             ],
@@ -133,7 +133,7 @@ async def crocodile_bet(event: Message):
 
     return await event.reply(
         phrase.crocodile.bet.format(
-            formatter.value_to_str(bet, phrase.currency)
+            formatter.value_to_str(bet, phrase.currency),
         ),
     )
 
@@ -183,12 +183,12 @@ async def crocodile_handler(event: Message):
         await crocostat.add(event.sender_id)
 
         return await event.reply(
-            phrase.crocodile.win.format(current_word) + win_msg
+            phrase.crocodile.win.format(current_word) + win_msg,
         )
 
     if not text.startswith("/"):
-        changed, new_mask_str, finished = await CrocodileGame.reveal_on_guess(
-            text
+        changed, new_mask_str, _finished = await CrocodileGame.reveal_on_guess(
+            text,
         )
         if changed:
             return await event.reply(
@@ -217,7 +217,7 @@ async def crocodile_hint(event: Message):
         for i, letter in enumerate(game["unsec"], 1):
             if letter == "_":
                 return await event.reply(
-                    f"{i} буква в слове - **{word[i - 1]}**"
+                    f"{i} буква в слове - **{word[i - 1]}**",
                 )
 
     try:
@@ -258,7 +258,7 @@ async def cities_timeout(current_player: int, last_city: str):
 
                     stats_lines = []
                     for n, (uid, count) in enumerate(
-                        Cities.get_all_stat().items(), 1
+                        Cities.get_all_stat().items(), 1,
                     ):
                         prefix = "👑 1" if n == 1 else str(n)
                         stats_lines.append(
@@ -296,7 +296,7 @@ async def cities_timeout(current_player: int, last_city: str):
 
             if second % 5 == 0 and second <= config.cfg.CitiesTimeout / 2:
                 text = phrase.cities.timeout.format(
-                    player=player_name, time=second
+                    player=player_name, time=second,
                 )
                 if timer_msg:
                     try:
@@ -354,7 +354,7 @@ async def cities_answer(event: Message):
             ),
         )
         CitiesTimerTask = asyncio.create_task(
-            cities_timeout(current_player, last_city)
+            cities_timeout(current_player, last_city),
         )
 
     elif result_code == 1:
@@ -392,18 +392,18 @@ async def cities_callback(event: events.CallbackQuery.Event):
         keyboard = [
             [
                 KeyboardButtonCallback(
-                    text="➕ Присоединиться", data="cities.join"
-                )
+                    text="➕ Присоединиться", data="cities.join",
+                ),
             ],
             [
                 KeyboardButtonCallback(
-                    text="🎮 Начать игру", data="cities.start"
-                )
+                    text="🎮 Начать игру", data="cities.start",
+                ),
             ],
             [KeyboardButtonCallback(text="❌ Отменить", data="cities.cancel")],
         ]
         await event.edit(
-            phrase.cities.start.format(", ".join(names)), buttons=keyboard
+            phrase.cities.start.format(", ".join(names)), buttons=keyboard,
         )
         return await event.answer(phrase.cities.set_ingame)
 
@@ -447,8 +447,8 @@ async def cities_start(event: Message):
             buttons=[
                 [
                     KeyboardButtonCallback(
-                        text="❌ Отменить", data="cities.cancel"
-                    )
+                        text="❌ Отменить", data="cities.cancel",
+                    ),
                 ],
             ],
         )

@@ -22,7 +22,7 @@ logger.info(f"Загружен модуль {__name__}!")
 
 
 @func.new_command(
-    [r"/shop", r"/шоп$", r"/магазин$", r"магазин$", r"shop$", r"шоп$"]
+    [r"/shop", r"/шоп$", r"/магазин$", r"магазин$", r"shop$", r"шоп$"],
 )
 async def shop_command(event: Message):
     shop_data = await shop.get()
@@ -34,12 +34,12 @@ async def shop_command(event: Message):
     for i, (name, info) in enumerate(list(shop_data.items())[:5]):
         val = info["value"]
         items.append(
-            f"{i + 1}. {name}{' (' + str(val) + ')' if val != 1 else ''} - {info['price']} {phrase.currency_emoji}"
+            f"{i + 1}. {name}{' (' + str(val) + ')' if val != 1 else ''} - {info['price']} {phrase.currency_emoji}",
         )
         btns.append(
             KeyboardButtonCallback(
-                text=f"{i + 1}\u20e3", data=f"shop.{i}.{version}".encode()
-            )
+                text=f"{i + 1}\u20e3", data=f"shop.{i}.{version}".encode(),
+            ),
         )
 
     return await event.reply(
@@ -91,7 +91,7 @@ async def get_player_purchases(nick: str, limit: int = 50) -> list[dict]:
                             else datetime.now().strftime("%d.%m.%Y"),
                             "item": item,
                             "count": count,
-                        }
+                        },
                     )
         except Exception as e:
             logger.error(f"Ошибка чтения {log_file.name}: {e}")
@@ -115,7 +115,7 @@ def group_purchases(purchases: list[dict]) -> list[dict]:
 
 
 def create_pagination_message(
-    nick: str, items: list[dict], page: int = 0, per_page: int = 5
+    nick: str, items: list[dict], page: int = 0, per_page: int = 5,
 ) -> tuple:
     total = len(items)
     pages = (total + per_page - 1) // per_page if total > 0 else 1
@@ -123,7 +123,7 @@ def create_pagination_message(
 
     if not items:
         return phrase.shop.history.format(
-            player_nick=nick
+            player_nick=nick,
         ) + phrase.shop.history_empty, []
 
     msg = phrase.shop.history.format(player_nick=nick)
@@ -136,7 +136,7 @@ def create_pagination_message(
             cur_date = item["date_str"]
             msg += f"\n📆 **{cur_date}:**\n"
         msg += phrase.shop.item_line.format(
-            item=item["item"], count=item["total_count"]
+            item=item["item"], count=item["total_count"],
         )
 
     buttons = []
@@ -145,14 +145,14 @@ def create_pagination_message(
         if page > 0:
             nav.append(
                 Button.inline(
-                    phrase.shop.btn_back, f"logshop.{nick}.{page - 1}"
-                )
+                    phrase.shop.btn_back, f"logshop.{nick}.{page - 1}",
+                ),
             )
         if page < pages - 1:
             nav.append(
                 Button.inline(
-                    phrase.shop.btn_forward, f"logshop.{nick}.{page + 1}"
-                )
+                    phrase.shop.btn_forward, f"logshop.{nick}.{page + 1}",
+                ),
             )
         if nav:
             buttons.append(nav)
@@ -162,7 +162,7 @@ def create_pagination_message(
 
 
 @func.new_command(
-    [r"/logshop (\S+)", r"/логшоп (\S+)", r"/покупки (\S+)"], min_role=2
+    [r"/logshop (\S+)", r"/логшоп (\S+)", r"/покупки (\S+)"], min_role=2,
 )
 async def logshop_command(event: Message):
     parts = event.raw_text.split(maxsplit=1)
@@ -191,25 +191,25 @@ async def logshop_callback(event: events.CallbackQuery.Event):
 
     if len(data) != 3:
         return await event.answer(
-            f"{phrase.shop.error}: Неверные данные", alert=True
+            f"{phrase.shop.error}: Неверные данные", alert=True,
         )
 
     nick, page_str = data[1], data[2]
     if not formatter.is_valid_mc_nick(nick):
         return await event.answer(
-            f"{phrase.shop.error}: Неверный ник", alert=True
+            f"{phrase.shop.error}: Неверный ник", alert=True,
         )
 
     try:
         page = int(page_str)
     except ValueError:
         return await event.answer(
-            f"{phrase.shop.error}: Неверная страница", alert=True
+            f"{phrase.shop.error}: Неверная страница", alert=True,
         )
 
     purchases = await get_player_purchases(nick)
     msg, btns = create_pagination_message(
-        nick, group_purchases(purchases), page
+        nick, group_purchases(purchases), page,
     )
 
     await event.edit(msg, buttons=btns or None)
@@ -237,7 +237,7 @@ async def logshop_stats_command(event: Message):
             continue
 
     msg = phrase.shop.stats.format(
-        files=files_count, players=len(players), total=total, items=len(items)
+        files=files_count, players=len(players), total=total, items=len(items),
     )
     if items:
         msg += (

@@ -20,7 +20,7 @@ logger.info(f"Загружен модуль {__name__}!")
         r"/топ реф$",
         r"/топ рефералов$",
         r"/рефералы топ$",
-    ]
+    ],
 )
 async def top_ref(event: Message):
     text = [phrase.ref.top]
@@ -32,7 +32,7 @@ async def top_ref(event: Message):
     n = 1
     for user_id, ref_list in info.items():  # items() даёт пары (ключ, значение)
         text.append(
-            f"{n}. **{await func.get_name(int(user_id))}** - {len(ref_list)}"
+            f"{n}. **{await func.get_name(int(user_id))}** - {len(ref_list)}",
         )
         n += 1
         if n > config.cfg.MaxStatPlayers:
@@ -52,7 +52,7 @@ async def top_ref(event: Message):
         r"/refcode",
         r"/reflink",
         r"/рефссылка",
-    ]
+    ],
 )
 async def my_ref(event: Message):
     ref = await referrals.check_uses(event.sender_id)
@@ -64,5 +64,5 @@ async def my_ref(event: Message):
             players.append(await func.get_name(player, minecraft=True))  # noqa: PERF401
         uses = f"{len(ref)}: {', '.join(players)}"
     return await event.reply(
-        phrase.ref.my.format(ref_id=event.sender_id, uses=uses)
+        phrase.ref.my.format(ref_id=event.sender_id, uses=uses),
     )

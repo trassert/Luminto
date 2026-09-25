@@ -352,7 +352,7 @@ def flatten(node: Node, ctx: Ctx, out: list):
                     "color": color,
                     "deco": ctx.deco,
                     "font": ctx.font,
-                }
+                },
             )
     elif k == "color":
         c2 = Ctx(("color", node.payload), ctx.deco, ctx.font)
@@ -467,15 +467,15 @@ class Renderer:
         W = max(1, max_w + 2 * pad + s)
         H = max(1, len(lines) * line_adv - spacing + 2 * pad)
         if self.bg_image is not None:
-            base = self.bg + (255,) if self.bg else (0, 0, 0, 0)
+            base = (*self.bg, 255) if self.bg else (0, 0, 0, 0)
             img = Image.new("RGBA", (W, H), base)
             bw, bh = self.bg_image.size
             img.alpha_composite(
-                self.bg_image.convert("RGBA"), ((W - bw) // 2, (H - bh) // 2)
+                self.bg_image.convert("RGBA"), ((W - bw) // 2, (H - bh) // 2),
             )
         else:
             img = Image.new(
-                "RGBA", (W, H), self.bg + (255,) if self.bg else (0, 0, 0, 0)
+                "RGBA", (W, H), (*self.bg, 255) if self.bg else (0, 0, 0, 0),
             )
         dr = ImageDraw.Draw(img)
         for li, line in enumerate(lines):
@@ -495,7 +495,7 @@ class Renderer:
         return img
 
     def _pass(self, img, dr, chars, baseline, s, shadow):
-        for it, font, adv, x in chars:
+        for it, font, _adv, x in chars:
             ch = it["ref"]
             if ch.isspace():
                 continue
@@ -534,7 +534,7 @@ class Renderer:
                         round(x + adv) + dx + s - 1,
                         baseline + dx + s - 1,
                     ],
-                    fill=color + (255,),
+                    fill=(*color, 255),
                 )
             if "strikethrough" in it["deco"]:
                 y0 = baseline - math.ceil(asc * 0.5)
@@ -545,7 +545,7 @@ class Renderer:
                         round(x + adv) + dx + s - 1,
                         y0 + dx + s - 1,
                     ],
-                    fill=color + (255,),
+                    fill=(*color, 255),
                 )
 
     def _blit(self, img, font, ch, color, bold, italic, x, baseline, s):
@@ -556,13 +556,13 @@ class Renderer:
         w = math.ceil(adv) + 2 * m + s
         tile = Image.new("RGBA", (w, h + 2 * m), (0, 0, 0, 0))
         d = ImageDraw.Draw(tile)
-        fill = color + (255,)
+        fill = (*color, 255)
         d.text((m, m), ch, font=font, fill=fill)
         if bold:
             d.text((m + s, m), ch, font=font, fill=fill)
         if italic:
             tile = tile.transform(
-                tile.size, Image.AFFINE, (1, self.ITALIC_K, 0, 0, 1, 0)
+                tile.size, Image.AFFINE, (1, self.ITALIC_K, 0, 0, 1, 0),
             )
         a = tile.getchannel("A").point(lambda v: 255 if v >= 120 else 0)
         tile.putalpha(a)

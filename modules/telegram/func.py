@@ -99,7 +99,7 @@ async def swap_resolve_recipient(event: Message, args: list[str]) -> int | None:
 
 
 async def checks(
-    event: Message | events.CallbackQuery.Event, min_role: int = 0
+    event: Message | events.CallbackQuery.Event, min_role: int = 0,
 ) -> bool:
     "Логгирование ЛС"
     if event.is_private and not isinstance(event, events.CallbackQuery.Event):
@@ -128,22 +128,22 @@ async def checks(
         if isinstance(event, events.CallbackQuery.Event):
             await event.answer(
                 phrase.roles.no_perms_buttons.format(
-                    name=phrase.roles.types[min_role]
+                    name=phrase.roles.types[min_role],
                 ),
                 alert=True,
             )
         else:
             await event.reply(
                 phrase.roles.no_perms.format(
-                    level=min_role, name=phrase.roles.types[min_role]
-                )
+                    level=min_role, name=phrase.roles.types[min_role],
+                ),
             )
         return False
     return True
 
 
 def new_command(
-    command: str | list[str], checks=checks, chats=None, min_role: int = 0
+    command: str | list[str], checks=checks, chats=None, min_role: int = 0,
 ):
     async def check_wrapper(event):
         return await checks(event, min_role=min_role)
@@ -154,7 +154,7 @@ def new_command(
             client.add_event_handler(
                 func,
                 events.NewMessage(
-                    pattern=rf"(?i)^{command}", func=check_wrapper, chats=chats
+                    pattern=rf"(?i)^{command}", func=check_wrapper, chats=chats,
                 ),
             )
             return func

@@ -41,7 +41,7 @@ aio = Bot(
     session=AiohttpSession(
         proxy=f"socks5://{config.tokens.proxy.login}:{config.tokens.proxy.password}@{config.tokens.proxy.host}:{config.tokens.proxy.port}"
         if config.tokens.proxy.enabled
-        else None
+        else None,
     ),
 )
 dp = Dispatcher()

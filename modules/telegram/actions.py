@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 
 from aiogram import Router, exceptions, types
 from loguru import logger
@@ -57,20 +58,18 @@ async def chat_action(event: events.ChatAction.Event):
         return await client.send_message(
             config.chats.chat,
             phrase.chataction.leave.format(
-                nick=user_name, time=time_played, messages=messages
+                nick=user_name, time=time_played, messages=messages,
             ),
         )
 
     if event.user_joined or event.user_added:
         if formatter.check_zalgo(user_name) > 50:
-            try:
+            with contextlib.suppress(Exception):
                 await client.edit_permissions(
                     config.chats.chat,
                     event.user_id,
                     send_messages=False,
                 )
-            except Exception:
-                pass
             return await client.send_message(
                 config.chats.chat,
                 phrase.chataction.zalgo.format(user_name),
@@ -84,16 +83,16 @@ async def chat_action(event: events.ChatAction.Event):
 
         try:
             perms = await client.get_permissions(
-                config.chats.chat, event.user_id
+                config.chats.chat, event.user_id,
             )
             if perms.is_banned or perms.has_left:
                 logger.info(
-                    f"Пользователь {event.user_id} забанен или вышел до приветствия."
+                    f"Пользователь {event.user_id} забанен или вышел до приветствия.",
                 )
                 return None
         except Exception as e:
             logger.info(
-                f"Пользователь {event.user_id} отсутствует в чате или ошибка проверки: {e}"
+                f"Пользователь {event.user_id} отсутствует в чате или ошибка проверки: {e}",
             )
             return None
 

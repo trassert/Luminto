@@ -64,12 +64,12 @@ async def rewards():
 async def pay_state_taxes() -> None:
     from .telegram import (
         func,
-    )  #! fix has no attribute 'new_command'  # noqa: I001
+    )  #! fix has no attribute 'new_command'
 
     logger.info("Проверяем налоги государств..")
     states = await states_helper.get_all()
 
-    for state_name in states.keys():
+    for state_name in states:
         logger.info(f"Проверяем налоги государства {state_name}..")
         state = await states_helper.State(state_name)
         if state.tax <= 0:
@@ -86,7 +86,7 @@ async def pay_state_taxes() -> None:
                 reply_to=config.chats.topics.rp,
             )
         await _check_and_update_tier(
-            state, len(state.players), state.name.capitalize()
+            state, len(state.players), state.name.capitalize(),
         )
 
 
@@ -160,12 +160,12 @@ async def rm_closed_topics() -> None:
             try:
                 await client(
                     functions.messages.DeleteTopicHistoryRequest(
-                        peer=config.chats.forum, top_msg_id=int(topic_id)
-                    )
+                        peer=config.chats.forum, top_msg_id=int(topic_id),
+                    ),
                 )
             except Exception as e:
                 return logger.warning(
-                    f"Ошибка при удалении топика {topic_id}: {e}"
+                    f"Ошибка при удалении топика {topic_id}: {e}",
                 )
             logger.info(f"Удалён топик {topic_id}")
             data.pop(topic_id, None)

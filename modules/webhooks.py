@@ -15,11 +15,6 @@ from .telegram.client import client
 
 logger.info(f"Загружен модуль {__name__}!")
 
-repos = {
-    "LumintoGold": {"chat": -1003408993511, "topic": 72},
-    "TrassertTools": {"chat": -1003408993511, "topic": 72},
-}
-
 
 def is_local_request(request: aiohttp.web.Request) -> bool:
     "Check if the request is from a local or private IP address, true or false"
@@ -66,17 +61,13 @@ async def github(request: aiohttp.web.Request) -> aiohttp.web.Response:
         repo_url = phrase.href(repo["html_url"])
         is_private = repo["private"]
 
-        repo_cfg = repos.get(repo["name"], {})
-        chat_id = repo_cfg.get("chat", config.chats.chat)
-        topic_id = repo_cfg.get("topic", config.chats.topics.updates)
-
         async def send(text: str, *, reply: bool = True) -> None:
             await client.send_message(
-                chat_id,
+                config.chats.chat,
                 text,
                 link_preview=False,
                 parse_mode="html",
-                reply_to=topic_id if reply else None,
+                reply_to=config.chats.topics.updates if reply else None,
             )
 
         if event == "star" and action != "deleted":
@@ -114,7 +105,7 @@ async def github(request: aiohttp.web.Request) -> aiohttp.web.Response:
                             if not is_private
                             else ""
                         ),
-                    )
+                    ),
                 )
         elif (event == "repository" and action == "created") or (
             event == "ping" and data["hook"]["type"] == "Repository"
@@ -128,7 +119,7 @@ async def github(request: aiohttp.web.Request) -> aiohttp.web.Response:
                     type="Приватный" if is_private else "Публичный",
                     author=phrase.esc(sender["login"]),
                     author_url=phrase.href(sender["html_url"]),
-                )
+                ),
             )
         elif event == "issues" and action == "labeled":
             logger.info(f"Выдан тип! Репо {repo_name}")
@@ -139,7 +130,7 @@ async def github(request: aiohttp.web.Request) -> aiohttp.web.Response:
                     issue=phrase.esc(issue["title"]),
                     issue_url=phrase.href(issue["html_url"]),
                     label=phrase.esc(label["name"]),
-                )
+                ),
             )
         elif event == "issues" and action == "opened":
             logger.info(f"Открыт топик! Репо {repo_name}")
@@ -153,13 +144,13 @@ async def github(request: aiohttp.web.Request) -> aiohttp.web.Response:
                     issue=phrase.esc(issue["title"]),
                     url=phrase.href(issue["html_url"]),
                     body=phrase.esc(body_text),
-                )
+                ),
             )
         elif event == "issues" and action == "closed":
             logger.info(f"Закрыт топик! Репо {repo_name}")
             issue = data["issue"]
             emoji, reason = phrase.github.close_reasons.get(
-                issue["state_reason"], ("❌", "Без причины")
+                issue["state_reason"], ("❌", "Без причины"),
             )
             await send(
                 phrase.github.issue_closed.format(
@@ -167,7 +158,7 @@ async def github(request: aiohttp.web.Request) -> aiohttp.web.Response:
                     issue=phrase.esc(issue["title"]),
                     url=phrase.href(issue["html_url"]),
                     reason=reason,
-                )
+                ),
             )
 
         return aiohttp.web.Response(text="ok")
@@ -275,12 +266,12 @@ async def own_actions(request: aiohttp.web.Request):
         if user > roles.VIP:
             logger.warning("Игрок уже имеет VIP или выше (vip-action)")
             return aiohttp.web.Response(
-                text="Player already has VIP or higher", status=401
+                text="Player already has VIP or higher", status=401,
             )
         if user == roles.BLACKLIST:
             logger.warning("Игрок в черном списке (vip-action)")
             return aiohttp.web.Response(
-                text="Player is blacklisted", status=401
+                text="Player is blacklisted", status=401,
             )
         await roles.set(tgid, roles.VIP)
         return aiohttp.web.Response(text="ok")

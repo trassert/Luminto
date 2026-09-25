@@ -40,7 +40,7 @@ async def add_money(id: int, count: int):
 
 
 async def check_and_update_withdraw_limit(
-    id: int, amount: int
+    id: int, amount: int,
 ) -> tuple[bool, int]:
     """
     Атомарная проверка и обновление day-limit.
@@ -53,7 +53,7 @@ async def check_and_update_withdraw_limit(
     if id_str in data:
         try:
             record_date = datetime.strptime(
-                data[id_str]["date"], "%Y-%m-%d"
+                data[id_str]["date"], "%Y-%m-%d",
             ).date()
             already_withdrawn = data[id_str].get("withdrawn", 0)
         except KeyError, ValueError:
@@ -150,7 +150,7 @@ class Statistic:
                 nick_stat = await self.get(nick, all_days=all_days)
             except Exception:
                 logger.warning(
-                    f"Ошибка при получении статистики для игрока {nick}"
+                    f"Ошибка при получении статистики для игрока {nick}",
                 )
                 continue
             else:
@@ -158,7 +158,7 @@ class Statistic:
                     data[nick] = nick_stat
         return sorted(data.items(), key=lambda item: item[1], reverse=True)
 
-    async def add(self, nick: str = None, date=None):
+    async def add(self, nick: str | None = None, date=None):
         """
         Добавляет единицу статистики для игрока.
         Args:
@@ -180,7 +180,7 @@ class Statistic:
             resolved_filepath.relative_to(base_stats)
         except ValueError:
             logger.warning(
-                f"Заблокирован выход за пределы каталога статистики: {target_nick!r}"
+                f"Заблокирован выход за пределы каталога статистики: {target_nick!r}",
             )
             return
         try:
@@ -304,7 +304,7 @@ class CitiesGame:
         self.data_file = pathes.cities
         self.data = self._load_data()
         self._valid_cities = set(
-            pathes.chk_city.read_text(encoding="utf8").splitlines()
+            pathes.chk_city.read_text(encoding="utf8").splitlines(),
         )
         self._cities_list = list(self._valid_cities)
 
@@ -401,12 +401,12 @@ class CitiesGame:
         self.data["status"] = True
         self.data["current_game"]["last_city"] = city
         self.data["current_game"]["current_player_id"] = choice(
-            self.get_players()
+            self.get_players(),
         )
         self.logger(f"Запущена игра Города. Начинается с города {city}")
         self.logger(f"Игроки: {self.get_players()}")
         self.logger(
-            f"Отвечает: {self.data['current_game']['current_player_id']}"
+            f"Отвечает: {self.data['current_game']['current_player_id']}",
         )
         self._save_data()
         return self.data
@@ -518,7 +518,7 @@ async def get_crocodile_word() -> str:
 
 
 async def add_pending_hint(
-    user_id: int | str, hint_string: str, word: str
+    user_id: int | str, hint_string: str, word: str,
 ) -> int:
     data = await files.load_json_async(pathes.pending_hints)
     pending_id = max((int(k) for k in data), default=0) + 1
@@ -587,7 +587,7 @@ class Item(TypedDict):
 
 
 async def add_item(
-    id: str, author_id: int, item: str, count: int, price: int
+    id: str, author_id: int, item: str, count: int, price: int,
 ) -> None:
     """Добавляет новый товар по ID. Перезаписывает, если уже существует."""
     data = await files.load_json_async(pathes.items)
@@ -712,7 +712,7 @@ class CrocodileGame:
         word = current.get("word", "")
         mask = list(current.get("unsec", ""))
         changed = False
-        for i, (w_char, g_char) in enumerate(zip(word, guess)):
+        for i, (w_char, g_char) in enumerate(zip(word, guess, strict=False)):
             if w_char == g_char and mask[i] == "_":
                 mask[i] = w_char
                 changed = True
@@ -765,9 +765,9 @@ class Topics:
     def idconv(self, id):
         try:
             return str(id)
-        except Exception:
+        except Exception as e:
             msg = f"Невозможно конвертировать ID {id} в строку"
-            raise ValueError(msg)
+            raise ValueError(msg) from e
 
     async def get_byid(self, id: str) -> dict:
         id = self.idconv(id)
@@ -782,7 +782,7 @@ class Topics:
             self.data[id] = []
         self.data[id].append(topic_id)
         return await files.save_json_async(
-            self.data_file, self.data, indent=True
+            self.data_file, self.data, indent=True,
         )
 
     async def remove(self, id: str, topic_id: str) -> bool:
