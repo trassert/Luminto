@@ -22,7 +22,9 @@ logger.info(f"Загружен модуль {__name__}!")
 
 
 async def _check_and_update_tier(
-    state, players_len: int, name_cap: str,
+    state,
+    players_len: int,
+    name_cap: str,
 ) -> None:
     """Обновляет статус (Княжество/Государство/Империя) при изменении состава."""
     new_type = None
@@ -131,7 +133,8 @@ async def state_make(event: Message) -> Message:
             ),
         ]
         return await event.reply(
-            phrase.state.warn_make.format(arg), buttons=[button],
+            phrase.state.warn_make.format(arg),
+            buttons=[button],
         )
     except tgerrors.ButtonDataInvalidError:
         return await event.reply(phrase.state.too_long)
@@ -201,7 +204,9 @@ async def state_collecttax(event: Message) -> Message:
             ", ".join(kicked_players),
         )
         await _check_and_update_tier(
-            state, len(state.players), state.name.capitalize(),
+            state,
+            len(state.players),
+            state.name.capitalize(),
         )
     return await event.reply(message)
 
@@ -226,7 +231,8 @@ async def state_tax_nonpayment(event: Message) -> Message:
         return await event.reply(phrase.state.howto_tax_nonpayment)
 
     await (await states_helper.State(state_name)).change(
-        "tax_nonpayment", action,
+        "tax_nonpayment",
+        action,
     )
     return await event.reply(
         phrase.state.tax_nonpayment_set.format(
@@ -306,7 +312,12 @@ async def state_enter(event: Message) -> Message:
 
 
 @func.new_command(
-    [r"/state$", r"/state@luminto_chatbot$", r"/госво(.*)", r"/государство(.*)"],
+    [
+        r"/state$",
+        r"/state@luminto_chatbot$",
+        r"/госво(.*)",
+        r"/государство(.*)",
+    ],
 )
 async def state_get(event: Message):
     try:
@@ -468,7 +479,8 @@ async def state_coords(event: Message) -> Message:
     if len(coords) != 3:
         return await event.reply(phrase.state.howto_change_coords)
     await (await states_helper.State(state_name)).change(
-        "coordinates", ", ".join(coords),
+        "coordinates",
+        ", ".join(coords),
     )
     return await event.reply(phrase.state.change_coords)
 
@@ -638,7 +650,9 @@ async def state_kick_user(event: Message) -> Message:
     )
 
     await _check_and_update_tier(
-        state, len(state.players), state.name.capitalize(),
+        state,
+        len(state.players),
+        state.name.capitalize(),
     )
     return await event.reply(phrase.state.kicked.format(target_name))
 

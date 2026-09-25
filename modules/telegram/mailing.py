@@ -59,7 +59,8 @@ async def admin_broadcast(event: Message):
         else:
             await status_msg.edit(
                 phrase.mailing.done.format(
-                    count=data["successful"], error=data["error"],
+                    count=data["successful"],
+                    error=data["error"],
                 ),
             )
 

@@ -94,7 +94,9 @@ async def get_top() -> dict[int, list[int]]:
     """
     data = await _load()
     sorted_items = sorted(
-        data["referrals"].items(), key=lambda item: len(item[1]), reverse=True,
+        data["referrals"].items(),
+        key=lambda item: len(item[1]),
+        reverse=True,
     )
     return {int(k): [int(user_id) for user_id in v] for k, v in sorted_items}
 

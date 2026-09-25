@@ -40,7 +40,8 @@ async def add_money(id: int, count: int):
 
 
 async def check_and_update_withdraw_limit(
-    id: int, amount: int,
+    id: int,
+    amount: int,
 ) -> tuple[bool, int]:
     """
     Атомарная проверка и обновление day-limit.
@@ -53,7 +54,8 @@ async def check_and_update_withdraw_limit(
     if id_str in data:
         try:
             record_date = datetime.strptime(
-                data[id_str]["date"], "%Y-%m-%d",
+                data[id_str]["date"],
+                "%Y-%m-%d",
             ).date()
             already_withdrawn = data[id_str].get("withdrawn", 0)
         except KeyError, ValueError:
@@ -518,7 +520,9 @@ async def get_crocodile_word() -> str:
 
 
 async def add_pending_hint(
-    user_id: int | str, hint_string: str, word: str,
+    user_id: int | str,
+    hint_string: str,
+    word: str,
 ) -> int:
     data = await files.load_json_async(pathes.pending_hints)
     pending_id = max((int(k) for k in data), default=0) + 1
@@ -587,7 +591,11 @@ class Item(TypedDict):
 
 
 async def add_item(
-    id: str, author_id: int, item: str, count: int, price: int,
+    id: str,
+    author_id: int,
+    item: str,
+    count: int,
+    price: int,
 ) -> None:
     """Добавляет новый товар по ID. Перезаписывает, если уже существует."""
     data = await files.load_json_async(pathes.items)
@@ -782,7 +790,9 @@ class Topics:
             self.data[id] = []
         self.data[id].append(topic_id)
         return await files.save_json_async(
-            self.data_file, self.data, indent=True,
+            self.data_file,
+            self.data,
+            indent=True,
         )
 
     async def remove(self, id: str, topic_id: str) -> bool:

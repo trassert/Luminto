@@ -33,7 +33,8 @@ class State:
         self._data.setdefault("tax_period", s.DefaultTaxPeriod)
         self._data.setdefault("tax_nonpayment", s.DefaultTaxNonpayment)
         self._data.setdefault(
-            "tax_last_date", datetime.now().strftime("%Y.%m.%d"),
+            "tax_last_date",
+            datetime.now().strftime("%Y.%m.%d"),
         )
         self._data.setdefault("recognition_votes", [])
         self._data.setdefault("recognition_pending", s.RecognitionPending)

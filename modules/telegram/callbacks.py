@@ -87,7 +87,9 @@ async def _handle_suggestion(
                 ),
             )
             return await client.edit_message(
-                sender_id, event.message_id, add_phrase,
+                sender_id,
+                event.message_id,
+                add_phrase,
             )
 
         case "no":
@@ -113,20 +115,24 @@ async def state_callback(event: events.CallbackQuery.Event):
             nick = await nicks.get_byid(sender_id)
             if nick is None:
                 return await event.answer(
-                    phrase.state.not_connected, alert=True,
+                    phrase.state.not_connected,
+                    alert=True,
                 )
             if await states_helper.if_player(sender_id) is not None:
                 return await event.answer(
-                    phrase.state.already_player, alert=True,
+                    phrase.state.already_player,
+                    alert=True,
                 )
             if await states_helper.if_author(sender_id) is not None:
                 return await event.answer(
-                    phrase.state.already_author, alert=True,
+                    phrase.state.already_author,
+                    alert=True,
                 )
 
             state = await states_helper.State(data[2])
             balance_check = await _check_and_deduct_balance(
-                sender_id, state.price,
+                sender_id,
+                state.price,
             )
             if balance_check is not True:
                 return await event.answer(balance_check, alert=True)
@@ -138,7 +144,8 @@ async def state_callback(event: events.CallbackQuery.Event):
             await client.send_message(
                 entity=config.chats.chat,
                 message=phrase.state.new_player.format(
-                    state=state.name, player=nick,
+                    state=state.name,
+                    player=nick,
                 ),
                 reply_to=config.chats.topics.rp,
             )
@@ -147,7 +154,8 @@ async def state_callback(event: events.CallbackQuery.Event):
                 await client.send_message(
                     entity=config.chats.chat,
                     message=phrase.state.up.format(
-                        name=state.name, type="Государство",
+                        name=state.name,
+                        type="Государство",
                     ),
                     reply_to=config.chats.topics.rp,
                 )
@@ -157,14 +165,16 @@ async def state_callback(event: events.CallbackQuery.Event):
                 await client.send_message(
                     entity=config.chats.chat,
                     message=phrase.state.up.format(
-                        name=state.name, type="Империя",
+                        name=state.name,
+                        type="Империя",
                     ),
                     reply_to=config.chats.topics.rp,
                 )
                 await state.change("type", 2)
 
             return await event.answer(
-                phrase.state.admit.format(state.name), alert=True,
+                phrase.state.admit.format(state.name),
+                alert=True,
             )
 
         case "remove":
@@ -172,7 +182,8 @@ async def state_callback(event: events.CallbackQuery.Event):
                 state = await states_helper.State(data[2])
             except FileNotFoundError:
                 return await event.answer(
-                    phrase.state.already_deleted, alert=True,
+                    phrase.state.already_deleted,
+                    alert=True,
                 )
 
             if not _ensure_owner(sender_id, state.author):
@@ -246,7 +257,8 @@ async def state_callback(event: events.CallbackQuery.Event):
 
             await event.reply(
                 phrase.state.renamed.format(
-                    old=state_name.capitalize(), new=new_name,
+                    old=state_name.capitalize(),
+                    new=new_name,
                 ),
             )
             return await client.send_message(
@@ -263,7 +275,8 @@ async def state_callback(event: events.CallbackQuery.Event):
             if state_name != data[2]:
                 return await event.answer(phrase.state.not_a_author, alert=True)
             await (await states_helper.State(state_name)).change(
-                "author", int(data[3]),
+                "author",
+                int(data[3]),
             )
             await event.answer(
                 phrase.state.transfer_ok.format(
@@ -277,8 +290,9 @@ async def state_callback(event: events.CallbackQuery.Event):
                 message=phrase.state.transfer_rp.format(
                     state=state_name,
                     new_leader=await func.get_name(
-                        int(data[3]), minecraft=True,
-                    )
+                        int(data[3]),
+                        minecraft=True,
+                    ),
                 ),
                 reply_to=config.chats.topics.rp,
             )
@@ -429,7 +443,8 @@ async def shop_callback(event: events.CallbackQuery.Event):
         return await event.answer(phrase.shop.timeout, alert=True)
 
     return await event.answer(
-        phrase.shop.buy.format(items[int(data[1])]), alert=True,
+        phrase.shop.buy.format(items[int(data[1])]),
+        alert=True,
     )
 
 
@@ -466,7 +481,8 @@ async def crocodile_callback(event: events.CallbackQuery.Event):
 
             if not await CrocodileGame.is_running():
                 return await event.answer(
-                    phrase.crocodile.already_down, alert=True,
+                    phrase.crocodile.already_down,
+                    alert=True,
                 )
 
             bets_json = CrocodileGame.get_bets()
@@ -584,12 +600,14 @@ async def mine_callback(event: events.CallbackQuery.Event):
                 buttons=[
                     [
                         Button.inline(
-                            phrase.mine.button_yes, f"mine.yes.{sender_id}",
+                            phrase.mine.button_yes,
+                            f"mine.yes.{sender_id}",
                         ),
                     ],
                     [
                         Button.inline(
-                            phrase.mine.button_no, f"mine.no.{sender_id}",
+                            phrase.mine.button_no,
+                            f"mine.no.{sender_id}",
                         ),
                     ],
                 ],
@@ -620,7 +638,8 @@ async def hint_callback(event: events.CallbackQuery.Event):
                 phrase.newhints.accept.format(
                     word=hint_data["word"],
                     get=formatter.value_to_str(
-                        config.cfg.HintGift, phrase.currency,
+                        config.cfg.HintGift,
+                        phrase.currency,
                     ),
                 ),
             )

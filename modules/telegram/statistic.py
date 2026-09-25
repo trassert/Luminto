@@ -35,7 +35,8 @@ async def active_check(event: Message):
     players = "\n".join(
         f"{i}. {name} - {count}"
         for i, (name, count) in enumerate(
-            all_data[: config.cfg.MaxStatPlayers], 1,
+            all_data[: config.cfg.MaxStatPlayers],
+            1,
         )
     )
 
@@ -133,5 +134,6 @@ async def server_top_mine(event: Message):
         if i <= config.cfg.MaxStatPlayers
     ]
     return await event.reply(
-        phrase.stat.mine.format("\n".join(top)), silent=True,
+        phrase.stat.mine.format("\n".join(top)),
+        silent=True,
     )

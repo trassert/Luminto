@@ -471,11 +471,14 @@ class Renderer:
             img = Image.new("RGBA", (W, H), base)
             bw, bh = self.bg_image.size
             img.alpha_composite(
-                self.bg_image.convert("RGBA"), ((W - bw) // 2, (H - bh) // 2),
+                self.bg_image.convert("RGBA"),
+                ((W - bw) // 2, (H - bh) // 2),
             )
         else:
             img = Image.new(
-                "RGBA", (W, H), (*self.bg, 255) if self.bg else (0, 0, 0, 0),
+                "RGBA",
+                (W, H),
+                (*self.bg, 255) if self.bg else (0, 0, 0, 0),
             )
         dr = ImageDraw.Draw(img)
         for li, line in enumerate(lines):
@@ -562,7 +565,9 @@ class Renderer:
             d.text((m + s, m), ch, font=font, fill=fill)
         if italic:
             tile = tile.transform(
-                tile.size, Image.AFFINE, (1, self.ITALIC_K, 0, 0, 1, 0),
+                tile.size,
+                Image.AFFINE,
+                (1, self.ITALIC_K, 0, 0, 1, 0),
             )
         a = tile.getchannel("A").point(lambda v: 255 if v >= 120 else 0)
         tile.putalpha(a)

@@ -9,7 +9,8 @@ logger.info(f"Загружен модуль {__name__}!")
 
 
 def _weighted_choice(
-    strings: list[str], weights: dict[str, int | float],
+    strings: list[str],
+    weights: dict[str, int | float],
 ) -> str | None:
     """
     Выбирает строку из списка с учетом весов.

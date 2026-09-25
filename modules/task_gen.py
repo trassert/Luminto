@@ -74,7 +74,9 @@ class Generator:
         )
 
     async def _worker(
-        self, func: Callable, next_run: Callable[[], float],
+        self,
+        func: Callable,
+        next_run: Callable[[], float],
     ) -> None:
         """Рабочий для периодических задач."""
         while True:

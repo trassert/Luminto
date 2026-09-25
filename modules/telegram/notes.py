@@ -12,12 +12,15 @@ logger.info(f"Загружен модуль {__name__}!")
 
 
 @func.new_command(
-    [r"\+note (.+)\n([\s\S]+)", r"\+нот (.+)\n([\s\S]+)"], min_role=1,
+    [r"\+note (.+)\n([\s\S]+)", r"\+нот (.+)\n([\s\S]+)"],
+    min_role=1,
 )
 async def add_note(event: Message):
     name = event.pattern_match.group(1).strip()
     if await notes.create(
-        event.sender_id, name, event.text.split("\n", maxsplit=1)[1],
+        event.sender_id,
+        name,
+        event.text.split("\n", maxsplit=1)[1],
     ):
         return await event.reply(
             phrase.notes.new.format(name),
@@ -86,7 +89,8 @@ async def get_my_notes(event: Message):
 
 
 @func.new_command(
-    [r"\-нот (.+)$", r"\-note (.+)$", r"\-text (.+)$"], min_role=1,
+    [r"\-нот (.+)$", r"\-note (.+)$", r"\-text (.+)$"],
+    min_role=1,
 )
 async def del_note(event: Message):
     name = event.pattern_match.group(1).strip()

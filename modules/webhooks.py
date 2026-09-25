@@ -150,7 +150,8 @@ async def github(request: aiohttp.web.Request) -> aiohttp.web.Response:
             logger.info(f"Закрыт топик! Репо {repo_name}")
             issue = data["issue"]
             emoji, reason = phrase.github.close_reasons.get(
-                issue["state_reason"], ("❌", "Без причины"),
+                issue["state_reason"],
+                ("❌", "Без причины"),
             )
             await send(
                 phrase.github.issue_closed.format(
@@ -266,12 +267,14 @@ async def own_actions(request: aiohttp.web.Request):
         if user > roles.VIP:
             logger.warning("Игрок уже имеет VIP или выше (vip-action)")
             return aiohttp.web.Response(
-                text="Player already has VIP or higher", status=401,
+                text="Player already has VIP or higher",
+                status=401,
             )
         if user == roles.BLACKLIST:
             logger.warning("Игрок в черном списке (vip-action)")
             return aiohttp.web.Response(
-                text="Player is blacklisted", status=401,
+                text="Player is blacklisted",
+                status=401,
             )
         await roles.set(tgid, roles.VIP)
         return aiohttp.web.Response(text="ok")

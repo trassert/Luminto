@@ -24,7 +24,9 @@ def getsigint(num_points: int) -> int:
 
 
 def create_plot(
-    data_dict, output_file=pathes.chart, time_range_days=None,
+    data_dict,
+    output_file=pathes.chart,
+    time_range_days=None,
 ) -> None:
     """Фукнция для создания линейного графика."""
     "Данные"

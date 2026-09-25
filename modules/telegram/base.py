@@ -372,7 +372,8 @@ async def money_to_server(event: Message) -> Message:
         return await event.reply(phrase.bank.daily_limit)
 
     success, remaining = await db.check_and_update_withdraw_limit(
-        user_id, amount,
+        user_id,
+        amount,
     )
 
     if not success:
@@ -470,7 +471,8 @@ async def link_nick(event: Message) -> Message:
     if current_linked_nick is not None:
         btn = [
             KeyboardButtonCallback(
-                "✅ Сменить", f"nick.{nick}.{event.sender_id}".encode(),
+                "✅ Сменить",
+                f"nick.{nick}.{event.sender_id}".encode(),
             ),
         ]
         price_str = formatter.value_to_str(
@@ -504,7 +506,8 @@ async def link_nick(event: Message) -> Message:
             await client.send_message(
                 referral,
                 phrase.ref.used.format(
-                    user=sender_name, amount=config.cfg.RefGift,
+                    user=sender_name,
+                    amount=config.cfg.RefGift,
                 ),
             )
         except Exception:
@@ -522,7 +525,8 @@ async def link_nick(event: Message) -> Message:
 
     try:
         return await aio.approve_chat_join_request(
-            chat_id=config.chats.chat, user_id=event.sender_id,
+            chat_id=config.chats.chat,
+            user_id=event.sender_id,
         )
     except Exception:
         logger.info(
@@ -531,7 +535,13 @@ async def link_nick(event: Message) -> Message:
 
 
 @func.new_command(
-    [r"/linknick$", r"/привязать$", r"привязать$", r"/новый ник$", r"/линкник$"],
+    [
+        r"/linknick$",
+        r"/привязать$",
+        r"привязать$",
+        r"/новый ник$",
+        r"/линкник$",
+    ],
 )
 async def link_nick_empty(event: Message) -> Message:
     return await event.reply(phrase.nick.not_select)
@@ -738,7 +748,8 @@ async def cities_remove(event: Message) -> Message:
     if await roles.get(event.sender_id) < roles.ADMIN:
         return await event.reply(
             phrase.roles.no_perms.format(
-                level=roles.ADMIN, name=phrase.roles.admin,
+                level=roles.ADMIN,
+                name=phrase.roles.admin,
             ),
         )
 
@@ -815,7 +826,9 @@ async def add_new_hint(event: Message) -> Message:
 
                 hint_cap = text.capitalize()
                 pending_id = await db.add_pending_hint(
-                    event.sender_id, hint_cap, word,
+                    event.sender_id,
+                    hint_cap,
+                    word,
                 )
 
                 admin_btns = [
@@ -850,7 +863,8 @@ async def get_last_hint(event: Message) -> Message:
     if await roles.get(event.sender_id) < roles.ADMIN:
         return await event.reply(
             phrase.roles.no_perms.format(
-                level=roles.ADMIN, name=phrase.roles.admin,
+                level=roles.ADMIN,
+                name=phrase.roles.admin,
             ),
         )
 

@@ -68,14 +68,16 @@ async def crocodile(event: Message):
 
     is_running = await CrocodileGame.is_running()
     stop_btn = KeyboardButtonCallback(
-        text="❌ Остановить игру", data=b"crocodile.stop",
+        text="❌ Остановить игру",
+        data=b"crocodile.stop",
     )
 
     if not is_running:
         keyboard = [
             [
                 KeyboardButtonCallback(
-                    text="✅ Играть", data=b"crocodile.start",
+                    text="✅ Играть",
+                    data=b"crocodile.start",
                 ),
                 stop_btn,
             ],
@@ -258,7 +260,8 @@ async def cities_timeout(current_player: int, last_city: str):
 
                     stats_lines = []
                     for n, (uid, count) in enumerate(
-                        Cities.get_all_stat().items(), 1,
+                        Cities.get_all_stat().items(),
+                        1,
                     ):
                         prefix = "👑 1" if n == 1 else str(n)
                         stats_lines.append(
@@ -296,7 +299,8 @@ async def cities_timeout(current_player: int, last_city: str):
 
             if second % 5 == 0 and second <= config.cfg.CitiesTimeout / 2:
                 text = phrase.cities.timeout.format(
-                    player=player_name, time=second,
+                    player=player_name,
+                    time=second,
                 )
                 if timer_msg:
                     try:
@@ -392,18 +396,21 @@ async def cities_callback(event: events.CallbackQuery.Event):
         keyboard = [
             [
                 KeyboardButtonCallback(
-                    text="➕ Присоединиться", data="cities.join",
+                    text="➕ Присоединиться",
+                    data="cities.join",
                 ),
             ],
             [
                 KeyboardButtonCallback(
-                    text="🎮 Начать игру", data="cities.start",
+                    text="🎮 Начать игру",
+                    data="cities.start",
                 ),
             ],
             [KeyboardButtonCallback(text="❌ Отменить", data="cities.cancel")],
         ]
         await event.edit(
-            phrase.cities.start.format(", ".join(names)), buttons=keyboard,
+            phrase.cities.start.format(", ".join(names)),
+            buttons=keyboard,
         )
         return await event.answer(phrase.cities.set_ingame)
 
@@ -447,7 +454,8 @@ async def cities_start(event: Message):
             buttons=[
                 [
                     KeyboardButtonCallback(
-                        text="❌ Отменить", data="cities.cancel",
+                        text="❌ Отменить",
+                        data="cities.cancel",
                     ),
                 ],
             ],

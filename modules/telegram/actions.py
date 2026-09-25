@@ -58,7 +58,9 @@ async def chat_action(event: events.ChatAction.Event):
         return await client.send_message(
             config.chats.chat,
             phrase.chataction.leave.format(
-                nick=user_name, time=time_played, messages=messages,
+                nick=user_name,
+                time=time_played,
+                messages=messages,
             ),
         )
 
@@ -83,7 +85,8 @@ async def chat_action(event: events.ChatAction.Event):
 
         try:
             perms = await client.get_permissions(
-                config.chats.chat, event.user_id,
+                config.chats.chat,
+                event.user_id,
             )
             if perms.is_banned or perms.has_left:
                 logger.info(
