@@ -161,7 +161,26 @@ async def github(request: aiohttp.web.Request) -> aiohttp.web.Response:
                     reason=reason,
                 ),
             )
+        elif event == "issue_comment" and action == "created":
+            logger.info(f"Новый комментарий! Репо {repo_name}")
+            issue = data["issue"]
+            comment = data["comment"]
+            commenter = comment["user"]
 
+            comment_body = comment.get("body")
+            body_text = (
+                comment_body.strip() if comment_body else "Текст отсутствует"
+            )
+
+            await send(
+                phrase.github.issue_comment.format(
+                    issue=phrase.esc(issue["title"]),
+                    issue_url=phrase.href(issue["html_url"]),
+                    author=phrase.esc(commenter["login"]),
+                    author_url=phrase.href(commenter["html_url"]),
+                    body=phrase.esc(body_text),
+                ),
+            )
         return aiohttp.web.Response(text="ok")
     except (orjson.JSONDecodeError, KeyError, TypeError, AttributeError) as e:
         logger.warning(f"Невалидный payload от GitHub: {e}")

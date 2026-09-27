@@ -783,6 +783,12 @@ class github:
         "not_planned": ("🚫", "Не запланировано"),
         "duplicate": ("👥", "Дубликат"),
     }
+    issue_comment = (
+        '💬 : Новый комментарий в топике <b>«<a href="{issue_url}">{issue}</a>»</b>\n'
+        "\n"
+        "👨🏻‍💻 : Автор: <b><a href=\"{author_url}\">{author}</a></b>\n"
+        "💬 : {body}"
+    )
 
 
 class port:
