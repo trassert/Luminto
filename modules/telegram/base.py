@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 from datetime import datetime
 from random import choice, randint
 from time import time
@@ -11,7 +12,6 @@ from loguru import logger
 from telethon import Button
 from telethon import errors as tgerrors
 from telethon.tl import types
-from telethon.tl.types import KeyboardButtonCallback
 
 from .. import (
     config,
@@ -63,14 +63,12 @@ async def help(event: Message) -> Message:
 @func.new_command([r"/пинг(.*)", r"/ping(.*)", r"пинг(.*)"])
 async def ping(event: Message) -> Message:
     """Проверяет задержку бота и (опционально) сервера."""
-    arg: str = event.pattern_match.group(1).strip().lower()
-    latency: float = round(time() - event.date.timestamp(), 2)
-    latency_text: str = (
-        phrase.ping.min if latency <= 0 else f"за {latency} сек."
-    )
+    arg = event.pattern_match.group(1).strip().lower()
+    latency = round(time() - event.date.timestamp(), 2)
+    latency_text = phrase.ping.min if latency <= 0 else f"за {latency} сек."
+    extra = []
 
-    extra_pings: list[str] = []
-    if arg in [
+    if arg in {
         "all",
         "подробно",
         "подробный",
@@ -79,48 +77,45 @@ async def ping(event: Message) -> Message:
         "весь",
         "фулл",
         "full",
-    ]:
+    }:
         try:
             async with mcrcon.Vanilla as rcon:
                 pings = formatter.parse_pings_strict(
                     formatter.rm_colors(await rcon.send("ping @a")),
                 )
-            if pings == []:
-                extra_pings.append("🧍 : Игроков не найдено")
-            else:
-                extra_pings.append(
-                    f"🧍 : Пинг игроков ↑|≈|↓ - {max(pings)} | {sum(pings) // len(pings)} | {min(pings)} мс",
-                )
+            extra.append(
+                "🧍 : Игроков не найдено"
+                if not pings
+                else f"🧍 : Пинг игроков ↑|≈|↓ - {max(pings)} | {sum(pings) // len(pings)} | {min(pings)} мс",
+            )
         except Exception:
-            extra_pings.append("🧍 : Не удалось получить пинг игроков")
+            extra.append("🧍 : Не удалось получить пинг игроков")
 
-    text: str = (
-        f"{phrase.ping.set.format(latency_text)}\n{'\n'.join(extra_pings)}"
+    return await event.reply(
+        f"{phrase.ping.set.format(latency_text)}\n{'\n'.join(extra)}",
     )
-    return await event.reply(text)
 
 
 @func.new_command([r"/start(.*)", r"/старт(.*)"])
 async def start(event: Message):
     """Приветственное сообщение при первом запуске."""
-    name: str = await func.get_name(event.sender_id)
-    await event.reply(phrase.start.format(name), silent=True)
-    arg: str = event.pattern_match.group(1).strip().lower()
+    await event.reply(
+        phrase.start.format(await func.get_name(event.sender_id)),
+        silent=True,
+    )
+    arg = event.pattern_match.group(1).strip().lower()
     if not arg.isdigit():
         return
-    try:
-        referral_id: int = int(arg)
-    except ValueError:
-        return
-    if referral_id == event.sender_id:
-        return
-    if not await referrals.new(referral_id, event.sender_id):
+    referral_id = int(arg)
+    if referral_id == event.sender_id or not await referrals.new(
+        referral_id, event.sender_id
+    ):
         return
     try:
         await client.send_message(
             referral_id,
             phrase.ref.start_withref.format(
-                await func.get_name(event.sender_id),
+                await func.get_name(event.sender_id)
             ),
         )
     except Exception:
@@ -132,40 +127,37 @@ async def start(event: Message):
 )
 async def profile(event: Message) -> Message:
     """Выводит детальную информацию об игроке, его роли, государстве и статистике."""
-    user_id: int = event.sender_id
-    role: int = await db.Roles().get(user_id)
+    user_id = event.sender_id
+    role = await db.Roles().get(user_id)
 
-    state_author: str | bool = await states_helper.if_author(user_id)
-    if state_author:
+    if state_author := await states_helper.if_author(user_id):
         state_info = f"**{state_author}, Глава**"
     else:
-        state_player: str | bool = await states_helper.if_player(user_id)
-        state_info = state_player or "Не состоит в государстве"
+        state_info = (
+            await states_helper.if_player(user_id)
+        ) or "Не состоит в государстве"
 
-    nick: str = await nicks.get_byid(user_id) or "Не привязан"
+    nick = await nicks.get_byid(user_id) or "Не привязан"
 
     if nick != "Не привязан":
-        m_day: int = await db.Statistic(1).get(nick)
-        m_week: int = await db.Statistic(7).get(nick)
-        m_month: int = await db.Statistic(30).get(nick)
-        m_all: int = await db.Statistic().get(nick, all_days=True)
-
+        m_day = await db.Statistic(1).get(nick)
+        m_week = await db.Statistic(7).get(nick)
+        m_month = await db.Statistic(30).get(nick)
+        m_all = await db.Statistic().get(nick, all_days=True)
         try:
             async with mcrcon.Vanilla as rcon:
-                raw_time: str = await rcon.send(
-                    f"papi parse --null %PTM_playtime_{nick}:luminto%",
-                )
-                time_played: str = raw_time.replace("\n", "").strip()
-                if time_played == "":
-                    time_played = "Менее минуты"
+                time_played = (
+                    await rcon.send(
+                        f"papi parse --null %PTM_playtime_{nick}:luminto%",
+                    )
+                ).replace("\n", "").strip() or "Менее минуты"
         except Exception:
             time_played = "Неизвестно"
     else:
         m_day = m_week = m_month = m_all = 0
         time_played = "-"
 
-    balance: int = await db.get_money(user_id)
-
+    balance = await db.get_money(user_id)
     return await event.reply(
         phrase.profile.full.format(
             name=await func.get_name(user_id),
@@ -187,7 +179,7 @@ async def profile(event: Message) -> Message:
 async def msktime(event: Message) -> Message:
     """Показывает текущее московское время."""
     return await event.reply(
-        phrase.time.format(datetime.now().strftime("%H:%M:%S")),
+        phrase.time.format(datetime.now().strftime("%H:%M:%S"))
     )
 
 
@@ -196,8 +188,7 @@ async def msktime(event: Message) -> Message:
 )
 async def mine_start(event: Message) -> Message:
     """Запускает сессию майнинга (шахты)."""
-    user_id: int = event.sender_id
-
+    user_id = event.sender_id
     if not (
         await states_helper.if_player(user_id)
         or await states_helper.if_author(user_id)
@@ -208,35 +199,31 @@ async def mine_start(event: Message) -> Message:
     if user_id in mining.sessions:
         return await event.reply(phrase.mine.already)
 
-    initial: int = randint(1, config.cfg.Mining.InitialGems)
+    initial = randint(1, config.cfg.Mining.InitialGems)
     mining.sessions[user_id] = {
         "gems": initial,
         "death_chance": config.cfg.Mining.BaseDeathChance,
         "step": 1,
     }
-
     asyncio.create_task(mining.cleanup_session(user_id))
 
-    buttons = [
-        [Button.inline(phrase.mine.button_yes, f"mine.yes.{user_id}")],
-        [Button.inline(phrase.mine.button_no, f"mine.no.{user_id}")],
-    ]
-
-    msg_text: str = (
+    return await event.reply(
         phrase.mine.done.format(
-            formatter.value_to_str(initial, phrase.currency),
+            formatter.value_to_str(initial, phrase.currency)
         )
-        + phrase.mine.q
+        + phrase.mine.q,
+        buttons=[
+            [Button.inline(phrase.mine.button_yes, f"mine.yes.{user_id}")],
+            [Button.inline(phrase.mine.button_no, f"mine.no.{user_id}")],
+        ],
     )
-    return await event.reply(msg_text, buttons=buttons)
 
 
 @func.new_command([r"/nick(.*)", r"/ник(.*)"])
 async def check_nick(event: Message) -> Message:
     """Показывает привязанный Minecraft ник пользователя."""
-    arg: str = event.pattern_match.group(1).strip()
-    user_id: int = None
-
+    arg = event.pattern_match.group(1).strip()
+    user_id = None
     if arg:
         try:
             user_id = await func.get_id(arg)
@@ -252,12 +239,11 @@ async def check_nick(event: Message) -> Message:
         )
 
     if user_id is None:
-        author_nick: str = await nicks.get_byid(event.sender_id)
-        if author_nick is None:
+        if (author_nick := await nicks.get_byid(event.sender_id)) is None:
             return await event.reply(phrase.nick.who)
         return await event.reply(phrase.nick.urnick.format(author_nick))
 
-    nick: str = await nicks.get_byid(user_id)
+    nick = await nicks.get_byid(user_id)
     return await event.reply(
         phrase.nick.no_nick
         if nick is None
@@ -276,26 +262,24 @@ async def check_nick(event: Message) -> Message:
 )
 async def swap_money(event: Message) -> Message:
     """Переводит валюту другому игроку."""
-    args: list[str] = event.pattern_match.group(1).strip().split()
+    args = event.pattern_match.group(1).strip().split()
     if not args:
         return await event.reply(
-            phrase.money.no_count + phrase.money.swap_balance_use,
+            phrase.money.no_count + phrase.money.swap_balance_use
         )
 
-    sender_id: int = event.sender_id
-
+    sender_id = event.sender_id
     try:
-        recipient_id: int = await func.swap_resolve_recipient(event, args)
+        recipient_id = await func.swap_resolve_recipient(event, args)
     except ValueError, TypeError, tgerrors.rpcerrorlist.UsernameInvalidError:
         return await event.reply(
-            phrase.money.no_such_people + phrase.money.swap_balance_use,
+            phrase.money.no_such_people + phrase.money.swap_balance_use
         )
 
     if recipient_id is None:
         return await event.reply(
-            phrase.money.no_people + phrase.money.swap_balance_use,
+            phrase.money.no_people + phrase.money.swap_balance_use
         )
-
     if sender_id == recipient_id:
         return await event.reply(phrase.money.selfbyself)
 
@@ -305,25 +289,23 @@ async def swap_money(event: Message) -> Message:
             return await event.reply(phrase.money.bot)
     except Exception:
         return await event.reply(
-            phrase.money.no_people + phrase.money.swap_balance_use,
+            phrase.money.no_people + phrase.money.swap_balance_use
         )
 
     if args[0].lower() in {"все", "всё", "all", "весь"}:
-        sender_balance = await db.get_money(sender_id)
-        amount = sender_balance
+        amount = await db.get_money(sender_id)
     else:
         try:
             amount = int(args[0])
         except ValueError:
             return await event.reply(
-                phrase.money.nan_count + phrase.money.swap_balance_use,
+                phrase.money.nan_count + phrase.money.swap_balance_use
             )
 
     if amount <= 0:
         return await event.reply(phrase.money.negative_count)
 
     current_balance = await db.get_money(sender_id)
-
     if current_balance < amount:
         return await event.reply(
             phrase.money.not_enough.format(
@@ -333,10 +315,9 @@ async def swap_money(event: Message) -> Message:
 
     await db.add_money(sender_id, -amount)
     await db.add_money(recipient_id, amount)
-
     return await event.reply(
         phrase.money.swap_money.format(
-            formatter.value_to_str(amount, phrase.currency),
+            formatter.value_to_str(amount, phrase.currency)
         ),
     )
 
@@ -353,62 +334,53 @@ async def swap_money(event: Message) -> Message:
     ],
 )
 async def money_to_server(event: Message) -> Message:
-    user_id: int = event.sender_id
-    nick: str = await nicks.get_byid(user_id)
-
+    user_id = event.sender_id
+    nick = await nicks.get_byid(user_id)
     if nick is None:
         return await event.reply(phrase.nick.not_append)
 
     try:
-        amount: int = int(event.pattern_match.group(1).strip())
+        amount = int(event.pattern_match.group(1).strip())
     except ValueError:
         return await event.reply(phrase.money.nan_count)
 
     if amount < 1:
         return await event.reply(phrase.money.negative_count)
-
-    daily_limit = 64
-    if amount > daily_limit:
+    if amount > 64:
         return await event.reply(phrase.bank.daily_limit)
 
     success, remaining = await db.check_and_update_withdraw_limit(
-        user_id,
-        amount,
+        user_id, amount
     )
-
     if not success:
         return await event.reply(
             phrase.bank.limit.format(
-                formatter.value_to_str(remaining, phrase.currency),
+                formatter.value_to_str(remaining, phrase.currency)
             ),
         )
 
     balance = await db.get_money(user_id)
-
     if balance < amount:
         await db.rollback_withdraw_limit(user_id, amount)
         return await event.reply(
             phrase.money.not_enough.format(
-                formatter.value_to_str(balance, phrase.currency),
+                formatter.value_to_str(balance, phrase.currency)
             ),
         )
 
     await db.add_money(user_id, -amount)
-
     try:
         async with mcrcon.Vanilla as rcon:
             await rcon.send(f"invgive {nick} amethyst_shard {amount}")
     except Exception as e:
         logger.error(f"RCON Error during withdraw: {e}")
-
         await db.add_money(user_id, amount)
         await db.rollback_withdraw_limit(user_id, amount)
-
         return await event.reply(phrase.bank.error)
 
     return await event.reply(
         phrase.bank.withdraw.format(
-            formatter.value_to_str(amount, phrase.currency),
+            formatter.value_to_str(amount, phrase.currency)
         ),
     )
 
@@ -441,10 +413,11 @@ async def money_to_server_empty(event: Message) -> Message:
 )
 async def get_balance(event: Message) -> Message:
     """Показывает баланс аметистов игрока."""
-    balance: int = await db.get_money(event.sender_id)
     return await event.reply(
         phrase.money.wallet.format(
-            formatter.value_to_str(balance, phrase.currency),
+            formatter.value_to_str(
+                await db.get_money(event.sender_id), phrase.currency
+            ),
         ),
     )
 
@@ -459,9 +432,10 @@ async def get_balance(event: Message) -> Message:
     ],
 )
 async def link_nick(event: Message) -> Message:
-    nick: str = event.pattern_match.group(1).strip()
+    nick = event.pattern_match.group(1).strip()
     if formatter.is_valid_mc_nick(nick) is False:
         return await event.reply(phrase.nick.invalid)
+
     current_linked_nick = await nicks.get_byid(event.sender_id)
     if current_linked_nick == nick:
         return await event.reply(phrase.nick.already_you)
@@ -469,19 +443,19 @@ async def link_nick(event: Message) -> Message:
         return await event.reply(phrase.nick.taken)
 
     if current_linked_nick is not None:
-        btn = [
-            KeyboardButtonCallback(
-                "✅ Сменить",
-                f"nick.{nick}.{event.sender_id}".encode(),
-            ),
-        ]
-        price_str = formatter.value_to_str(
-            config.cfg.PriceForChangeNick,
-            phrase.currency,
-        )
         return await event.reply(
-            phrase.nick.already_have.format(price=price_str),
-            buttons=[btn],
+            phrase.nick.already_have.format(
+                price=formatter.value_to_str(
+                    config.cfg.PriceForChangeNick, phrase.currency
+                ),
+            ),
+            buttons=[
+                [
+                    Button.inline(
+                        "✅ Сменить", f"nick.{nick}.{event.sender_id}".encode()
+                    )
+                ]
+            ],
         )
 
     try:
@@ -494,24 +468,19 @@ async def link_nick(event: Message) -> Message:
     await db.add_money(event.sender_id, config.cfg.LinkGift)
     await nicks.link(event.sender_id, nick)
 
-    referral = await referrals.is_ref(event.sender_id)
     ref_msg = None
-    if referral is not None:
+    if (referral := await referrals.is_ref(event.sender_id)) is not None:
         await db.add_money(referral, config.cfg.RefGift)
         await db.add_money(event.sender_id, config.cfg.RefGift)
         ref_msg = phrase.ref.gift.format(config.cfg.RefGift)
-
-        try:
-            sender_name = await func.get_name(event.sender_id, minecraft=True)
+        with contextlib.suppress(Exception):
             await client.send_message(
                 referral,
                 phrase.ref.used.format(
-                    user=sender_name,
+                    user=await func.get_name(event.sender_id, minecraft=True),
                     amount=config.cfg.RefGift,
                 ),
             )
-        except Exception:
-            pass
 
     logger.success(f"Юзер {event.sender_id} привязал свой ник!")
     await event.reply(
@@ -519,7 +488,6 @@ async def link_nick(event: Message) -> Message:
             formatter.value_to_str(config.cfg.LinkGift, phrase.currency),
         ),
     )
-
     if ref_msg:
         await event.reply(ref_msg)
 
@@ -535,13 +503,7 @@ async def link_nick(event: Message) -> Message:
 
 
 @func.new_command(
-    [
-        r"/linknick$",
-        r"/привязать$",
-        r"привязать$",
-        r"/новый ник$",
-        r"/линкник$",
-    ],
+    [r"/linknick$", r"/привязать$", r"привязать$", r"/новый ник$", r"/линкник$"]
 )
 async def link_nick_empty(event: Message) -> Message:
     return await event.reply(phrase.nick.not_select)
@@ -559,7 +521,6 @@ async def randompic(event: Message) -> Message:
     wait_time = floodwait.WaitPic.request()
     if wait_time is False:
         return await event.reply(phrase.pic.wait)
-
     await asyncio.sleep(wait_time)
     return await client.send_file(
         entity=event.chat_id,
@@ -607,22 +568,19 @@ async def vote(event: Message) -> Message:
 )
 async def check_info_by_nick(event: Message) -> Message:
     """Ищет Telegram-профиль и статус игрока по его Minecraft нику."""
-    nick: str = event.pattern_match.group(1).strip()
-    user_id: int = await nicks.get_byname(nick)
-
+    nick = event.pattern_match.group(1).strip()
+    user_id = await nicks.get_byname(nick)
     if user_id is None:
         return await event.reply(phrase.nick.not_find)
 
-    state: str | bool = await states_helper.if_player(
-        user_id,
+    state = await states_helper.if_player(
+        user_id
     ) or await states_helper.if_author(user_id)
-    state_info = state or "Нет"
-
     return await event.reply(
         phrase.nick.info.format(
             tg=await func.get_name(user_id),
             role=phrase.roles.types[await db.Roles().get(user_id)],
-            state=state_info,
+            state=state or "Нет",
         ),
     )
 
@@ -645,8 +603,7 @@ async def check_info_by_nick_empty(event: Message) -> Message:
 @func.new_command(r"\+город (.+)")
 async def cities_request(event: Message) -> Message:
     """Отправляет запрос администратору на добавление нового города."""
-    word: str = event.pattern_match.group(1).strip().lower()
-
+    word = event.pattern_match.group(1).strip().lower()
     async with aiofiles.open(pathes.chk_city) as aiof:
         if word in (await aiof.read()).splitlines():
             return await event.reply(phrase.cities.exists)
@@ -654,25 +611,23 @@ async def cities_request(event: Message) -> Message:
         if word in (await aiof.read()).splitlines():
             return await event.reply(phrase.cities.in_blacklist)
 
-    user_name: str = await func.get_name(event.sender_id)
-    keyboard = [
-        [
-            KeyboardButtonCallback(
-                "✅ Добавить",
-                f"cityadd.yes.{word}.{event.sender_id}".encode(),
-            ),
-            KeyboardButtonCallback(
-                "❌ Отклонить",
-                f"cityadd.no.{word}.{event.sender_id}".encode(),
-            ),
-        ],
-    ]
-
+    user_name = await func.get_name(event.sender_id)
     try:
         await client.send_message(
             config.tokens.bot.creator,
             phrase.cities.request.format(user=user_name, word=word),
-            buttons=keyboard,
+            buttons=[
+                [
+                    Button.inline(
+                        "✅ Добавить",
+                        f"cityadd.yes.{word}.{event.sender_id}".encode(),
+                    ),
+                    Button.inline(
+                        "❌ Отклонить",
+                        f"cityadd.no.{word}.{event.sender_id}".encode(),
+                    ),
+                ]
+            ],
         )
     except tgerrors.ButtonDataInvalidError:
         return await event.reply(phrase.cities.long)
@@ -682,7 +637,7 @@ async def cities_request(event: Message) -> Message:
 @func.new_command(r"\+города\s([\s\S]+)")
 async def cities_requests(event: Message) -> Message:
     """Массовая проверка и отправка запросов на добавление городов."""
-    words: list[str] = [
+    words = [
         w.strip().lower()
         for w in event.pattern_match.group(1).splitlines()
         if w.strip()
@@ -691,49 +646,44 @@ async def cities_requests(event: Message) -> Message:
         return await event.reply(phrase.cities.empty_long)
 
     status_msg = await event.reply(phrase.cities.checker)
-
     existing = set((await files.load_text_async(pathes.chk_city)).splitlines())
     blacklisted = set(
-        (await files.load_text_async(pathes.bl_city)).splitlines(),
+        (await files.load_text_async(pathes.bl_city)).splitlines()
     )
 
-    output_lines: list[str] = []
-    pending_to_admin: list[str] = []
-
+    output, pending = [], []
     for word in words:
         if word in existing:
-            output_lines.append(f"Город **{word}** - есть")
+            output.append(f"Город **{word}** - есть")
         elif word in blacklisted:
-            output_lines.append(f"Город **{word}** - в ЧС")
+            output.append(f"Город **{word}** - в ЧС")
         else:
-            pending_to_admin.append(word)
-            output_lines.append(f"Город **{word}** - проверяется")
-
-        if len(output_lines) % 5 == 0:
-            await status_msg.edit("\n".join(output_lines))
+            pending.append(word)
+            output.append(f"Город **{word}** - проверяется")
+        if len(output) % 5 == 0:
+            await status_msg.edit("\n".join(output))
             await asyncio.sleep(0.5)
 
-    await status_msg.edit("\n".join(output_lines))
+    await status_msg.edit("\n".join(output))
 
     user_name = await func.get_name(event.sender_id)
-    for word in pending_to_admin:
-        btns = [
-            [
-                KeyboardButtonCallback(
-                    "✅ Добавить",
-                    f"cityadd.yes.{word}.{event.sender_id}".encode(),
-                ),
-                KeyboardButtonCallback(
-                    "❌ Отклонить",
-                    f"cityadd.no.{word}.{event.sender_id}".encode(),
-                ),
-            ],
-        ]
+    for word in pending:
         try:
             await client.send_message(
                 config.tokens.bot.creator,
                 phrase.cities.request.format(user=user_name, word=word),
-                buttons=btns,
+                buttons=[
+                    [
+                        Button.inline(
+                            "✅ Добавить",
+                            f"cityadd.yes.{word}.{event.sender_id}".encode(),
+                        ),
+                        Button.inline(
+                            "❌ Отклонить",
+                            f"cityadd.no.{word}.{event.sender_id}".encode(),
+                        ),
+                    ]
+                ],
             )
             await asyncio.sleep(0.3)
         except Exception:
@@ -748,19 +698,16 @@ async def cities_remove(event: Message) -> Message:
     if await roles.get(event.sender_id) < roles.ADMIN:
         return await event.reply(
             phrase.roles.no_perms.format(
-                level=roles.ADMIN,
-                name=phrase.roles.admin,
+                level=roles.ADMIN, name=phrase.roles.admin
             ),
         )
 
-    word: str = event.pattern_match.group(1).strip().lower()
+    word = event.pattern_match.group(1).strip().lower()
     lines = (await files.load_text_async(pathes.chk_city)).splitlines()
-
     if word not in lines:
         return await event.reply(phrase.cities.not_exists)
 
     lines.remove(word)
-
     await files.save_text_async(pathes.chk_city, "\n".join(lines))
     return await event.reply(phrase.cities.deleted.format(word))
 
@@ -785,15 +732,11 @@ async def online(event: Message) -> Message:
     """Запрашивает список игроков онлайн через RCON."""
     try:
         async with mcrcon.Vanilla as rcon:
-            response: str = await rcon.send("list")
-
-        players_raw: str = (
+            response = await rcon.send("list")
+        players_raw = (
             response.split(":", 1)[1].strip() if ":" in response else ""
         )
-        players: list[str] = [
-            p.strip() for p in players_raw.split(",") if p.strip()
-        ]
-
+        players = [p.strip() for p in players_raw.split(",") if p.strip()]
         return await event.reply(
             phrase.online.format(list=", ".join(players), count=len(players)),
         )
@@ -810,15 +753,13 @@ async def add_new_hint(event: Message) -> Message:
     if not event.is_private:
         return await event.reply(phrase.newhints.private)
 
-    word: str = await db.get_crocodile_word()
+    word = await db.get_crocodile_word()
     async with client.conversation(event.sender_id, timeout=300) as conv:
         await conv.send_message(phrase.newhints.ask_hint.format(word=word))
-
         try:
             while True:
                 response: Message = await conv.get_response()
-                text: str = response.raw_text.strip()
-
+                text = response.raw_text.strip()
                 if text.lower() == "/стоп":
                     return await conv.send_message(phrase.newhints.cancel)
                 if text.startswith("/"):
@@ -826,17 +767,8 @@ async def add_new_hint(event: Message) -> Message:
 
                 hint_cap = text.capitalize()
                 pending_id = await db.add_pending_hint(
-                    event.sender_id,
-                    hint_cap,
-                    word,
+                    event.sender_id, hint_cap, word
                 )
-
-                admin_btns = [
-                    [
-                        Button.inline("✅", f"hint.accept.{pending_id}"),
-                        Button.inline("❌", f"hint.reject.{pending_id}"),
-                    ],
-                ]
                 await client.send_message(
                     config.tokens.bot.creator,
                     phrase.newhints.admin_alert.format(
@@ -844,10 +776,15 @@ async def add_new_hint(event: Message) -> Message:
                         hint=hint_cap,
                         user=await func.get_name(event.sender_id),
                     ),
-                    buttons=admin_btns,
+                    buttons=[
+                        [
+                            Button.inline("✅", f"hint.accept.{pending_id}"),
+                            Button.inline("❌", f"hint.reject.{pending_id}"),
+                        ]
+                    ],
                 )
                 return await conv.send_message(
-                    phrase.newhints.sent.format(pending_id),
+                    phrase.newhints.sent.format(pending_id)
                 )
         except TimeoutError:
             return await event.reply(phrase.newhints.timeout)
@@ -863,8 +800,7 @@ async def get_last_hint(event: Message) -> Message:
     if await roles.get(event.sender_id) < roles.ADMIN:
         return await event.reply(
             phrase.roles.no_perms.format(
-                level=roles.ADMIN,
-                name=phrase.roles.admin,
+                level=roles.ADMIN, name=phrase.roles.admin
             ),
         )
 
@@ -872,20 +808,18 @@ async def get_last_hint(event: Message) -> Message:
     if not hint:
         return await event.reply(phrase.newhints.not_found)
 
-    btns = [
-        [
-            Button.inline("✅", f"hint.accept.{hint['id']}"),
-            Button.inline("❌", f"hint.reject.{hint['id']}"),
-        ],
-    ]
-
     return await event.reply(
         phrase.newhints.admin_alert.format(
             word=hint["word"],
             hint=hint["hint"],
             user=await func.get_name(hint["user"]),
         ),
-        buttons=btns,
+        buttons=[
+            [
+                Button.inline("✅", f"hint.accept.{hint['id']}"),
+                Button.inline("❌", f"hint.reject.{hint['id']}"),
+            ]
+        ],
     )
 
 
@@ -895,13 +829,16 @@ async def miniparser(event: Message) -> Message:
     out_path = pathes.mini_pic / f"{event.sender_id}.png"
     if minimessage.render(text, out_path=out_path) is False:
         return await event.reply(phrase.minimessage.too_long)
-    return await client.send_file(
-        entity=event.chat_id,
-        file=out_path,
-        reply_to=event.id,
-        caption=phrase.minimessage.done,
-    )
-    return await anyio.Path(out_path).unlink(missing_ok=True)
+
+    try:
+        return await client.send_file(
+            entity=event.chat_id,
+            file=out_path,
+            reply_to=event.id,
+            caption=phrase.minimessage.done,
+        )
+    finally:
+        await anyio.Path(out_path).unlink(missing_ok=True)
 
 
 @func.new_command(r"/сайт (.+)")
@@ -914,12 +851,12 @@ async def check_host(event: Message) -> Message:
     text = [phrase.check_host.checking.format(domain=domain)]
     for node, r in data["result"].items():
         res = r[0]
-        if res[0] == 1:
-            text.append(
-                f"{func.cc_to_flag(data['info']['nodes'][node][0])} : {node} - ✅ - Пинг {round(res[1] * 1000)} мс",
-            )
-        else:
-            text.append(
-                f"{func.cc_to_flag(data['info']['nodes'][node][0])} : {node} - ❌ - {res[2]}",
-            )
+        text.append(
+            f"{func.cc_to_flag(data['info']['nodes'][node][0])} : {node} - "
+            + (
+                f"✅ - Пинг {round(res[1] * 1000)} мс"
+                if res[0] == 1
+                else f"❌ - {res[2]}"
+            ),
+        )
     return await event.reply("\n".join(text))
