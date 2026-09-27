@@ -786,7 +786,7 @@ class github:
     issue_comment = (
         '💬 : Новый комментарий в топике <b>«<a href="{issue_url}">{issue}</a>»</b>\n'
         "\n"
-        "👨🏻‍💻 : Автор: <b><a href=\"{author_url}\">{author}</a></b>\n"
+        '👨🏻‍💻 : Автор: <b><a href="{author_url}">{author}</a></b>\n'
         "💬 : {body}"
     )
 
