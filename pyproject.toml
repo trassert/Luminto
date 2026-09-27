@@ -27,7 +27,7 @@ dependencies = [
     "pydantic>=2.13.4",
     "pillow>=12.0.0",
     "aioping>=0.4.0",
-    "telethon==1.44.0",
+    "telethon>=1.45.0",
 ]
 
 [tool.ty.rules]
