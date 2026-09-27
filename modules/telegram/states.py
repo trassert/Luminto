@@ -4,12 +4,8 @@ from random import choice
 from typing import TYPE_CHECKING
 
 from loguru import logger
+from telethon import Button
 from telethon import errors as tgerrors
-from telethon.tl.types import (
-    KeyboardButtonCallback,
-    KeyboardButtonRow,
-    ReplyInlineMarkup,
-)
 
 from .. import config, db, formatter, nicks, pathes, phrase, states_helper
 from . import func
@@ -22,13 +18,10 @@ logger.info(f"Загружен модуль {__name__}!")
 
 
 async def _check_and_update_tier(
-    state,
-    players_len: int,
-    name_cap: str,
+    state, players_len: int, name_cap: str
 ) -> None:
     """Обновляет статус (Княжество/Государство/Империя) при изменении состава."""
-    new_type = None
-    label = ""
+    new_type, label = None, ""
 
     if state.type == 0 and players_len >= config.cfg.Type1Players:
         new_type, label = 1, "Государство"
@@ -90,8 +83,7 @@ async def states_all_top(event: Message) -> Message:
     if not data:
         return await event.reply(phrase.state.empty_list)
 
-    lines = [phrase.state.toptreasury]
-    n = 1
+    lines, n = [phrase.state.toptreasury], 1
     for name, info in data.items():
         if info["money"] > 0:
             lines.append(f"{n}. **{name}** - {info['money']} амт.")
@@ -100,19 +92,17 @@ async def states_all_top(event: Message) -> Message:
 
 
 @func.new_command(
-    [r"/создать госво\s(.+)", r"\+госво\s(.+)", r"\+государство\s(.+)"],
+    [r"/создать госво\s(.+)", r"\+госво\s(.+)", r"\+государство\s(.+)"]
 )
 async def state_make(event: Message) -> Message:
-    arg: str = event.pattern_match.group(1).strip().capitalize()
+    arg = event.pattern_match.group(1).strip().capitalize()
 
     if len(arg) > 28:
         return await event.reply(phrase.state.too_long)
     if not re.fullmatch(r"^[а-яА-ЯёЁa-zA-Z\- ]+$", arg) or re.fullmatch(
-        r"^[\- ]+$",
-        arg,
+        r"^[\- ]+$", arg
     ):
         return await event.reply(phrase.state.not_valid)
-
     if await nicks.get_byid(event.sender_id) is None:
         return await event.reply(phrase.state.not_connected)
     if await states_helper.if_author(event.sender_id):
@@ -121,20 +111,20 @@ async def state_make(event: Message) -> Message:
         return await event.reply(phrase.state.already_player)
     if await states_helper.exists(arg):
         return await event.reply(phrase.state.already_here)
-
     if await db.get_money(event.sender_id) < config.cfg.PriceForNewState:
         return await event.reply(phrase.state.require_emerald)
 
     try:
-        button = [
-            KeyboardButtonCallback(
-                text="🏰 Создать государство",
-                data=f"state.m.{event.sender_id}.{arg}".encode(),
-            ),
-        ]
         return await event.reply(
             phrase.state.warn_make.format(arg),
-            buttons=[button],
+            buttons=[
+                [
+                    Button.inline(
+                        "🏰 Создать государство",
+                        f"state.m.{event.sender_id}.{arg}".encode(),
+                    ),
+                ]
+            ],
         )
     except tgerrors.ButtonDataInvalidError:
         return await event.reply(phrase.state.too_long)
@@ -151,15 +141,12 @@ async def state_tax(event: Message) -> Message:
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
 
-    arg: str = event.pattern_match.group(1).strip()
-    if not arg:
-        return await event.reply(phrase.state.howto_tax)
-    if not re.fullmatch(r"-?\d+", arg):
+    arg = event.pattern_match.group(1).strip()
+    if not arg or not re.fullmatch(r"-?\d+", arg):
         return await event.reply(phrase.state.howto_tax)
 
     amount = int(arg)
-    state = await states_helper.State(state_name)
-    await state.change("tax", max(amount, 0))
+    await (await states_helper.State(state_name)).change("tax", max(amount, 0))
     if amount <= 0:
         return await event.reply(phrase.state.tax_disabled)
     return await event.reply(phrase.state.tax_set.format(amount))
@@ -178,17 +165,18 @@ async def state_collecttax(event: Message) -> Message:
     state_name = await states_helper.if_author(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
+
     state = await states_helper.State(state_name)
     if state.tax <= 0:
         return await event.reply(phrase.state.tax_disabled)
+
     ptx_result = await state.pay_tax()
-    if ptx_result is None:
+    if ptx_result is None or ptx_result["collected"] == 0:
         return await event.reply(phrase.state.tax_collected_none)
-    if ptx_result["collected"] == 0:
-        return await event.reply(phrase.state.tax_collected_none)
+
     message = phrase.state.tax_collected.format(ptx_result["collected"])
-    kicked_players = []
-    if ptx_result["kicked"] != []:
+    if ptx_result["kicked"]:
+        kicked_players = []
         for player in ptx_result["kicked"]:
             nick = await func.get_name(player, minecraft=True)
             await client.send_message(
@@ -201,12 +189,10 @@ async def state_collecttax(event: Message) -> Message:
             )
             kicked_players.append(nick)
         message += "\n" + phrase.state.tax_kicked_list.format(
-            ", ".join(kicked_players),
+            ", ".join(kicked_players)
         )
         await _check_and_update_tier(
-            state,
-            len(state.players),
-            state.name.capitalize(),
+            state, len(state.players), state.name.capitalize()
         )
     return await event.reply(message)
 
@@ -217,7 +203,7 @@ async def state_tax_nonpayment(event: Message) -> Message:
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
 
-    arg: str = event.pattern_match.group(1).strip().lower()
+    arg = event.pattern_match.group(1).strip().lower()
     if not arg:
         return await event.reply(phrase.state.howto_tax_nonpayment)
 
@@ -231,8 +217,7 @@ async def state_tax_nonpayment(event: Message) -> Message:
         return await event.reply(phrase.state.howto_tax_nonpayment)
 
     await (await states_helper.State(state_name)).change(
-        "tax_nonpayment",
-        action,
+        "tax_nonpayment", action
     )
     return await event.reply(
         phrase.state.tax_nonpayment_set.format(
@@ -247,10 +232,8 @@ async def state_tax_period(event: Message) -> Message:
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
 
-    arg: str = event.pattern_match.group(1).strip()
-    if not arg:
-        return await event.reply(phrase.state.howto_tax_period)
-    if not re.fullmatch(r"-?\d+", arg):
+    arg = event.pattern_match.group(1).strip()
+    if not arg or not re.fullmatch(r"-?\d+", arg):
         return await event.reply(phrase.state.howto_tax_period)
 
     period = int(arg)
@@ -262,22 +245,20 @@ async def state_tax_period(event: Message) -> Message:
 
 
 @func.new_command(
-    [r"/вступить(.*)", r"вступить(.*)", r"/г вступить(.*)", r"/г войти(.*)"],
+    [r"/вступить(.*)", r"вступить(.*)", r"/г вступить(.*)", r"/г войти(.*)"]
 )
 async def state_enter(event: Message) -> Message:
-    arg: str = event.pattern_match.group(1).strip().capitalize()
+    arg = event.pattern_match.group(1).strip().capitalize()
     if not arg:
         return await event.reply(phrase.state.no_name)
-
     if not await states_helper.exists(arg):
         return await event.reply(phrase.state.not_find)
 
     nick = await nicks.get_byid(event.sender_id)
     if not nick:
         return await event.reply(phrase.state.not_connected)
-
     if await states_helper.if_player(
-        event.sender_id,
+        event.sender_id
     ) or await states_helper.if_author(event.sender_id):
         return await event.reply(phrase.state.already_player)
 
@@ -286,15 +267,16 @@ async def state_enter(event: Message) -> Message:
         return await event.reply(phrase.state.enter_exit)
 
     if state.price != 0:
-        btn = [
-            KeyboardButtonCallback(
-                text=f"✅ Оплатить вход ({state.price})",
-                data=f"state.pay.{state.name}".encode(),
-            ),
-        ]
         return await event.reply(
             phrase.state.pay_to_enter,
-            buttons=ReplyInlineMarkup([KeyboardButtonRow(btn)]),
+            buttons=[
+                [
+                    Button.inline(
+                        f"✅ Оплатить вход ({state.price})",
+                        f"state.pay.{state.name}".encode(),
+                    ),
+                ]
+            ],
         )
 
     players = state.players
@@ -312,25 +294,18 @@ async def state_enter(event: Message) -> Message:
 
 
 @func.new_command(
-    [
-        r"/state$",
-        r"/state@luminto_chatbot$",
-        r"/госво(.*)",
-        r"/государство(.*)",
-    ],
+    [r"/state$", r"/state@luminto_chatbot$", r"/госво(.*)", r"/государство(.*)"]
 )
 async def state_get(event: Message):
     try:
-        arg: str = event.pattern_match.group(1).strip().capitalize()
+        arg = event.pattern_match.group(1).strip().capitalize()
     except IndexError:
         arg = ""
 
     if not arg:
         state_name = await states_helper.if_player(
-            event.sender_id,
-        ) or await states_helper.if_author(
-            event.sender_id,
-        )
+            event.sender_id
+        ) or await states_helper.if_author(event.sender_id)
         if not state_name:
             return await event.reply(phrase.state.no_name)
     else:
@@ -356,7 +331,7 @@ async def state_get(event: Message):
     period_val = str(state.tax_period if state.tax_period > 0 else 7)
 
     names = await asyncio.gather(
-        *[func.get_name(p, minecraft=True) for p in state.players],
+        *[func.get_name(p, minecraft=True) for p in state.players]
     )
     pic_path = pathes.states_pic / f"{state_name}.png"
 
@@ -434,15 +409,16 @@ async def state_rem(event: Message) -> Message:
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
 
-    btn = [
-        KeyboardButtonCallback(
-            text=phrase.state.rem_button,
-            data=f"state.remove.{state_name}".encode(),
-        ),
-    ]
     return await event.reply(
         phrase.state.rem_message.format(name=state_name),
-        buttons=ReplyInlineMarkup([KeyboardButtonRow(btn)]),
+        buttons=[
+            [
+                Button.inline(
+                    phrase.state.rem_button,
+                    f"state.remove.{state_name}".encode(),
+                ),
+            ]
+        ],
     )
 
 
@@ -458,10 +434,10 @@ async def state_desc(event: Message) -> Message:
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
 
-    new_desc: str = event.pattern_match.group(1).strip()
+    new_desc = event.pattern_match.group(1).strip()
     if len(new_desc) > config.cfg.DescriptionsMaxLen:
         return await event.reply(
-            phrase.state.max_len.format(config.cfg.DescriptionsMaxLen),
+            phrase.state.max_len.format(config.cfg.DescriptionsMaxLen)
         )
 
     await (await states_helper.State(state_name)).change("desc", new_desc)
@@ -474,13 +450,12 @@ async def state_coords(event: Message) -> Message:
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
 
-    arg: str = event.pattern_match.group(1).strip()
-    coords = [str(int(x)) for x in arg.split()]
+    coords = [str(int(x)) for x in event.pattern_match.group(1).strip().split()]
     if len(coords) != 3:
         return await event.reply(phrase.state.howto_change_coords)
+
     await (await states_helper.State(state_name)).change(
-        "coordinates",
-        ", ".join(coords),
+        "coordinates", ", ".join(coords)
     )
     return await event.reply(phrase.state.change_coords)
 
@@ -492,7 +467,7 @@ async def state_enter_arg(event: Message) -> Message:
         return await event.reply(phrase.state.not_a_author)
 
     state = await states_helper.State(state_name)
-    arg: str = event.pattern_match.group(1).strip().lower()
+    arg = event.pattern_match.group(1).strip().lower()
 
     if arg in ("да", "+", "разрешить", "открыть", "true", "ok", "ок", "можно"):
         await state.change("price", 0)
@@ -518,7 +493,7 @@ async def state_enter_arg(event: Message) -> Message:
         await state.change("enter", True)
         return await event.reply(
             phrase.state.enter_price.format(
-                formatter.value_to_str(price, phrase.currency),
+                formatter.value_to_str(price, phrase.currency)
             ),
         )
 
@@ -535,14 +510,12 @@ async def state_enter_arg(event: Message) -> Message:
 )
 async def state_add_money(event: Message) -> Message:
     state_name = await states_helper.if_player(
-        event.sender_id,
-    ) or await states_helper.if_author(
-        event.sender_id,
-    )
+        event.sender_id
+    ) or await states_helper.if_author(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_member)
 
-    arg: str = event.pattern_match.group(1).strip().lower()
+    arg = event.pattern_match.group(1).strip().lower()
     balance = await db.get_money(event.sender_id)
 
     if arg in ("все", "всё", "все деньги", "на все"):
@@ -557,7 +530,7 @@ async def state_add_money(event: Message) -> Message:
     if amount > balance:
         return await event.reply(
             phrase.money.not_enough.format(
-                formatter.value_to_str(balance, phrase.currency),
+                formatter.value_to_str(balance, phrase.currency)
             ),
         )
 
@@ -566,7 +539,7 @@ async def state_add_money(event: Message) -> Message:
     await state.change("money", state.money + amount)
     return await event.reply(
         phrase.state.add_treasury.format(
-            formatter.value_to_str(amount, phrase.currency),
+            formatter.value_to_str(amount, phrase.currency)
         ),
     )
 
@@ -585,7 +558,7 @@ async def state_rem_money(event: Message) -> Message:
         return await event.reply(phrase.state.not_a_author)
 
     state = await states_helper.State(state_name)
-    arg: str = event.pattern_match.group(1).strip().lower()
+    arg = event.pattern_match.group(1).strip().lower()
 
     if arg in ("все", "всё", "все деньги", "на все"):
         amount = state.money
@@ -603,7 +576,7 @@ async def state_rem_money(event: Message) -> Message:
     await db.add_money(event.sender_id, amount)
     return await event.reply(
         phrase.state.rem_treasury.format(
-            formatter.value_to_str(amount, phrase.currency),
+            formatter.value_to_str(amount, phrase.currency)
         ),
     )
 
@@ -626,6 +599,7 @@ async def state_kick_user(event: Message) -> Message:
         user_id = await func.get_id(event.pattern_match.group(1).strip())
     except Exception:
         user_id = None
+
     if user_id is None:
         msg_id = func.get_reply_message_id(event)
         if not msg_id:
@@ -643,16 +617,13 @@ async def state_kick_user(event: Message) -> Message:
     await client.send_message(
         entity=config.chats.chat,
         message=choice(phrase.state.kicked_rp).format(
-            state=state_name,
-            player=target_name,
+            state=state_name, player=target_name
         ),
         reply_to=config.chats.topics.rp,
     )
 
     await _check_and_update_tier(
-        state,
-        len(state.players),
-        state.name.capitalize(),
+        state, len(state.players), state.name.capitalize()
     )
     return await event.reply(phrase.state.kicked.format(target_name))
 
@@ -671,19 +642,20 @@ async def state_rename(event: Message) -> Message:
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
 
-    new_name: str = event.pattern_match.group(1).strip()
+    new_name = event.pattern_match.group(1).strip()
     if await states_helper.exists(new_name.capitalize()):
         return await event.reply(phrase.state.already_here)
 
-    btn = [
-        KeyboardButtonCallback(
-            text=phrase.state.button_rename,
-            data=f"state.rn.{new_name}.{event.sender_id}".encode(),
-        ),
-    ]
     return await event.reply(
         phrase.state.rename.format(new_name.capitalize()),
-        buttons=[btn],
+        buttons=[
+            [
+                Button.inline(
+                    phrase.state.button_rename,
+                    f"state.rn.{new_name}.{event.sender_id}".encode(),
+                ),
+            ]
+        ],
         parse_mode="html",
     )
 
@@ -722,10 +694,9 @@ async def state_recognize(event: Message) -> Message:
     if not voter_state:
         return await event.reply(phrase.state.not_a_author)
 
-    arg: str = event.pattern_match.group(1).strip().capitalize()
+    arg = event.pattern_match.group(1).strip().capitalize()
     if not await states_helper.exists(arg):
         return await event.reply(phrase.state.not_find)
-
     if arg == voter_state:
         return await event.reply(phrase.state.recognize_self)
 
@@ -751,13 +722,12 @@ async def state_recognize_empty(event: Message) -> Message:
 
 @func.new_command(r"/г статус\s(.+)")
 async def state_status(event: Message) -> Message:
-    arg: str = event.pattern_match.group(1).strip().capitalize()
+    arg = event.pattern_match.group(1).strip().capitalize()
     if not await states_helper.exists(arg):
         return await event.reply(phrase.state.not_find)
 
     state = await states_helper.State(arg)
-    total = states_helper.count()
-    other_count = max(total - 1, 1)
+    other_count = max(states_helper.count() - 1, 1)
 
     if state.is_recognized:
         status = phrase.state.status_recognized
@@ -793,6 +763,7 @@ async def state_transfer(event: Message) -> Message:
     state_name = await states_helper.if_author(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
+
     try:
         user_id = await func.get_id(event.pattern_match.group(1).strip())
     except Exception:
@@ -800,22 +771,23 @@ async def state_transfer(event: Message) -> Message:
         if not msg_id:
             return await event.reply(phrase.state.invalid_new)
         user_id = await func.get_author_by_msgid(event.chat_id, msg_id)
+
     nick = await func.get_name(user_id, minecraft=True)
     if nick is None:
         return await event.reply(phrase.state.new_not_connected)
     if await states_helper.if_player(user_id) or await states_helper.if_author(
-        user_id,
+        user_id
     ):
         return await event.reply(phrase.state.new_already_player)
+
     return await event.reply(
-        phrase.state.transfer.format(
-            new_leader=nick,
-            state=state_name,
-        ),
+        phrase.state.transfer.format(new_leader=nick, state=state_name),
         buttons=[
-            KeyboardButtonCallback(
-                text=phrase.state.button_transfer,
-                data=f"state.mv.{state_name}.{user_id}".encode(),
-            ),
+            [
+                Button.inline(
+                    phrase.state.button_transfer,
+                    f"state.mv.{state_name}.{user_id}".encode(),
+                ),
+            ]
         ],
     )

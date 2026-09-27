@@ -1,46 +1,33 @@
 from datetime import datetime
 from random import choice
-from typing import TYPE_CHECKING
 
 from loguru import logger
-from telethon import events
-from telethon.tl.custom import Button
-from telethon.tl.types import (
-    KeyboardButtonCallback,
-    KeyboardButtonRow,
-    Message,
-    ReplyInlineMarkup,
-)
+from telethon import Button, events
+from telethon.tl.types import Message
 
 from .. import files, formatter, pathes, phrase, shop, task_gen
 from . import func
-
-if TYPE_CHECKING:
-    from telethon.tl.custom import Message
 
 logger.info(f"Загружен модуль {__name__}!")
 
 
 @func.new_command(
-    [r"/shop", r"/шоп$", r"/магазин$", r"магазин$", r"shop$", r"шоп$"],
+    [r"/shop", r"/шоп$", r"/магазин$", r"магазин$", r"shop$", r"шоп$"]
 )
 async def shop_command(event: Message):
     shop_data = await shop.get()
     version = await shop.version()
-    theme = shop_data.pop("theme")
-    theme_data = phrase.shop_quotes[theme]
+    theme_data = phrase.shop_quotes[shop_data.pop("theme")]
 
     items, btns = [], []
     for i, (name, info) in enumerate(list(shop_data.items())[:5]):
         val = info["value"]
         items.append(
-            f"{i + 1}. {name}{' (' + str(val) + ')' if val != 1 else ''} - {info['price']} {phrase.currency_emoji}",
+            f"{i + 1}. {name}{' (' + str(val) + ')' if val != 1 else ''} - "
+            f"{info['price']} {phrase.currency_emoji}",
         )
         btns.append(
-            KeyboardButtonCallback(
-                text=f"{i + 1}\u20e3",
-                data=f"shop.{i}.{version}".encode(),
-            ),
+            Button.inline(f"{i + 1}\u20e3", f"shop.{i}.{version}".encode()),
         )
 
     return await event.reply(
@@ -50,7 +37,7 @@ async def shop_command(event: Message):
             items="\n".join(items),
             clock=formatter.fmtime(await task_gen.UpdateShopTask.info()),
         ),
-        buttons=ReplyInlineMarkup([KeyboardButtonRow(btns)]),
+        buttons=[btns],
     )
 
 
@@ -59,37 +46,40 @@ def parse_log_line(line: str) -> tuple:
     if len(parts) != 2:
         return None, None, None
     player, item_part = parts
-    if "-" in item_part:
-        i = item_part.rfind("-")
-        item, count = (
-            item_part[:i],
-            int(item_part[i + 1 :]) if item_part[i + 1 :].isdigit() else 1,
-        )
-    else:
-        item, count = item_part, 1
-    return player, item, count
+    if "-" not in item_part:
+        return player, item_part, 1
+    i = item_part.rfind("-")
+    tail = item_part[i + 1 :]
+    return player, item_part[:i], int(tail) if tail.isdigit() else 1
 
 
 async def get_player_purchases(nick: str, limit: int = 50) -> list[dict]:
     if not pathes.shop_log.exists():
         return []
 
+    now = datetime.now()
+    nick_lower = nick.lower()
     purchases = []
+
     for log_file in sorted(pathes.shop_log.glob("*.log")):
         try:
-            content = await files.load_text_async(log_file)
             date_str = log_file.stem
+            date_obj = (
+                datetime.strptime(date_str, "%Y.%m.%d") if date_str else now
+            )
+            date_disp = (
+                date_str.replace("2026.", "26.")
+                if date_str
+                else now.strftime("%d.%m.%Y")
+            )
+            content = await files.load_text_async(log_file)
             for line in content.splitlines():
                 player, item, count = parse_log_line(line)
-                if player and player.lower() == nick.lower():
+                if player and player.lower() == nick_lower:
                     purchases.append(
                         {
-                            "date": datetime.strptime(date_str, "%Y.%m.%d")
-                            if date_str
-                            else datetime.now(),
-                            "date_str": date_str.replace("2026.", "26.")
-                            if date_str
-                            else datetime.now().strftime("%d.%m.%Y"),
+                            "date": date_obj,
+                            "date_str": date_disp,
                             "item": item,
                             "count": count,
                         },
@@ -101,17 +91,19 @@ async def get_player_purchases(nick: str, limit: int = 50) -> list[dict]:
 
 
 def group_purchases(purchases: list[dict]) -> list[dict]:
-    grouped = {}
+    grouped: dict[tuple, dict] = {}
     for p in purchases:
         key = (p["date_str"], p["item"])
-        if key not in grouped:
-            grouped[key] = {
+        entry = grouped.setdefault(
+            key,
+            {
                 "date": p["date"],
                 "date_str": p["date_str"],
                 "item": p["item"],
                 "total_count": 0,
-            }
-        grouped[key]["total_count"] += p["count"]
+            },
+        )
+        entry["total_count"] += p["count"]
     return sorted(grouped.values(), key=lambda x: x["date"], reverse=True)
 
 
@@ -126,13 +118,17 @@ def create_pagination_message(
     page = max(0, min(page, pages - 1))
 
     if not items:
-        return phrase.shop.history.format(
-            player_nick=nick,
-        ) + phrase.shop.history_empty, []
+        return (
+            phrase.shop.history.format(player_nick=nick)
+            + phrase.shop.history_empty,
+            [],
+        )
 
-    msg = phrase.shop.history.format(player_nick=nick)
-    msg += phrase.shop.page.format(page=page + 1, total_pages=pages)
-    msg += phrase.shop.total_items.format(total_items=total)
+    msg = (
+        phrase.shop.history.format(player_nick=nick)
+        + phrase.shop.page.format(page=page + 1, total_pages=pages)
+        + phrase.shop.total_items.format(total_items=total)
+    )
 
     cur_date = None
     for item in items[page * per_page : min(page * per_page + per_page, total)]:
@@ -150,16 +146,14 @@ def create_pagination_message(
         if page > 0:
             nav.append(
                 Button.inline(
-                    phrase.shop.btn_back,
-                    f"logshop.{nick}.{page - 1}",
-                ),
+                    phrase.shop.btn_back, f"logshop.{nick}.{page - 1}"
+                )
             )
         if page < pages - 1:
             nav.append(
                 Button.inline(
-                    phrase.shop.btn_forward,
-                    f"logshop.{nick}.{page + 1}",
-                ),
+                    phrase.shop.btn_forward, f"logshop.{nick}.{page + 1}"
+                )
             )
         if nav:
             buttons.append(nav)
@@ -199,32 +193,26 @@ async def logshop_callback(event: events.CallbackQuery.Event):
 
     if len(data) != 3:
         return await event.answer(
-            f"{phrase.shop.error}: Неверные данные",
-            alert=True,
+            f"{phrase.shop.error}: Неверные данные", alert=True
         )
 
     nick, page_str = data[1], data[2]
     if not formatter.is_valid_mc_nick(nick):
         return await event.answer(
-            f"{phrase.shop.error}: Неверный ник",
-            alert=True,
+            f"{phrase.shop.error}: Неверный ник", alert=True
         )
 
     try:
         page = int(page_str)
     except ValueError:
         return await event.answer(
-            f"{phrase.shop.error}: Неверная страница",
-            alert=True,
+            f"{phrase.shop.error}: Неверная страница", alert=True
         )
 
     purchases = await get_player_purchases(nick)
     msg, btns = create_pagination_message(
-        nick,
-        group_purchases(purchases),
-        page,
+        nick, group_purchases(purchases), page
     )
-
     await event.edit(msg, buttons=btns or None)
     return await event.answer()
 
