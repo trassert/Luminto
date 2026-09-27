@@ -18,7 +18,6 @@ def _json(name: str):
 async def _dump(path, data):
     await files.save_json_async(path, data, indent=True, sort_keys=True)
 
-
 class State:
     def __init__(self, name: str):
         self.name = name
@@ -38,6 +37,7 @@ class State:
         )
         self._data.setdefault("recognition_votes", [])
         self._data.setdefault("recognition_pending", s.RecognitionPending)
+        self._data.setdefault("banned", [])
         return self
 
     def __getattr__(self, key):
@@ -129,6 +129,7 @@ async def add(state_name: str, author: int) -> bool:
             "tax_period": s.DefaultTaxPeriod,
             "tax_nonpayment": s.DefaultTaxNonpayment,
             "tax_last_date": today,
+            "banned": [],
         },
     )
     logger.info(f"Государство создано: {state_name}")

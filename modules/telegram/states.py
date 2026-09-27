@@ -33,9 +33,10 @@ async def _check_and_update_tier(
         new_type, label = 0, "Княжество"
 
     if new_type is not None:
+        old_type = state.type
         await state.change("type", new_type)
         msg_template = (
-            phrase.state.up if new_type > state.type else phrase.state.down
+            phrase.state.up if new_type > old_type else phrase.state.down
         )
         await client.send_message(
             entity=config.chats.chat,
@@ -263,6 +264,8 @@ async def state_enter(event: Message) -> Message:
         return await event.reply(phrase.state.already_player)
 
     state = await states_helper.State(arg)
+    if event.sender_id in state.banned:
+        return await event.reply(phrase.state.banned_enter)
     if not state.enter:
         return await event.reply(phrase.state.enter_exit)
 
@@ -330,9 +333,19 @@ async def state_get(event: Message):
     nonpayment_val = "ничего" if state.tax_nonpayment == "nothing" else "кик"
     period_val = str(state.tax_period if state.tax_period > 0 else 7)
 
+    players = list(state.players)
     names = await asyncio.gather(
-        *[func.get_name(p, minecraft=True) for p in state.players]
+        *[func.get_name(p, minecraft=True) for p in players]
     )
+    names = [n or str(p) for n, p in zip(names, players)]
+
+    max_show = 50
+    list_players = ", ".join(names[:max_show])
+    if len(names) > max_show:
+        list_players += " " + phrase.state.ban_list_more.format(
+            count=len(names) - max_show
+        )
+
     pic_path = pathes.states_pic / f"{state_name}.png"
 
     return await client.send_message(
@@ -350,7 +363,7 @@ async def state_get(event: Message):
             desc=state.desc,
             date=state.date,
             players=len(state.players),
-            list_players=", ".join(names),
+            list_players=list_players,
             xyz=state.coordinates,
         ),
         reply_to=event.id,
@@ -772,6 +785,11 @@ async def state_transfer(event: Message) -> Message:
             return await event.reply(phrase.state.invalid_new)
         user_id = await func.get_author_by_msgid(event.chat_id, msg_id)
 
+    if user_id is None:
+        return await event.reply(phrase.state.invalid_new)
+    if user_id == event.sender_id:
+        return await event.reply(phrase.state.transfer_self)
+
     nick = await func.get_name(user_id, minecraft=True)
     if nick is None:
         return await event.reply(phrase.state.new_not_connected)
@@ -779,6 +797,10 @@ async def state_transfer(event: Message) -> Message:
         user_id
     ):
         return await event.reply(phrase.state.new_already_player)
+
+    state = await states_helper.State(state_name)
+    if user_id in state.banned:
+        return await event.reply(phrase.state.transfer_banned)
 
     return await event.reply(
         phrase.state.transfer.format(new_leader=nick, state=state_name),
@@ -791,3 +813,126 @@ async def state_transfer(event: Message) -> Message:
             ]
         ],
     )
+
+
+@func.new_command([r"/г запретить въезд(.*)"])
+async def state_ban_enter(event: Message) -> Message:
+    state_name = await states_helper.if_author(event.sender_id)
+    if not state_name:
+        return await event.reply(phrase.state.not_a_author)
+
+    arg = event.pattern_match.group(1).strip()
+    try:
+        user_id = await func.get_id(arg) if arg else None
+    except Exception:
+        user_id = None
+
+    if user_id is None:
+        msg_id = func.get_reply_message_id(event)
+        if not msg_id:
+            return await event.reply(phrase.state.ban_enter_no_player)
+        user_id = await func.get_author_by_msgid(event.chat_id, msg_id)
+
+    if user_id is None:
+        return await event.reply(phrase.state.ban_enter_no_player)
+    if user_id == event.sender_id:
+        return await event.reply(phrase.state.ban_enter_self)
+    if await nicks.get_byid(user_id) is None:
+        return await event.reply(phrase.state.ban_enter_not_connected)
+
+    state = await states_helper.State(state_name)
+    banned = list(state.banned)
+    if user_id in banned:
+        return await event.reply(phrase.state.ban_enter_already)
+
+    # авто-кик, если уже в составе
+    if user_id in state.players:
+        players = list(state.players)
+        players.remove(user_id)
+        await state.change("players", players)
+
+        kick_name = await func.get_name(user_id, minecraft=True) or str(user_id)
+        await client.send_message(
+            entity=config.chats.chat,
+            message=choice(phrase.state.kicked_rp).format(
+                state=state_name, player=kick_name
+            ),
+            reply_to=config.chats.topics.rp,
+        )
+        await _check_and_update_tier(
+            state, len(players), state.name.capitalize()
+        )
+
+    banned.append(user_id)
+    await state.change("banned", banned)
+
+    target_name = await func.get_name(user_id, minecraft=True) or str(user_id)
+    return await event.reply(
+        phrase.state.ban_enter_ok.format(player=target_name)
+    )
+
+
+@func.new_command([r"/г разрешить въезд(.*)"])
+async def state_unban_enter(event: Message) -> Message:
+    state_name = await states_helper.if_author(event.sender_id)
+    if not state_name:
+        return await event.reply(phrase.state.not_a_author)
+
+    arg = event.pattern_match.group(1).strip()
+    try:
+        user_id = await func.get_id(arg) if arg else None
+    except Exception:
+        user_id = None
+
+    if user_id is None:
+        msg_id = func.get_reply_message_id(event)
+        if not msg_id:
+            return await event.reply(phrase.state.unban_enter_no_player)
+        user_id = await func.get_author_by_msgid(event.chat_id, msg_id)
+
+    if user_id is None:
+        return await event.reply(phrase.state.unban_enter_no_player)
+
+    state = await states_helper.State(state_name)
+    banned = list(state.banned)
+    if user_id not in banned:
+        return await event.reply(phrase.state.unban_enter_not_banned)
+
+    banned.remove(user_id)
+    await state.change("banned", banned)
+
+    target_name = await func.get_name(user_id, minecraft=True) or str(user_id)
+    return await event.reply(
+        phrase.state.unban_enter_ok.format(player=target_name)
+    )
+
+
+@func.new_command([r"/г банлист$"])
+async def state_ban_list(event: Message) -> Message:
+    state_name = await states_helper.if_author(event.sender_id)
+    if not state_name:
+        return await event.reply(phrase.state.not_a_author)
+
+    state = await states_helper.State(state_name)
+    banned = list(state.banned)
+    if not banned:
+        return await event.reply(phrase.state.ban_list_empty)
+
+    names = await asyncio.gather(
+        *[func.get_name(p, minecraft=True) for p in banned]
+    )
+    names = [n or str(p) for n, p in zip(names, banned)]
+
+    max_per_msg = 150
+    header = phrase.state.ban_list_header.format(count=len(names))
+    lines = [header]
+    for n, name in enumerate(names[:max_per_msg], 1):
+        lines.append(f"{n}. {name}")
+
+    if len(names) > max_per_msg:
+        lines.append(
+            phrase.state.ban_list_more.format(
+                count=len(names) - max_per_msg
+            )
+        )
+    return await event.reply("\n".join(lines))

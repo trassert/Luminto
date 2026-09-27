@@ -130,6 +130,17 @@ async def state_callback(event: events.CallbackQuery.Event):
                 )
 
             state = await states_helper.State(data[2])
+            if sender_id in state.banned:
+                return await event.answer(
+                    phrase.state.banned_enter,
+                    alert=True,
+                )
+            if not state.enter:
+                return await event.answer(
+                    phrase.state.enter_exit,
+                    alert=True,
+                )
+
             balance_check = await _check_and_deduct_balance(
                 sender_id,
                 state.price,
@@ -274,13 +285,27 @@ async def state_callback(event: events.CallbackQuery.Event):
             state_name = await states_helper.if_author(sender_id)
             if state_name != data[2]:
                 return await event.answer(phrase.state.not_a_author, alert=True)
-            await (await states_helper.State(state_name)).change(
-                "author",
-                int(data[3]),
-            )
+
+            state = await states_helper.State(state_name)
+            new_leader_id = int(data[3])
+
+            if await states_helper.if_player(
+                new_leader_id
+            ) or await states_helper.if_author(new_leader_id):
+                return await event.answer(
+                    phrase.state.new_already_player,
+                    alert=True,
+                )
+            if new_leader_id in state.banned:
+                return await event.answer(
+                    phrase.state.transfer_banned,
+                    alert=True,
+                )
+
+            await state.change("author", new_leader_id)
             await event.answer(
                 phrase.state.transfer_ok.format(
-                    new_leader=await nicks.get_byid(int(data[3])),
+                    new_leader=await nicks.get_byid(new_leader_id),
                     state=state_name,
                 ),
                 alert=True,
@@ -290,7 +315,7 @@ async def state_callback(event: events.CallbackQuery.Event):
                 message=phrase.state.transfer_rp.format(
                     state=state_name,
                     new_leader=await func.get_name(
-                        int(data[3]),
+                        new_leader_id,
                         minecraft=True,
                     ),
                 ),
