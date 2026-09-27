@@ -61,13 +61,13 @@ async def github(request: aiohttp.web.Request) -> aiohttp.web.Response:
         repo_url = phrase.href(repo["html_url"])
         is_private = repo["private"]
 
-        async def send(text: str, *, reply: bool = True) -> None:
+        async def send(text: str) -> None:
             await client.send_message(
                 config.chats.chat,
                 text,
                 link_preview=False,
                 parse_mode="html",
-                reply_to=config.chats.topics.updates if reply else None,
+                reply_to=config.chats.topics.updates,
             )
 
         if event == "star" and action != "deleted":
@@ -80,7 +80,6 @@ async def github(request: aiohttp.web.Request) -> aiohttp.web.Response:
                     author=phrase.esc(sender["login"]),
                     author_url=phrase.href(sender["html_url"]),
                 ),
-                reply=False,
             )
         elif event == "push" and data.get("commits"):
             logger.info(f"Обновление! Репо {repo_name}")
