@@ -18,6 +18,7 @@ def _json(name: str):
 async def _dump(path, data):
     await files.save_json_async(path, data, indent=True, sort_keys=True)
 
+
 class State:
     def __init__(self, name: str):
         self.name = name

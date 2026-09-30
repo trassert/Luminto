@@ -109,3 +109,5 @@ States:
   DefaultTaxPeriod: 7
   DefaultTaxNonpayment: "nothing"
   RecognitionPending: false
+
+LuckPermsURL: "http://127.0.0.1:8080"

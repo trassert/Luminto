@@ -29,6 +29,7 @@ from .. import (
     referrals,
     states_helper,
     sys,
+    roles
 )
 from . import func
 from .client import aio, client
@@ -860,3 +861,8 @@ async def check_host(event: Message) -> Message:
             ),
         )
     return await event.reply("\n".join(text))
+
+
+@func.new_command(r"/test", min_role=4)
+async def test(event: Message) -> Message:
+    return await event.reply(str(await roles.api.get_all_roles()))

@@ -337,7 +337,7 @@ async def state_get(event: Message):
     names = await asyncio.gather(
         *[func.get_name(p, minecraft=True) for p in players]
     )
-    names = [n or str(p) for n, p in zip(names, players)]
+    names = [n or str(p) for n, p in zip(names, players, strict=False)]
 
     max_show = 50
     list_players = ", ".join(names[:max_show])
@@ -921,7 +921,7 @@ async def state_ban_list(event: Message) -> Message:
     names = await asyncio.gather(
         *[func.get_name(p, minecraft=True) for p in banned]
     )
-    names = [n or str(p) for n, p in zip(names, banned)]
+    names = [n or str(p) for n, p in zip(names, banned, strict=False)]
 
     max_per_msg = 150
     header = phrase.state.ban_list_header.format(count=len(names))
@@ -931,8 +931,6 @@ async def state_ban_list(event: Message) -> Message:
 
     if len(names) > max_per_msg:
         lines.append(
-            phrase.state.ban_list_more.format(
-                count=len(names) - max_per_msg
-            )
+            phrase.state.ban_list_more.format(count=len(names) - max_per_msg)
         )
     return await event.reply("\n".join(lines))
