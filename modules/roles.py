@@ -1,14 +1,15 @@
 import atexit
 import time
 from typing import Any
-from loguru import logger
 
 import aiohttp
 import orjson
+from loguru import logger
 
 from . import config
 
 logger.info(f"Загружен модуль {__name__}!")
+
 
 class LuckPermsAPI:
     def __init__(
@@ -55,9 +56,7 @@ class LuckPermsAPI:
         """
         if self._session and not self._session.closed:
             connector = self._session.connector
-            self._session._connector = (
-                None
-            )
+            self._session._connector = None
             if connector is not None and not connector.closed:
                 connector._close()
             self._session = None
@@ -112,5 +111,6 @@ class LuckPermsAPI:
 
     async def get_all_roles(self) -> list[str]:
         return await self._request("GET", "/group")
+
 
 api = LuckPermsAPI(config.cfg.LuckPermsURL)
