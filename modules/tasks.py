@@ -168,7 +168,6 @@ async def rm_closed_topics() -> None:
             )
         except Exception as e:
             logger.warning(f"Ошибка при удалении топика {topic_id}: {e}")
-            continue
         data.pop(topic_id, None)
         changed = True
     if changed:
