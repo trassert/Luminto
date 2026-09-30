@@ -10,6 +10,15 @@ from . import config
 
 logger.info(f"Загружен модуль {__name__}!")
 
+roles = {
+    0: "default",
+    1: "млмодер",
+    2: "модер",
+    3: "админ",
+    4: "создатель",
+    5: "вип",
+}
+
 
 class LuckPermsAPI:
     def __init__(

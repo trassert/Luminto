@@ -150,29 +150,27 @@ async def backup_db() -> None:
 
 
 async def rm_closed_topics() -> None:
-    """Удаляет старые топики, которые были закрыты ботом."""
     try:
         data = await files.load_json_async(pathes.rmtopics)
     except Exception:
         return None
     ttl_seconds = config.cfg.ClosedTopicsTTL * 24 * 60 * 60
     changed = False
-    for topic_id, closed_time in data.items():
-        if time.time() - closed_time > ttl_seconds:
-            try:
-                await client(
-                    functions.messages.DeleteTopicHistoryRequest(
-                        peer=config.chats.forum,
-                        top_msg_id=int(topic_id),
-                    ),
-                )
-            except Exception as e:
-                return logger.warning(
-                    f"Ошибка при удалении топика {topic_id}: {e}",
-                )
-            logger.info(f"Удалён топик {topic_id}")
-            data.pop(topic_id, None)
-            changed = True
+    for topic_id in list(data.keys()):
+        if time.time() - data[topic_id] <= ttl_seconds:
+            continue
+        try:
+            await client(
+                functions.messages.DeleteTopicHistoryRequest(
+                    channel=config.chats.forum,
+                    top_msg_id=int(topic_id),
+                ),
+            )
+        except Exception as e:
+            logger.warning(f"Ошибка при удалении топика {topic_id}: {e}")
+            continue
+        data.pop(topic_id, None)
+        changed = True
     if changed:
         return await files.save_json_async(pathes.rmtopics, data)
     return None
