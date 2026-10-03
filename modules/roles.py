@@ -6,21 +6,27 @@ import aiohttp
 import orjson
 from loguru import logger
 
-from . import config
+from . import config, files, nicks, pathes
 
 logger.info(f"Загружен модуль {__name__}!")
 
+DEFAULT = 0
+VIP = 1
+INTERN = 2
+MODER = 3
+ADMIN = 4
+OWNER = 5
 roles = {
-    0: "default",
-    1: "млмодер",
-    2: "модер",
-    3: "админ",
-    4: "создатель",
-    5: "вип",
+    DEFAULT: "default",
+    VIP: "вип",
+    INTERN: "млмодер",
+    MODER: "модер",
+    ADMIN: "админ",
+    OWNER: "создатель",
 }
 
 
-class LuckPermsAPI:
+class LuckPermsRestAPI:
     def __init__(
         self, base_url: str, api_key: str | None = None, timeout: int = 10
     ):
@@ -122,4 +128,59 @@ class LuckPermsAPI:
         return await self._request("GET", "/group")
 
 
-api = LuckPermsAPI(config.cfg.LuckPermsURL)
+api = LuckPermsRestAPI(config.cfg.LuckPermsURL)
+
+
+async def get_role(nick: str) -> int:
+    try:
+        user_roles = await api.get_roles(nick)
+    except ValueError:
+        return DEFAULT
+    return max(
+        (level for level, group in roles.items() if group in user_roles),
+        default=DEFAULT,
+    )
+
+
+async def get_user_role(user_id: int) -> int:
+    nick = await nicks.get_byid(user_id)
+    return await get_role(nick) if nick else DEFAULT
+
+
+async def set_role(nick: str, role: int) -> None:
+    current = await get_role(nick)
+    if current == role:
+        return
+    if current != DEFAULT:
+        await api.del_role(nick, roles[current])
+    if role != DEFAULT:
+        await api.add_role(nick, roles[role])
+
+
+async def get_blacklist(id: int) -> str | None:
+    try:
+        data = await files.load_json_async(pathes.blacklist)
+    except FileNotFoundError:
+        return None
+    return data.get(str(id))
+
+
+async def add_to_blacklist(id: int, reason: str) -> None:
+    try:
+        data = await files.load_json_async(pathes.blacklist)
+    except FileNotFoundError:
+        data = {}
+    data[str(id)] = reason
+    await files.save_json_async(pathes.blacklist, data, indent=True)
+
+
+async def remove_from_blacklist(id: int) -> bool:
+    try:
+        data = await files.load_json_async(pathes.blacklist)
+    except FileNotFoundError:
+        return False
+    if str(id) not in data:
+        return False
+    del data[str(id)]
+    await files.save_json_async(pathes.blacklist, data, indent=True)
+    return True

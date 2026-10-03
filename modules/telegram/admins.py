@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from loguru import logger
 from telethon.tl.functions.users import GetFullUserRequest
 
-from .. import db, formatter, mcrcon, pathes, phrase
+from .. import db, formatter, mcrcon, nicks, pathes, phrase, roles
 from . import func
 from .client import client
 
@@ -46,49 +46,111 @@ async def add_balance(event: Message):
     return None
 
 
-@func.new_command([r"\+staff(.*)", r"\+стафф(.*)"], min_role=5)
+@func.new_command([r"\+staff(.*)", r"\+стафф(.*)"], min_role=roles.OWNER)
 async def add_staff(event: Message):
     arg = event.pattern_match.group(1).strip()
     try:
-        user = await client(GetFullUserRequest(arg))
-        user = user.full_user.id
-        tag = await func.get_name(user)
-    except IndexError, ValueError:
-        reply_to_msg = event.reply_to_msg_id
-        if reply_to_msg:
-            reply_message = await event.get_reply_message()
-            user = reply_message.sender_id
-            tag = await func.get_name(user)
-        else:
-            return await event.reply(phrase.money.no_people)
-    roles = db.Roles()
-    new_role = await roles.get(user) + 1
-    await roles.set(user, new_role)
+        user = (
+            await func.get_id(arg)
+            if arg
+            else await func.get_author_by_msgid(
+                event.chat_id,
+                func.get_reply_message_id(event),
+            )
+        )
+    except Exception:
+        user = None
+    if user is None:
+        return await event.reply(phrase.money.no_people)
+    tag = await func.get_name(user)
+    nick = await nicks.get_byid(user)
+    if not nick:
+        return await event.reply(phrase.perms.no_minecraft)
+    current_role = await roles.get_role(nick)
+    if current_role == roles.OWNER:
+        return await event.reply(phrase.perms.max_role)
+    new_role = current_role + 1
+    await roles.set_role(nick, new_role)
     return await event.reply(
         phrase.perms.upgrade.format(nick=tag, staff=new_role),
     )
 
 
-@func.new_command([r"\-staff(.*)", r"\-стафф(.*)"], min_role=5)
+@func.new_command([r"\-staff(.*)", r"\-стафф(.*)"], min_role=roles.OWNER)
 async def del_staff(event: Message):
-    roles = db.Roles()
     arg = event.pattern_match.group(1).strip()
     try:
-        user = await client(GetFullUserRequest(arg))
-        user = user.full_user.id
-        tag = await func.get_name(user)
-    except IndexError, ValueError:
-        reply_to_msg = event.reply_to_msg_id
-        if reply_to_msg:
-            reply_message = await event.get_reply_message()
-            user = reply_message.sender_id
-            tag = await func.get_name(user)
-        else:
-            return await event.reply(phrase.money.no_people)
-    new_role = await roles.get(user) - 1
-    await roles.set(user, new_role)
+        user = (
+            await func.get_id(arg)
+            if arg
+            else await func.get_author_by_msgid(
+                event.chat_id,
+                func.get_reply_message_id(event),
+            )
+        )
+    except Exception:
+        user = None
+    if user is None:
+        return await event.reply(phrase.money.no_people)
+    tag = await func.get_name(user)
+    nick = await nicks.get_byid(user)
+    if not nick:
+        return await event.reply(phrase.perms.no_minecraft)
+    current_role = await roles.get_role(nick)
+    if current_role == roles.DEFAULT:
+        return await event.reply(phrase.perms.min_role)
+    new_role = current_role - 1
+    await roles.set_role(nick, new_role)
     return await event.reply(
         phrase.perms.downgrade.format(nick=tag, staff=new_role),
+    )
+
+
+@func.new_command(r"/чсб(.*)", min_role=roles.ADMIN)
+async def add_bot_blacklist(event: Message):
+    args = event.pattern_match.group(1).strip()
+    reply_id = func.get_reply_message_id(event)
+    if reply_id:
+        user = await func.get_author_by_msgid(event.chat_id, reply_id)
+        reason = args
+    else:
+        parts = args.split(maxsplit=1)
+        if len(parts) < 2:
+            return await event.reply(phrase.bot_blacklist.add_use)
+        try:
+            user = await func.get_id(parts[0])
+        except Exception:
+            return await event.reply(phrase.money.no_people)
+        reason = parts[1]
+    if user is None:
+        return await event.reply(phrase.money.no_people)
+    if not reason:
+        return await event.reply(phrase.bot_blacklist.add_use)
+    await roles.add_to_blacklist(user, reason)
+    return await event.reply(
+        phrase.bot_blacklist.added.format(user=await func.get_name(user)),
+    )
+
+
+@func.new_command(r"-чсб(.*)", min_role=roles.ADMIN)
+async def remove_bot_blacklist(event: Message):
+    arg = event.pattern_match.group(1).strip()
+    reply_id = func.get_reply_message_id(event)
+    if reply_id:
+        user = await func.get_author_by_msgid(event.chat_id, reply_id)
+    elif arg:
+        try:
+            user = await func.get_id(arg.split()[0])
+        except Exception:
+            return await event.reply(phrase.money.no_people)
+    else:
+        return await event.reply(phrase.bot_blacklist.remove_use)
+    if user is None:
+        return await event.reply(phrase.money.no_people)
+    if not await roles.remove_from_blacklist(user):
+        return await event.reply(phrase.bot_blacklist.not_found)
+    return await event.reply(
+        phrase.bot_blacklist.removed.format(user=await func.get_name(user)),
     )
 
 

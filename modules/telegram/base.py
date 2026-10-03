@@ -129,7 +129,12 @@ async def start(event: Message):
 async def profile(event: Message) -> Message:
     """Выводит детальную информацию об игроке, его роли, государстве и статистике."""
     user_id = event.sender_id
-    role = await db.Roles().get(user_id)
+    minecraft_nick = await nicks.get_byid(user_id)
+    role = (
+        await roles.get_role(minecraft_nick)
+        if minecraft_nick
+        else roles.DEFAULT
+    )
 
     if state_author := await states_helper.if_author(user_id):
         state_info = f"**{state_author}, Глава**"
@@ -138,7 +143,7 @@ async def profile(event: Message) -> Message:
             await states_helper.if_player(user_id)
         ) or "Не состоит в государстве"
 
-    nick = await nicks.get_byid(user_id) or "Не привязан"
+    nick = minecraft_nick or "Не привязан"
 
     if nick != "Не привязан":
         m_day = await db.Statistic(1).get(nick)
@@ -580,7 +585,7 @@ async def check_info_by_nick(event: Message) -> Message:
     return await event.reply(
         phrase.nick.info.format(
             tg=await func.get_name(user_id),
-            role=phrase.roles.types[await db.Roles().get(user_id)],
+            role=phrase.roles.types[await roles.get_role(nick)],
             state=state or "Нет",
         ),
     )
@@ -695,8 +700,7 @@ async def cities_requests(event: Message) -> Message:
 @func.new_command(r"\-город (.+)")
 async def cities_remove(event: Message) -> Message:
     """Удаляет город из базы (доступно администраторам)."""
-    roles = db.Roles()
-    if await roles.get(event.sender_id) < roles.ADMIN:
+    if await roles.get_user_role(event.sender_id) < roles.ADMIN:
         return await event.reply(
             phrase.roles.no_perms.format(
                 level=roles.ADMIN, name=phrase.roles.admin
@@ -797,8 +801,7 @@ async def get_last_hint(event: Message) -> Message:
     if not event.is_private:
         return await event.reply(phrase.newhints.private)
 
-    roles = db.Roles()
-    if await roles.get(event.sender_id) < roles.ADMIN:
+    if await roles.get_user_role(event.sender_id) < roles.ADMIN:
         return await event.reply(
             phrase.roles.no_perms.format(
                 level=roles.ADMIN, name=phrase.roles.admin

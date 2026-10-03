@@ -5,7 +5,7 @@ from loguru import logger
 from telethon.errors.rpcbaseerrors import BadRequestError
 from telethon.tl import functions
 
-from .. import config, db, files, pathes, phrase
+from .. import config, db, files, pathes, phrase, roles
 from . import func
 from .client import client
 
@@ -57,7 +57,7 @@ async def delete_topic(event: Message):
     author_topics = await db.Topics().get_byid(event.sender_id)
     if (
         str(topic_id) not in author_topics
-        and await db.Roles().get(event.sender_id) < db.Roles.ADMIN
+        and await roles.get_user_role(event.sender_id) < roles.ADMIN
     ):
         return await event.reply(phrase.forum.not_author)
     try:

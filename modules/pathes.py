@@ -17,7 +17,7 @@ pending_hints = Path("db") / "crocodile" / "pending_hints.json"
 mine = Path("db") / "timings" / "mine.json"
 
 # Директория users
-roles = Path("db") / "users" / "roles.json"
+blacklist = Path("db") / "users" / "blacklist.json"
 money = Path("db") / "users" / "money.json"
 nick = Path("db") / "users" / "nicks.json"
 wdraw = Path("db") / "users" / "withdraws.json"

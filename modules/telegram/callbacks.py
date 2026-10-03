@@ -16,6 +16,7 @@ from .. import (
     nicks,
     pathes,
     phrase,
+    roles,
     shop,
     states_helper,
 )
@@ -643,8 +644,7 @@ async def mine_callback(event: events.CallbackQuery.Event):
 @func.new_callback("hint")
 async def hint_callback(event: events.CallbackQuery.Event):
     data = event.data.decode("utf-8").split(".")
-    roles = db.Roles()
-    if await roles.get(event.sender_id) < roles.ADMIN:
+    if await roles.get_user_role(event.sender_id) < roles.ADMIN:
         return None
     hint_data = await db.get_hint_byid(data[2])
     if hint_data is None:

@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
-from .. import db, notes, phrase
+from .. import notes, phrase, roles
 from . import func
 from .client import client
 
@@ -99,7 +99,7 @@ async def del_note(event: Message):
         return await event.reply(phrase.notes.not_found)
     if (
         event.sender_id != note_data["author"]
-        and not await db.Roles().get(event.sender_id) >= 4
+        and await roles.get_user_role(event.sender_id) < roles.ADMIN
     ):
         return await event.reply(phrase.notes.not_author)
     if not await notes.remove(name):

@@ -6,7 +6,7 @@ from loguru import logger
 from telethon import events
 from telethon.tl.functions.users import GetFullUserRequest
 
-from .. import db, nicks, phrase
+from .. import nicks, phrase, roles
 from .client import client
 
 if TYPE_CHECKING:
@@ -117,14 +117,15 @@ async def checks(
         logger.info(f"Кнопка - {name} > {event.data.decode('utf-8')}")
 
     "Проверка на ЧСБ и ур. доступа"
-    roles = db.Roles()
-    u_role = await roles.get(event.sender_id)
-    if u_role == roles.BLACKLIST:
+    reason = await roles.get_blacklist(event.sender_id)
+    if reason is not None:
+        message = phrase.bot_blacklist.blocked.format(reason=reason)
         if isinstance(event, events.CallbackQuery.Event):
-            await event.answer(phrase.blacklisted, alert=True)
+            await event.answer(message, alert=True)
         else:
-            await event.reply(phrase.blacklisted)
+            await event.reply(message)
         return False
+    u_role = await roles.get_user_role(event.sender_id)
     if u_role < min_role:
         if isinstance(event, events.CallbackQuery.Event):
             await event.answer(

@@ -9,7 +9,7 @@ import aiohttp.web
 import orjson
 from loguru import logger
 
-from . import config, db, formatter, log, nicks, phrase
+from . import config, db, formatter, log, nicks, phrase, roles
 from .telegram import func
 from .telegram.client import client
 
@@ -280,21 +280,20 @@ async def own_actions(request: aiohttp.web.Request):
         if tgid is None:
             logger.warning("Неверный игрок (vip-action)")
             return aiohttp.web.Response(text="Uncorrect player", status=401)
-        roles = db.Roles()
-        user = await roles.get(tgid)
-        if user > roles.VIP:
-            logger.warning("Игрок уже имеет VIP или выше (vip-action)")
-            return aiohttp.web.Response(
-                text="Player already has VIP or higher",
-                status=401,
-            )
-        if user == roles.BLACKLIST:
+        if await roles.get_blacklist(tgid) is not None:
             logger.warning("Игрок в черном списке (vip-action)")
             return aiohttp.web.Response(
                 text="Player is blacklisted",
                 status=401,
             )
-        await roles.set(tgid, roles.VIP)
+        user_role = await roles.get_role(data.get("player"))
+        if user_role > roles.VIP:
+            logger.warning("Игрок уже имеет VIP или выше (vip-action)")
+            return aiohttp.web.Response(
+                text="Player already has VIP or higher",
+                status=401,
+            )
+        await roles.set_role(data.get("player"), roles.VIP)
         return aiohttp.web.Response(text="ok")
     return aiohttp.web.Response(text="Incorrect action", status=400)
 

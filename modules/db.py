@@ -94,32 +94,6 @@ async def ready_to_mine(id: str) -> bool:
     return False
 
 
-class Roles:
-    BLACKLIST = -1
-    USER = 0
-    VIP = 1
-    INTERN = 2
-    MODER = 3
-    ADMIN = 4
-    OWNER = 5
-
-    async def get(self, id: str) -> int:
-        """Получить роль пользователя (USER, если не найдено)"""
-        id = str(id)
-        data = await files.load_json_async(pathes.roles)
-        return data.get(id, self.USER)
-
-    async def set(self, id: str, role: int) -> bool:
-        """Установить роль пользователя"""
-        id = str(id)
-        role = int(role)
-        data = await files.load_json_async(pathes.roles)
-        data[id] = role
-        sorted_data = dict(sorted(data.items(), key=lambda x: (-x[1], x[0])))
-        await files.save_json_async(pathes.roles, sorted_data, indent=True)
-        return True
-
-
 class Statistic:
     def __init__(self, days=1, nick=None):
         self.days = days
