@@ -102,49 +102,52 @@ async def checks(
     event: Message | events.CallbackQuery.Event,
     min_role: int = 0,
 ) -> bool:
-    "Логгирование ЛС"
-    if event.is_private and not isinstance(event, events.CallbackQuery.Event):
-        name = await get_name(event.sender_id, log=True)
-        (
-            logger.info(f"ЛС - {name} > {event.text}")
-            if len(event.text) < 100
-            else logger.info(f"ЛС - {name} > {event.text[:100]}...")
-        )
+    is_callback = isinstance(event, events.CallbackQuery.Event)
 
-    "Логгирование кнопок"
-    if isinstance(event, events.CallbackQuery.Event):
+    "Логгирование"
+    if is_callback:
         name = await get_name(event.sender_id, log=True)
         logger.info(f"Кнопка - {name} > {event.data.decode('utf-8')}")
+    elif event.is_private:
+        name = await get_name(event.sender_id, log=True)
+        text = event.text
+        preview = text if len(text) < 100 else f"{text[:100]}..."
+        logger.info(f"ЛС - {name} > {preview}")
 
-    "Проверка на ЧСБ и ур. доступа"
+    "ЧСБ"
     reason = await roles.get_blacklist(event.sender_id)
     if reason is not None:
         message = phrase.bot_blacklist.blocked.format(reason=reason)
-        if isinstance(event, events.CallbackQuery.Event):
+        if is_callback:
             await event.answer(message, alert=True)
         else:
             await event.reply(message)
         return False
+
+    "Публичные команды"
     if min_role == 0:
         return True
+
+    "Проверка роли"
     u_role = await roles.get_user_role(event.sender_id)
-    if u_role < min_role:
-        if isinstance(event, events.CallbackQuery.Event):
-            await event.answer(
-                phrase.roles.no_perms_buttons.format(
-                    name=phrase.roles.types[min_role],
-                ),
-                alert=True,
-            )
-        else:
-            await event.reply(
-                phrase.roles.no_perms.format(
-                    level=min_role,
-                    name=phrase.roles.types[min_role],
-                ),
-            )
-        return False
-    return True
+    if u_role >= min_role:
+        return True
+
+    if is_callback:
+        await event.answer(
+            phrase.roles.no_perms_buttons.format(
+                name=phrase.roles.types[min_role],
+            ),
+            alert=True,
+        )
+    else:
+        await event.reply(
+            phrase.roles.no_perms.format(
+                level=min_role,
+                name=phrase.roles.types[min_role],
+            ),
+        )
+    return False
 
 
 def new_command(
