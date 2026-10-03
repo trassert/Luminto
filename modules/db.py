@@ -286,21 +286,49 @@ class CitiesGame:
         }
         self._cities_list = list(self._valid_cities)
 
-    def _load_data(self) -> dict:
-        if self.data_file.exists():
-            return files.load_json_sync(self.data_file)
+    def _default_data(self) -> dict:
         return {
             "current_game": {
-                "players": [],
-                "current_player_id": 0,
-                "last_city": None,
-                "cities": [],
+                "players": [], "current_player_id": 0,
+                "last_city": None, "cities": [],
             },
-            "statistics": {},
-            "status": False,
-            "start_players": 0,
-            "id": 0,
+            "statistics": {}, "status": False,
+            "start_players": 0, "id": 0,
         }
+    
+    def _load_data(self) -> dict:
+        defaults = self._default_data()
+        if not self.data_file.exists():
+            return defaults
+    
+        try:
+            loaded = files.load_json_sync(self.data_file)
+        except Exception as e:
+            self.logger(f"Битый файл: {e}")
+            return defaults
+    
+        if not isinstance(loaded, dict):
+            return defaults
+    
+        for key, val in defaults.items():
+            if key not in loaded:
+                loaded[key] = val
+    
+        cg = loaded.get("current_game")
+        if not isinstance(cg, dict):
+            loaded["current_game"] = defaults["current_game"]
+        else:
+            for key, val in defaults["current_game"].items():
+                cg.setdefault(key, val)
+            if not isinstance(cg.get("players"), list):
+                cg["players"] = []
+            if not isinstance(cg.get("cities"), list):
+                cg["cities"] = []
+    
+        if not isinstance(loaded.get("statistics"), dict):
+            loaded["statistics"] = {}
+    
+        return loaded
 
     def logger(self, msg: str):
         logger.info(f"[Города] {msg}")
@@ -362,15 +390,7 @@ class CitiesGame:
         )
 
     def end_game(self):
-        self.data["current_game"] = {
-            "players": [],
-            "current_player_id": 0,
-            "last_city": None,
-            "cities": [],
-        }
-        self.data["start_players"] = 0
-        self.data["status"] = False
-        self.data["statistics"] = {}
+        self.data = self._default_data()
         self.data["id"] = (self.data.get("id", 0) + 1) % 10 or 1
         self.logger("Экземпляр Города закончен.")
         self._save_data()
