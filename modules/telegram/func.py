@@ -125,6 +125,8 @@ async def checks(
         else:
             await event.reply(message)
         return False
+    if min_role == 0:
+        return True
     u_role = await roles.get_user_role(event.sender_id)
     if u_role < min_role:
         if isinstance(event, events.CallbackQuery.Event):
