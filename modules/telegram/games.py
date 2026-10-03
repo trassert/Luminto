@@ -220,18 +220,19 @@ async def cities_timeout(current_player: int, last_city: str):
                 await _safe_delete(timer_msg)
                 Cities.logger(f"Тайм-аут игрока {current_player}")
 
-                players = Cities.get_players()
                 players_count = Cities.get_count_players()
                 next_player = Cities.rem_player(current_player)
 
-                if next_player is False:
-                    winner_id = players[0]
+                if next_player is None:
+                    remaining = Cities.get_players()
+                    winner_id = remaining[0]
                     win_money = players_count * config.cfg.CitiesBet
                     await db.add_money(winner_id, win_money)
 
                     stat_text = (
                         "\n".join(
-                            f"{'👑 1' if n == 1 else n}. **{await func.get_name(uid)}** назвал {count} городов"
+                            f"{'👑 1' if n == 1 else n}. "
+                            f"**{await func.get_name(uid)}** назвал {count} городов"
                             for n, (uid, count) in enumerate(
                                 Cities.get_all_stat().items(), 1
                             )
@@ -337,12 +338,13 @@ async def cities_answer(event: Message):
     elif result_code == 5:
         await autodelete(phrase.cities.already_inlist)
 
-
 @client.on(events.CallbackQuery(pattern=r"^cities\."))
 async def cities_callback(event: events.CallbackQuery.Event):
     action = event.data.decode().split(".")[1]
 
     if action == "join":
+        if Cities.get_game_status():
+            return await event.answer(phrase.cities.already_started, alert=True)
         if event.sender_id in Cities.get_players():
             return await event.answer(phrase.cities.already_ingame, alert=True)
 
@@ -369,12 +371,16 @@ async def cities_callback(event: events.CallbackQuery.Event):
         return await event.answer(phrase.cities.set_ingame)
 
     if action == "start":
+        if Cities.get_game_status():
+            return await event.answer(phrase.cities.already_started, alert=True)
         if len(Cities.get_players()) < 2:
             return await event.answer(phrase.cities.low_players, alert=True)
 
         Cities.start_game()
         curr = Cities.who_answer()
         global CitiesTimerTask
+        if CitiesTimerTask:
+            CitiesTimerTask.cancel()
         CitiesTimerTask = asyncio.create_task(
             cities_timeout(curr, Cities.get_last_city()),
         )
@@ -388,6 +394,14 @@ async def cities_callback(event: events.CallbackQuery.Event):
     if action == "cancel":
         if event.sender_id not in Cities.get_players():
             return await event.answer(phrase.cities.not_in_players, alert=True)
+        if Cities.get_game_status():
+            return await event.answer(
+                phrase.cities.already_started, alert=True
+            )
+        for pid in Cities.get_players():
+            await db.add_money(pid, config.cfg.PriceForCities)
+        if CitiesTimerTask:
+            CitiesTimerTask.cancel()
         Cities.end_game()
         return await event.edit("❌ Игра отменена.")
     return None
@@ -422,7 +436,11 @@ async def cities_start(event: Message):
 
     current_id = Cities.get_id()
     await asyncio.sleep(300)
-    if not Cities.get_game_status() and Cities.get_id() == current_id:
+    if (
+        not Cities.get_game_status()
+        and Cities.get_id() == current_id
+        and Cities.get_count_players() <= 1
+    ):
         await msg.edit(phrase.cities.wait_exceeded, buttons=None)
         Cities.end_game()
     return None

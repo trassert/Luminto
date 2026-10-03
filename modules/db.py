@@ -279,9 +279,11 @@ class CitiesGame:
     def __init__(self):
         self.data_file = pathes.cities
         self.data = self._load_data()
-        self._valid_cities = set(
-            pathes.chk_city.read_text(encoding="utf8").splitlines(),
-        )
+        self._valid_cities = {
+            c.strip().lower()
+            for c in pathes.chk_city.read_text(encoding="utf8").splitlines()
+            if c.strip()
+        }
         self._cities_list = list(self._valid_cities)
 
     def _load_data(self) -> dict:
@@ -310,17 +312,20 @@ class CitiesGame:
         return self.data["current_game"]["players"]
 
     def add_player(self, player_id: int):
-        if player_id not in self.data["current_game"]["players"]:
-            self.data["current_game"]["players"].append(player_id)
+        players = self.get_players()
+        if player_id not in players:
+            players.append(player_id)
             self.data["start_players"] = self.data.get("start_players", 0) + 1
             self._save_data()
 
     def rem_player(self, player_id: int):
+        players = self.get_players()
+        if player_id not in players:
+            return self.who_answer()
         self.next_answer()
-        if player_id in self.data["current_game"]["players"]:
-            self.data["current_game"]["players"].remove(player_id)
-        if len(self.data["current_game"]["players"]) < 2:
-            return False
+        players.remove(player_id)
+        if len(players) < 2:
+            return None
         self._save_data()
         return self.who_answer()
 
@@ -337,12 +342,11 @@ class CitiesGame:
         current_id = self.data["current_game"]["current_player_id"]
         if current_id not in players:
             self.data["current_game"]["current_player_id"] = players[0]
-            self._save_data()
-            return
-        idx = players.index(current_id)
-        self.data["current_game"]["current_player_id"] = players[
-            (idx + 1) % len(players)
-        ]
+        else:
+            idx = players.index(current_id)
+            self.data["current_game"]["current_player_id"] = players[
+                (idx + 1) % len(players)
+            ]
         self.logger(
             f"Очередь игрока {self.data['current_game']['current_player_id']} отвечать",
         )
@@ -351,7 +355,7 @@ class CitiesGame:
     def get_all_stat(self) -> dict[int, int]:
         return dict(
             sorted(
-                self.data["statistics"].items(),
+                ((int(k), v) for k, v in self.data["statistics"].items()),
                 key=lambda item: item[1],
                 reverse=True,
             ),
@@ -372,7 +376,7 @@ class CitiesGame:
         self._save_data()
 
     def start_game(self):
-        city = choice((pathes.chk_city).read_text(encoding="utf8").splitlines())
+        city = choice(self._cities_list)
         self.data["id"] = (self.data.get("id", 0) + 1) % 10 or 1
         self.data["status"] = True
         self.data["current_game"]["last_city"] = city
@@ -387,22 +391,23 @@ class CitiesGame:
         self._save_data()
         return self.data
 
-    def answer(self, id: str, city: str):
+    def answer(self, id: int, city: str):
         city = city.strip().lower()
-        players = self.data["current_game"]["players"]
-        if str(id) not in map(str, players):
+        players = self.get_players()
+        if id not in players:
             self.logger(f"{id} не в списке игроков")
             return 3
-        if str(id) != str(self.data["current_game"]["current_player_id"]):
+        if id != self.data["current_game"]["current_player_id"]:
             self.logger(f"{id} сейчас не должен отвечать")
             return 2
         if city not in self._valid_cities:
             self.logger(f"{id} ответил неизвестным городом")
             return 1
         last_city = self.data["current_game"]["last_city"]
-        if city[0] != formatter.city_last_letter(last_city):
+        if not last_city or city[0] != formatter.city_last_letter(last_city):
             self.logger(
-                f"{id} ответил городом с разными буквами ({city[0]} != {last_city[-1]})",
+                f"{id} ответил городом с разными буквами "
+                f"({city[0]} != {last_city[-1] if last_city else '?'})",
             )
             return 4
         if city in self.data["current_game"]["cities"]:
