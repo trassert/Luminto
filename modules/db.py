@@ -324,9 +324,9 @@ class CitiesGame:
             return self.who_answer()
         self.next_answer()
         players.remove(player_id)
+        self._save_data()          # сохраняем ВСЕГДА, даже если игроков < 2
         if len(players) < 2:
             return None
-        self._save_data()
         return self.who_answer()
 
     def who_answer(self) -> int | None:
@@ -394,6 +394,10 @@ class CitiesGame:
     def answer(self, id: int, city: str):
         city = city.strip().lower()
         players = self.get_players()
+        if not self.data["status"] or len(players) < 2:
+            self.logger(f"{id} ответил, но игра не активна")
+            return 3
+    
         if id not in players:
             self.logger(f"{id} не в списке игроков")
             return 3
@@ -403,6 +407,7 @@ class CitiesGame:
         if city not in self._valid_cities:
             self.logger(f"{id} ответил неизвестным городом")
             return 1
+    
         last_city = self.data["current_game"]["last_city"]
         if not last_city or city[0] != formatter.city_last_letter(last_city):
             self.logger(
@@ -410,9 +415,11 @@ class CitiesGame:
                 f"({city[0]} != {last_city[-1] if last_city else '?'})",
             )
             return 4
+    
         if city in self.data["current_game"]["cities"]:
             self.logger(f"{id} ответил городом, который был")
             return 5
+    
         self.data["current_game"]["last_city"] = city
         self.data["statistics"][str(id)] = (
             self.data["statistics"].get(str(id), 0) + 1

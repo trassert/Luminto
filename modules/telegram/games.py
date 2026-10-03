@@ -200,7 +200,6 @@ async def crocodile_hint(event: Message):
     except Exception as e:
         logger.error(f"Ошибка чтения карты подсказок: {e}")
 
-
 @logger.catch
 async def cities_timeout(current_player: int, last_city: str):
     try:
@@ -225,8 +224,14 @@ async def cities_timeout(current_player: int, last_city: str):
 
                 if next_player is None:
                     remaining = Cities.get_players()
-                    winner_id = remaining[0]
+                    winner_id = remaining[0] if remaining else current_player
                     win_money = players_count * config.cfg.CitiesBet
+
+                    # 1) Сначала фиксируем конец игры — до любых await
+                    stat_snapshot = Cities.get_all_stat()
+                    Cities.end_game()
+
+                    # 2) Деньги и сообщения — уже на консистентном стейте
                     await db.add_money(winner_id, win_money)
 
                     stat_text = (
@@ -234,7 +239,7 @@ async def cities_timeout(current_player: int, last_city: str):
                             f"{'👑 1' if n == 1 else n}. "
                             f"**{await func.get_name(uid)}** назвал {count} городов"
                             for n, (uid, count) in enumerate(
-                                Cities.get_all_stat().items(), 1
+                                stat_snapshot.items(), 1
                             )
                         )
                         or "Пусто!"
@@ -252,7 +257,7 @@ async def cities_timeout(current_player: int, last_city: str):
                         ),
                         reply_to=config.chats.topics.games,
                     )
-                    return Cities.end_game()
+                    return None
 
                 global CitiesTimerTask
                 CitiesTimerTask = asyncio.create_task(
