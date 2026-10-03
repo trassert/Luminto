@@ -200,6 +200,7 @@ async def crocodile_hint(event: Message):
     except Exception as e:
         logger.error(f"Ошибка чтения карты подсказок: {e}")
 
+
 @logger.catch
 async def cities_timeout(current_player: int, last_city: str):
     try:
@@ -343,6 +344,7 @@ async def cities_answer(event: Message):
     elif result_code == 5:
         await autodelete(phrase.cities.already_inlist)
 
+
 @client.on(events.CallbackQuery(pattern=r"^cities\."))
 async def cities_callback(event: events.CallbackQuery.Event):
     action = event.data.decode().split(".")[1]
@@ -400,9 +402,7 @@ async def cities_callback(event: events.CallbackQuery.Event):
         if event.sender_id not in Cities.get_players():
             return await event.answer(phrase.cities.not_in_players, alert=True)
         if Cities.get_game_status():
-            return await event.answer(
-                phrase.cities.already_started, alert=True
-            )
+            return await event.answer(phrase.cities.already_started, alert=True)
         for pid in Cities.get_players():
             await db.add_money(pid, config.cfg.PriceForCities)
         if CitiesTimerTask:
