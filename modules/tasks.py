@@ -162,7 +162,7 @@ async def rm_closed_topics() -> None:
         try:
             await client(
                 functions.messages.DeleteTopicHistoryRequest(
-                    channel=config.chats.forum,
+                    peer=config.chats.forum,
                     top_msg_id=int(topic_id),
                 ),
             )
