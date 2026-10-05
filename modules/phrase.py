@@ -782,6 +782,13 @@ class cities:
 
 
 class github:
+    issue_pinned: str = (
+        '📌 : <b>Закреплён топик <a href="{url}">{issue}</a></b>'
+    )
+
+    issue_unpinned: str = (
+        '📍 : <b>Откреплён топик <a href="{url}">{issue}</a></b>'
+    )
     star = (
         '<b>⭐️ : <a href="{repo_url}">{repo}</a> получил новую звезду!</b>\n'
         'Спасибо, <b><a href="{author_url}">{author}</a></b>!'

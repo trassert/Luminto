@@ -180,6 +180,24 @@ async def github(request: aiohttp.web.Request) -> aiohttp.web.Response:
                     body=phrase.esc(body_text),
                 ),
             )
+        elif event == "issues" and action == "pinned":
+            logger.info(f"Закреплён топик! Репо {repo_name}")
+            issue = data["issue"]
+            await send(
+                phrase.github.issue_pinned.format(
+                    issue=phrase.esc(issue["title"]),
+                    url=phrase.href(issue["html_url"]),
+                ),
+            )
+        elif event == "issues" and action == "unpinned":
+            logger.info(f"Откреплён топик! Репо {repo_name}")
+            issue = data["issue"]
+            await send(
+                phrase.github.issue_unpinned.format(
+                    issue=phrase.esc(issue["title"]),
+                    url=phrase.href(issue["html_url"]),
+                ),
+            )
         return aiohttp.web.Response(text="ok")
     except (orjson.JSONDecodeError, KeyError, TypeError, AttributeError) as e:
         logger.warning(f"Невалидный payload от GitHub: {e}")
