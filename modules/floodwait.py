@@ -37,6 +37,8 @@ class FloodWaitBase:
         return round(wait_time)  # Возвращаем флудвайт, с уч. будущего
 
 
-WaitCasino = FloodWaitBase("WaitCasino", config.cfg.Flood.Casino, exit_multiplier=1)
+WaitCasino = FloodWaitBase(
+    "WaitCasino", config.cfg.Flood.Casino, exit_multiplier=1
+)
 WaitPic = FloodWaitBase("WaitPic", config.cfg.Flood.Pic, exit_multiplier=1)
 WaitAI = FloodWaitBase("WaitAI", config.cfg.Flood.AI, exit_multiplier=1)
