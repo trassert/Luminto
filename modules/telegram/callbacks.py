@@ -453,6 +453,8 @@ async def shop_callback(event: events.CallbackQuery.Event):
     nick = await nicks.get_byid(sender_id)
     if nick is None:
         return await event.answer(phrase.nick.not_append, alert=True)
+    if not formatter.is_valid_mc_nick(nick):
+        return await event.answer(phrase.nick.invalid, alert=True)
 
     shop_data = await shop.get()
     del shop_data["theme"]
