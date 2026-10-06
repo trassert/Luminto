@@ -392,7 +392,8 @@ async def nick_callback(event: events.CallbackQuery.Event):
         return await event.answer(phrase.not_for_you)
 
     old_nick = await nicks.get_byid(sender_id)
-    if old_nick == data[1]:
+    new_nick = formatter.is_valid_mc_nick(data[1])
+    if old_nick == new_nick:
         return await event.answer(phrase.nick.already_you, alert=True)
 
     balance_check = await _check_and_deduct_balance(
@@ -405,12 +406,12 @@ async def nick_callback(event: events.CallbackQuery.Event):
     try:
         async with mcrcon.Vanilla as rcon:
             await rcon.send(f"nwl remove name {old_nick}")
-            await rcon.send(f"nwl add name {data[1]}")
+            await rcon.send(f"nwl add name {new_nick}")
     except Exception:
         logger.error("Внутренняя ошибка при управлении белым списком")
         return await event.answer(phrase.nick.error, alert=True)
 
-    await nicks.link(sender_id, data[1])
+    await nicks.link(sender_id, new_nick)
     user_name = await func.get_name(sender_id)
     return await event.reply(
         phrase.nick.buy_nick.format(
