@@ -39,22 +39,10 @@ def value_to_str(number, noun) -> str:
     return f"{number} {word}"
 
 
-def rm_badtext(text):
-    text = re.sub(r"\\boxed\{.*?\}", "", text)
-    return text.replace("$", "**").replace(
-        "\\cdot",
-        "×",
-    )  # ! Экранизация необходима
-
-
 def rm_colors(text):
     """Удаляет из текста все вхождения "§n", где n - цифра или буква."""
     pattern = r"§[a-zA-Z0-9]"
     return re.sub(pattern, "", text)
-
-
-def splitter(text, chunk_size=4096):
-    return [text[i : i + chunk_size] for i in range(0, len(text), chunk_size)]
 
 
 def check_zalgo(text):
