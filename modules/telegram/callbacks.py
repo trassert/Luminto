@@ -392,7 +392,9 @@ async def nick_callback(event: events.CallbackQuery.Event):
         return await event.answer(phrase.not_for_you)
 
     old_nick = await nicks.get_byid(sender_id)
-    new_nick = formatter.is_valid_mc_nick(data[1])
+    if not formatter.is_valid_mc_nick(data[1]):
+        return await event.answer(phrase.nick.invalid, alert=True)
+    new_nick = data[1]
     if old_nick == new_nick:
         return await event.answer(phrase.nick.already_you, alert=True)
 
