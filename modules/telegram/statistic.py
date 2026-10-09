@@ -113,7 +113,7 @@ async def server_top_list(event: Message):
                 for i in range(1, n + 1)
             ]
         return await event.reply("\n".join(text))
-    except TimeoutError:
+    except TimeoutError, ConnectionRefusedError:
         return await event.reply(phrase.server.stopped, silent=True)
 
 
