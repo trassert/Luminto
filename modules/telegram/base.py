@@ -138,6 +138,8 @@ async def profile(event: Message) -> Message:
 
     if state_author := await states_helper.if_author(user_id):
         state_info = f"**{state_author}, Глава**"
+    elif state_deputy := await states_helper.if_deputy(user_id):
+        state_info = f"**{state_deputy}, Заместитель**"
     else:
         state_info = (
             await states_helper.if_player(user_id)

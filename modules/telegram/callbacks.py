@@ -251,8 +251,8 @@ async def state_callback(event: events.CallbackQuery.Event):
             if await states_helper.exists(new_name):
                 return await event.answer(phrase.state.already_here, alert=True)
 
-            state_name = await states_helper.if_author(sender_id)
-            if state_name is False:
+            state_name = await states_helper.if_manager(sender_id)
+            if not state_name:
                 return await event.answer(phrase.state.not_a_author, alert=True)
 
             balance_check = await _check_and_deduct_balance(
@@ -304,6 +304,7 @@ async def state_callback(event: events.CallbackQuery.Event):
                 )
 
             await state.change("author", new_leader_id)
+            await state.change("deputy", None)
             await event.answer(
                 phrase.state.transfer_ok.format(
                     new_leader=await nicks.get_byid(new_leader_id),

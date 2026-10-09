@@ -138,7 +138,7 @@ async def state_make_empty(event: Message) -> Message:
 
 @func.new_command(r"/г налог(.*)")
 async def state_tax(event: Message) -> Message:
-    state_name = await states_helper.if_author(event.sender_id)
+    state_name = await states_helper.if_manager(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
 
@@ -163,7 +163,7 @@ async def state_tax(event: Message) -> Message:
     ],
 )
 async def state_collecttax(event: Message) -> Message:
-    state_name = await states_helper.if_author(event.sender_id)
+    state_name = await states_helper.if_manager(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
 
@@ -200,7 +200,7 @@ async def state_collecttax(event: Message) -> Message:
 
 @func.new_command(r"/г неуплата(.*)")
 async def state_tax_nonpayment(event: Message) -> Message:
-    state_name = await states_helper.if_author(event.sender_id)
+    state_name = await states_helper.if_manager(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
 
@@ -229,7 +229,7 @@ async def state_tax_nonpayment(event: Message) -> Message:
 
 @func.new_command(r"/г периодналогов(.*)")
 async def state_tax_period(event: Message) -> Message:
-    state_name = await states_helper.if_author(event.sender_id)
+    state_name = await states_helper.if_manager(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
 
@@ -355,6 +355,9 @@ async def state_get(event: Message):
             name=state.name,
             money=formatter.value_to_str(int(state.money), phrase.currency),
             author=await nicks.get_byid(state.author),
+            deputy=(
+                await nicks.get_byid(state.deputy) if state.deputy else "Нет"
+            ),
             enter=enter_val,
             tax=tax_val,
             period=period_val,
@@ -384,12 +387,40 @@ async def state_get(event: Message):
     ],
 )
 async def state_leave(event: Message) -> Message:
+    if state_name := await states_helper.if_author(event.sender_id):
+        state = await states_helper.State(state_name)
+        deputy = state.deputy
+        if not deputy:
+            return await event.reply(phrase.state.leave_no_deputy)
+
+        players = list(state.players)
+        if deputy in players:
+            players.remove(deputy)
+        await state.change("players", players)
+        await state.change("author", deputy)
+        await state.change("deputy", None)
+
+        name_cap = state.name.capitalize()
+        await client.send_message(
+            entity=config.chats.chat,
+            message=phrase.state.transfer_rp.format(
+                state=name_cap,
+                new_leader=await nicks.get_byid(deputy),
+            ),
+            reply_to=config.chats.topics.rp,
+        )
+
+        await _check_and_update_tier(state, len(players), name_cap)
+        return await event.reply(phrase.state.leave)
+
     state_name = await states_helper.if_player(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_member)
 
     state = await states_helper.State(state_name)
     state.players.remove(event.sender_id)
+    if state.deputy == event.sender_id:
+        await state.change("deputy", None)
     await state.change("players", state.players)
 
     name_cap = state.name.capitalize()
@@ -443,7 +474,7 @@ async def state_rem(event: Message) -> Message:
     ],
 )
 async def state_desc(event: Message) -> Message:
-    state_name = await states_helper.if_author(event.sender_id)
+    state_name = await states_helper.if_manager(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
 
@@ -459,7 +490,7 @@ async def state_desc(event: Message) -> Message:
 
 @func.new_command([r"/г корды\s(.+)", r"/г координаты\s(.+)"])
 async def state_coords(event: Message) -> Message:
-    state_name = await states_helper.if_author(event.sender_id)
+    state_name = await states_helper.if_manager(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
 
@@ -475,7 +506,7 @@ async def state_coords(event: Message) -> Message:
 
 @func.new_command([r"/г входы\s(.+)", r"/г вступления\s(.+)"])
 async def state_enter_arg(event: Message) -> Message:
-    state_name = await states_helper.if_author(event.sender_id)
+    state_name = await states_helper.if_manager(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
 
@@ -566,7 +597,7 @@ async def state_add_money(event: Message) -> Message:
     ],
 )
 async def state_rem_money(event: Message) -> Message:
-    state_name = await states_helper.if_author(event.sender_id)
+    state_name = await states_helper.if_manager(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
 
@@ -604,7 +635,7 @@ async def state_rem_money(event: Message) -> Message:
     ],
 )
 async def state_kick_user(event: Message) -> Message:
-    state_name = await states_helper.if_author(event.sender_id)
+    state_name = await states_helper.if_manager(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
 
@@ -624,6 +655,8 @@ async def state_kick_user(event: Message) -> Message:
         return await event.reply(phrase.state.player_not_in)
 
     state.players.remove(user_id)
+    if state.deputy == user_id:
+        await state.change("deputy", None)
     await state.change("players", state.players)
 
     target_name = await func.get_name(user_id, minecraft=True)
@@ -651,7 +684,7 @@ async def state_kick_user(event: Message) -> Message:
     ],
 )
 async def state_rename(event: Message) -> Message:
-    state_name = await states_helper.if_author(event.sender_id)
+    state_name = await states_helper.if_manager(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
 
@@ -675,7 +708,7 @@ async def state_rename(event: Message) -> Message:
 
 @func.new_command([r"/г pic$", r"/г картинка$", r"/г фото$"])
 async def state_pic(event: Message) -> Message:
-    state_name = await states_helper.if_author(event.sender_id)
+    state_name = await states_helper.if_manager(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
     if not event.photo:
@@ -815,9 +848,85 @@ async def state_transfer(event: Message) -> Message:
     )
 
 
+@func.new_command(
+    [
+        r"/назначить зама(.*)",
+        r"/г назначить зама(.*)",
+        r"/назначить заместителя(.*)",
+        r"/г назначить заместителя(.*)",
+    ],
+)
+async def state_deputy_set(event: Message) -> Message:
+    state_name = await states_helper.if_author(event.sender_id)
+    if not state_name:
+        return await event.reply(phrase.state.not_a_author)
+
+    try:
+        user_id = await func.get_id(event.pattern_match.group(1).strip())
+    except Exception:
+        msg_id = func.get_reply_message_id(event)
+        if not msg_id:
+            return await event.reply(phrase.state.deputy_no_player)
+        user_id = await func.get_author_by_msgid(event.chat_id, msg_id)
+
+    if user_id is None:
+        return await event.reply(phrase.state.deputy_no_player)
+    if user_id == event.sender_id:
+        return await event.reply(phrase.state.deputy_self)
+
+    state = await states_helper.State(state_name)
+    if user_id not in state.players:
+        return await event.reply(phrase.state.deputy_not_member)
+    if state.deputy == user_id:
+        return await event.reply(phrase.state.deputy_already)
+
+    await state.change("deputy", user_id)
+    return await event.reply(
+        phrase.state.deputy_set.format(
+            player=await func.get_name(user_id, minecraft=True) or user_id,
+        ),
+    )
+
+
+@func.new_command(
+    [
+        r"/убрать зама(.*)",
+        r"/г убрать зама(.*)",
+        r"/убрать заместителя(.*)",
+        r"/г убрать заместителя(.*)",
+    ],
+)
+async def state_deputy_remove(event: Message) -> Message:
+    state_name = await states_helper.if_author(event.sender_id)
+    if not state_name:
+        return await event.reply(phrase.state.not_a_author)
+
+    try:
+        user_id = await func.get_id(event.pattern_match.group(1).strip())
+    except Exception:
+        msg_id = func.get_reply_message_id(event)
+        if not msg_id:
+            return await event.reply(phrase.state.deputy_no_player)
+        user_id = await func.get_author_by_msgid(event.chat_id, msg_id)
+
+    if user_id is None:
+        return await event.reply(phrase.state.deputy_no_player)
+
+    state = await states_helper.State(state_name)
+    if state.deputy != user_id:
+        return await event.reply(phrase.state.deputy_none)
+
+    await state.change("deputy", None)
+    return await event.reply(
+        phrase.state.deputy_remove.format(
+            player=await func.get_name(user_id, minecraft=True) or user_id,
+        ),
+    )
+
+
 @func.new_command([r"/г запретить въезд(.*)"])
 async def state_ban_enter(event: Message) -> Message:
-    state_name = await states_helper.if_author(event.sender_id)
+    state_name = await states_helper.if_manager(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
 
@@ -841,6 +950,8 @@ async def state_ban_enter(event: Message) -> Message:
         return await event.reply(phrase.state.ban_enter_not_connected)
 
     state = await states_helper.State(state_name)
+    if user_id == state.author:
+        return await event.reply(phrase.state.ban_enter_leader)
     banned = list(state.banned)
     if user_id in banned:
         return await event.reply(phrase.state.ban_enter_already)
@@ -849,6 +960,8 @@ async def state_ban_enter(event: Message) -> Message:
     if user_id in state.players:
         players = list(state.players)
         players.remove(user_id)
+        if state.deputy == user_id:
+            await state.change("deputy", None)
         await state.change("players", players)
 
         kick_name = await func.get_name(user_id, minecraft=True) or str(user_id)
@@ -874,7 +987,7 @@ async def state_ban_enter(event: Message) -> Message:
 
 @func.new_command([r"/г разрешить въезд(.*)"])
 async def state_unban_enter(event: Message) -> Message:
-    state_name = await states_helper.if_author(event.sender_id)
+    state_name = await states_helper.if_manager(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
 
@@ -909,7 +1022,7 @@ async def state_unban_enter(event: Message) -> Message:
 
 @func.new_command([r"/г банлист$"])
 async def state_ban_list(event: Message) -> Message:
-    state_name = await states_helper.if_author(event.sender_id)
+    state_name = await states_helper.if_manager(event.sender_id)
     if not state_name:
         return await event.reply(phrase.state.not_a_author)
 

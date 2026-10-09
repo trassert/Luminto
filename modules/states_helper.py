@@ -39,6 +39,7 @@ class State:
         self._data.setdefault("recognition_votes", [])
         self._data.setdefault("recognition_pending", s.RecognitionPending)
         self._data.setdefault("banned", [])
+        self._data.setdefault("deputy", None)
         return self
 
     def __getattr__(self, key):
@@ -73,7 +74,10 @@ class State:
         if tax <= 0:
             return {"kicked": [], "payed": [], "collected": 0}
         payed, nonpayed, collected = [], [], 0
+        deputy = self.deputy
         for pid in list(self.players):
+            if pid == deputy:
+                continue
             if int(await db.get_money(pid) or 0) < tax:
                 nonpayed.append(pid)
             else:
@@ -131,6 +135,7 @@ async def add(state_name: str, author: int) -> bool:
             "tax_nonpayment": s.DefaultTaxNonpayment,
             "tax_last_date": today,
             "banned": [],
+            "deputy": None,
         },
     )
     logger.info(f"Государство создано: {state_name}")
@@ -168,6 +173,17 @@ async def if_author(player_id: int) -> str | None:
         if data.get("author") == player_id:
             return name
     return None
+
+
+async def if_deputy(player_id: int) -> str | None:
+    async for name, data in iter_states():
+        if data.get("deputy") == player_id:
+            return name
+    return None
+
+
+async def if_manager(player_id: int) -> str | None:
+    return await if_author(player_id) or await if_deputy(player_id)
 
 
 async def if_player(player_id: int) -> str | None:
