@@ -313,16 +313,14 @@ async def swap_money(event: Message) -> Message:
     if amount <= 0:
         return await event.reply(phrase.money.negative_count)
 
-    current_balance = await db.get_money(sender_id)
-    if current_balance < amount:
+    if not await db.transfer_money(sender_id, recipient_id, amount):
+        current_balance = await db.get_money(sender_id)
         return await event.reply(
             phrase.money.not_enough.format(
                 formatter.value_to_str(current_balance, phrase.currency),
             ),
         )
 
-    await db.add_money(sender_id, -amount)
-    await db.add_money(recipient_id, amount)
     return await event.reply(
         phrase.money.swap_money.format(
             formatter.value_to_str(amount, phrase.currency)
@@ -367,19 +365,23 @@ async def money_to_server(event: Message) -> Message:
             ),
         )
 
-    balance = await db.get_money(user_id)
-    if balance < amount:
+    if not await db.try_deduct_money(user_id, amount):
         await db.rollback_withdraw_limit(user_id, amount)
+        balance = await db.get_money(user_id)
         return await event.reply(
             phrase.money.not_enough.format(
                 formatter.value_to_str(balance, phrase.currency)
             ),
         )
 
-    await db.add_money(user_id, -amount)
     try:
         async with mcrcon.Vanilla as rcon:
             await rcon.send(f"invgive {nick} amethyst_shard {amount}")
+    except mcrcon.SentButUnconfirmed as e:
+        logger.error(
+            f"RCON: команда выдачи могла выполниться, автовозврат отменён: {e}"
+        )
+        return await event.reply(phrase.bank.uncertain)
     except Exception as e:
         logger.error(f"RCON Error during withdraw: {e}")
         await db.add_money(user_id, amount)

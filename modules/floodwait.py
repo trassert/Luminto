@@ -42,3 +42,6 @@ WaitCasino = FloodWaitBase(
 )
 WaitPic = FloodWaitBase("WaitPic", config.cfg.Flood.Pic, exit_multiplier=1)
 WaitAI = FloodWaitBase("WaitAI", config.cfg.Flood.AI, exit_multiplier=1)
+WaitTicket = FloodWaitBase(
+    "WaitTicket", config.cfg.Flood.Tickets, exit_multiplier=1
+)

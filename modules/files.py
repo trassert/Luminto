@@ -1,5 +1,7 @@
 import asyncio
+from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 import aiofiles
 import anyio
@@ -95,6 +97,35 @@ async def remove_file_async(filepath: Path):
         return False
     await anyio.Path(filepath).unlink()
     return True
+
+
+async def update_json_async(
+    filepath: Path,
+    updater: Callable[[dict], Any],
+    sort_keys: bool = False,
+    indent: bool = False,
+) -> Any:
+    """Атомарно читает, изменяет и сохраняет JSON под единым локом.
+
+    `updater` получает загруженный dict и должен изменить его на месте.
+    Возвращаемое `updater` значение возвращается наружу. Лок держится на
+    протяжении всего чтения-изменения-записи, что исключает гонки (lost
+    update / дюп) при одновременных вызовах.
+    """
+    lock = await get_lock(filepath)
+    options = orjson_options(sort_keys=sort_keys, indent=indent)
+    async with lock:
+        try:
+            async with aiofiles.open(filepath, "rb") as f:
+                data = orjson.loads(await f.read())
+        except FileNotFoundError:
+            data = {}
+        result = updater(data)
+        ensure_parent(filepath)
+        dump = orjson.dumps(data, option=options)
+        async with aiofiles.open(filepath, "wb") as f:
+            await f.write(dump)
+        return result
 
 
 async def append_text_async(filepath: Path, text: str):

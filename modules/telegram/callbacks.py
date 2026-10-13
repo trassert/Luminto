@@ -32,15 +32,14 @@ async def _check_and_deduct_balance(
     price: int,
     currency: str = phrase.currency,
 ) -> bool | str:
-    """Проверяет баланс и списывает сумму при успехе.
+    """Атомарно проверяет баланс и списывает сумму при успехе.
     Возвращает True или сообщение об ошибке."""
+    if await db.try_deduct_money(user_id, price):
+        return True
     balance = await db.get_money(user_id)
-    if balance < price:
-        return phrase.money.not_enough.format(
-            formatter.value_to_str(balance, currency),
-        )
-    await db.add_money(user_id, -price)
-    return True
+    return phrase.money.not_enough.format(
+        formatter.value_to_str(balance, currency),
+    )
 
 
 def _ensure_owner(sender_id: int, expected_id: int | str) -> bool:

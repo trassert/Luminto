@@ -571,16 +571,15 @@ async def state_add_money(event: Message) -> Message:
 
     if amount < 1:
         return await event.reply(phrase.money.negative_count)
-    if amount > balance:
+    if not await db.try_deduct_money(event.sender_id, amount):
+        balance = await db.get_money(event.sender_id)
         return await event.reply(
             phrase.money.not_enough.format(
                 formatter.value_to_str(balance, phrase.currency)
             ),
         )
 
-    await db.add_money(event.sender_id, -amount)
-    state = await states_helper.State(state_name)
-    await state.change("money", state.money + amount)
+    await states_helper.add_treasury(state_name, amount)
     return await event.reply(
         phrase.state.add_treasury.format(
             formatter.value_to_str(amount, phrase.currency)
@@ -613,10 +612,9 @@ async def state_rem_money(event: Message) -> Message:
 
     if amount < 1:
         return await event.reply(phrase.money.negative_count)
-    if state.money < amount:
+    if await states_helper.withdraw_treasury(state_name, amount) is None:
         return await event.reply(phrase.state.too_low)
 
-    await state.change("money", state.money - amount)
     await db.add_money(event.sender_id, amount)
     return await event.reply(
         phrase.state.rem_treasury.format(

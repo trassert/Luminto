@@ -30,13 +30,57 @@ async def add_money(id: int, count: int):
     Атомарное изменение баланса.
     """
     id_str = str(id)
-    data = await files.load_json_async(pathes.money)
-    old = data.get(id_str, 0)
-    new_val = max(old + count, 0)
-    data[id_str] = new_val
-    await files.save_json_async(pathes.money, data, indent=True)
-    logger.info(f"Изменён баланс {id} ({old} -> {new_val})")
+
+    def _updater(data: dict) -> int:
+        old = data.get(id_str, 0)
+        new_val = max(old + count, 0)
+        data[id_str] = new_val
+        return new_val
+
+    new_val = await files.update_json_async(pathes.money, _updater, indent=True)
+    logger.info(f"Изменён баланс {id} -> {new_val}")
     return new_val
+
+
+async def try_deduct_money(id: int, count: int) -> bool:
+    """
+    Атомарно проверяет и списывает сумму.
+    Возвращает True, если баланса хватило, иначе False.
+    """
+    id_str = str(id)
+
+    def _updater(data: dict) -> bool:
+        old = data.get(id_str, 0)
+        if old < count:
+            return False
+        data[id_str] = old - count
+        return True
+
+    success = await files.update_json_async(pathes.money, _updater, indent=True)
+    if success:
+        logger.info(f"Списан баланс {id} на {count}")
+    return success
+
+
+async def transfer_money(sender: int, recipient: int, amount: int) -> bool:
+    """
+    Атомарно переводит сумму между двумя счетами.
+    Возвращает True, если на счёте отправителя хватило средств.
+    """
+    sender_str, recipient_str = str(sender), str(recipient)
+
+    def _updater(data: dict) -> bool:
+        sender_balance = data.get(sender_str, 0)
+        if sender_balance < amount:
+            return False
+        data[sender_str] = sender_balance - amount
+        data[recipient_str] = data.get(recipient_str, 0) + amount
+        return True
+
+    success = await files.update_json_async(pathes.money, _updater, indent=True)
+    if success:
+        logger.info(f"Перевод {amount}: {sender} -> {recipient}")
+    return success
 
 
 async def check_and_update_withdraw_limit(
@@ -47,39 +91,37 @@ async def check_and_update_withdraw_limit(
     Атомарная проверка и обновление day-limit.
     """
     id_str = str(id)
-    today = datetime.now().date()
-    data = await files.load_json_async(pathes.wdraw)
-    already_withdrawn = 0
-    record_date = None
-    if id_str in data:
-        try:
-            record_date = datetime.strptime(
-                data[id_str]["date"],
-                "%Y-%m-%d",
-            ).date()
-            already_withdrawn = data[id_str].get("withdrawn", 0)
-        except KeyError, ValueError:
-            record_date = None
-    if record_date != today:
-        data[id_str] = {"date": today.isoformat(), "withdrawn": amount}
-        await files.save_json_async(pathes.wdraw, data, indent=True)
-        return True, 64 - amount
-    remaining = 64 - already_withdrawn
-    if amount > remaining:
-        return False, remaining
-    data[id_str]["withdrawn"] = already_withdrawn + amount
-    await files.save_json_async(pathes.wdraw, data, indent=True)
-    return True, remaining
+    today = datetime.now().date().isoformat()
+    limit = config.cfg.WithdrawDailyLimit
+
+    def _updater(data: dict) -> tuple[bool, int]:
+        record = data.get(id_str)
+        already_withdrawn = 0
+        if isinstance(record, dict) and record.get("date") == today:
+            already_withdrawn = record.get("withdrawn", 0)
+        remaining = limit - already_withdrawn
+        if amount > remaining:
+            return False, remaining
+        data[id_str] = {
+            "date": today,
+            "withdrawn": already_withdrawn + amount,
+        }
+        return True, remaining - amount
+
+    return await files.update_json_async(pathes.wdraw, _updater, indent=True)
 
 
 async def rollback_withdraw_limit(id: int, amount: int):
     """Откатывает лимит назад."""
     id_str = str(id)
-    data = await files.load_json_async(pathes.wdraw)
-    if id_str in data:
-        current = data[id_str].get("withdrawn", 0)
-        data[id_str]["withdrawn"] = max(0, current - amount)
-        await files.save_json_async(pathes.wdraw, data, indent=True)
+
+    def _updater(data: dict) -> None:
+        record = data.get(id_str)
+        if isinstance(record, dict):
+            current = record.get("withdrawn", 0)
+            record["withdrawn"] = max(0, current - amount)
+
+    await files.update_json_async(pathes.wdraw, _updater, indent=True)
 
 
 async def ready_to_mine(id: str) -> bool:

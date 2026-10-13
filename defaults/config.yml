@@ -79,6 +79,7 @@ Flood:
   Casino: 10
   Pic: 10
   AI: 30
+  Tickets: 5
 
 Crocodile:
   MaxBet: 5

@@ -199,3 +199,33 @@ async def remove(state_name: str) -> bool:
     except FileNotFoundError:
         return False
     return await state.remove()
+
+
+async def add_treasury(name: str, amount: int) -> int:
+    """Атомарно увеличивает казну государства, возвращая новый баланс."""
+
+    def _updater(data: dict) -> int:
+        data["money"] = int(data.get("money", 0)) + amount
+        return data["money"]
+
+    return await files.update_json_async(
+        _json(name), _updater, sort_keys=True, indent=True
+    )
+
+
+async def withdraw_treasury(name: str, amount: int) -> int | None:
+    """Атомарно снимает сумму из казны.
+
+    Возвращает новый баланс казны, либо None, если средств не хватает.
+    """
+
+    def _updater(data: dict) -> int | None:
+        money = int(data.get("money", 0))
+        if money < amount:
+            return None
+        data["money"] = money - amount
+        return data["money"]
+
+    return await files.update_json_async(
+        _json(name), _updater, sort_keys=True, indent=True
+    )

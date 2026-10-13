@@ -19,6 +19,9 @@ Cities = db.CitiesGame()
 CitiesTimerTask: asyncio.Task | None = None
 CrocodileGame = db.CrocodileGame()
 
+_cities_lock = asyncio.Lock()
+_crocodile_lock = asyncio.Lock()
+
 
 def _check_topic(event: Message) -> bool:
     """Проверяет, находится ли сообщение в игровом топике."""
@@ -121,55 +124,65 @@ async def crocodile_handler(event: Message):
         return None
 
     text = event.text.strip().lower()
-    game_data = CrocodileGame.get_current()
-    if not game_data:
-        return None
+    win_word: str | None = None
+    win_msg = ""
+    mask_result: str | None = None
 
-    current_word = game_data["word"]
-    if text == current_word:
-        bets = CrocodileGame.get_bets()
-        top_players = list((await crocostat.get_all()).keys())[
-            : config.cfg.TopLowerBets
-        ]
+    async with _crocodile_lock:
+        game_data = CrocodileGame.get_current()
+        if not game_data:
+            return None
 
-        total_payout = sum(
-            round(
-                bet_val
-                * (
-                    config.cfg.TopBets
-                    if uid in top_players
-                    else config.cfg.CrocodileBetCoo
+        current_word = game_data["word"]
+        if text == current_word:
+            bets = CrocodileGame.get_bets()
+            top_players = list((await crocostat.get_all()).keys())[
+                : config.cfg.TopLowerBets
+            ]
+
+            total_payout = sum(
+                round(
+                    bet_val
+                    * (
+                        config.cfg.TopBets
+                        if uid in top_players
+                        else config.cfg.CrocodileBetCoo
+                    )
                 )
-            )
-            if str(event.sender_id) == uid
-            else bet_val
-            for uid, bet_val in bets.items()
-        )
-
-        win_msg = ""
-        if total_payout > 0:
-            await db.add_money(event.sender_id, total_payout)
-            win_msg = phrase.crocodile.bet_win.format(
-                formatter.value_to_str(total_payout, phrase.currency)
+                if str(event.sender_id) == uid
+                else bet_val
+                for uid, bet_val in bets.items()
             )
 
-        await CrocodileGame.stop_game()
-        await CrocodileGame.set_last_hint(0)
-        client.remove_event_handler(crocodile_hint)
-        client.remove_event_handler(crocodile_handler)
-        await crocostat.add(event.sender_id)
+            if total_payout > 0:
+                await db.add_money(event.sender_id, total_payout)
+                win_msg = phrase.crocodile.bet_win.format(
+                    formatter.value_to_str(total_payout, phrase.currency)
+                )
+
+            await CrocodileGame.stop_game()
+            await CrocodileGame.set_last_hint(0)
+            client.remove_event_handler(crocodile_hint)
+            client.remove_event_handler(crocodile_handler)
+            await crocostat.add(event.sender_id)
+            win_word = current_word
+        elif not text.startswith("/"):
+            (
+                changed,
+                new_mask_str,
+                _finished,
+            ) = await CrocodileGame.reveal_on_guess(text)
+            if changed:
+                mask_result = new_mask_str
+
+    if win_word is not None:
         return await event.reply(
-            phrase.crocodile.win.format(current_word) + win_msg
+            phrase.crocodile.win.format(win_word) + win_msg
         )
-
-    if not text.startswith("/"):
-        changed, new_mask_str, _finished = await CrocodileGame.reveal_on_guess(
-            text
+    if mask_result is not None:
+        return await event.reply(
+            phrase.crocodile.new.format(mask_result.replace("_", ".."))
         )
-        if changed:
-            return await event.reply(
-                phrase.crocodile.new.format(new_mask_str.replace("_", ".."))
-            )
     return None
 
 
@@ -346,66 +359,77 @@ async def cities_answer(event: Message):
 async def cities_callback(event: events.CallbackQuery.Event):
     action = event.data.decode().split(".")[1]
 
-    if action == "join":
-        if Cities.get_game_status():
-            return await event.answer(phrase.cities.already_started, alert=True)
-        if event.sender_id in Cities.get_players():
-            return await event.answer(phrase.cities.already_ingame, alert=True)
+    async with _cities_lock:
+        if action == "join":
+            if Cities.get_game_status():
+                return await event.answer(
+                    phrase.cities.already_started, alert=True
+                )
+            if event.sender_id in Cities.get_players():
+                return await event.answer(
+                    phrase.cities.already_ingame, alert=True
+                )
 
-        balance = await db.get_money(event.sender_id)
-        if balance < config.cfg.PriceForCities:
-            return await event.answer(
-                phrase.money.not_enough.format(
-                    formatter.value_to_str(balance, phrase.currency)
+            if not await db.try_deduct_money(
+                event.sender_id, config.cfg.PriceForCities
+            ):
+                balance = await db.get_money(event.sender_id)
+                return await event.answer(
+                    phrase.money.not_enough.format(
+                        formatter.value_to_str(balance, phrase.currency)
+                    )
+                )
+            Cities.add_player(event.sender_id)
+
+            names = [await func.get_name(pid) for pid in Cities.get_players()]
+            await event.edit(
+                phrase.cities.start.format(", ".join(names)),
+                buttons=[
+                    [Button.inline("➕ Присоединиться", "cities.join")],
+                    [Button.inline("🎮 Начать игру", "cities.start")],
+                    [Button.inline("❌ Отменить", "cities.cancel")],
+                ],
+            )
+            return await event.answer(phrase.cities.set_ingame)
+
+        if action == "start":
+            if Cities.get_game_status():
+                return await event.answer(
+                    phrase.cities.already_started, alert=True
+                )
+            if len(Cities.get_players()) < 2:
+                return await event.answer(phrase.cities.low_players, alert=True)
+
+            Cities.start_game()
+            curr = Cities.who_answer()
+            global CitiesTimerTask
+            if CitiesTimerTask:
+                CitiesTimerTask.cancel()
+            CitiesTimerTask = asyncio.create_task(
+                cities_timeout(curr, Cities.get_last_city())
+            )
+            return await event.edit(
+                phrase.cities.game_started.format(
+                    Cities.get_last_city().title(), await func.get_name(curr)
                 )
             )
 
-        await db.add_money(event.sender_id, -config.cfg.PriceForCities)
-        Cities.add_player(event.sender_id)
-
-        names = [await func.get_name(pid) for pid in Cities.get_players()]
-        await event.edit(
-            phrase.cities.start.format(", ".join(names)),
-            buttons=[
-                [Button.inline("➕ Присоединиться", "cities.join")],
-                [Button.inline("🎮 Начать игру", "cities.start")],
-                [Button.inline("❌ Отменить", "cities.cancel")],
-            ],
-        )
-        return await event.answer(phrase.cities.set_ingame)
-
-    if action == "start":
-        if Cities.get_game_status():
-            return await event.answer(phrase.cities.already_started, alert=True)
-        if len(Cities.get_players()) < 2:
-            return await event.answer(phrase.cities.low_players, alert=True)
-
-        Cities.start_game()
-        curr = Cities.who_answer()
-        global CitiesTimerTask
-        if CitiesTimerTask:
-            CitiesTimerTask.cancel()
-        CitiesTimerTask = asyncio.create_task(
-            cities_timeout(curr, Cities.get_last_city())
-        )
-        return await event.edit(
-            phrase.cities.game_started.format(
-                Cities.get_last_city().title(), await func.get_name(curr)
-            )
-        )
-
-    if action == "cancel":
-        if event.sender_id not in Cities.get_players():
-            return await event.answer(phrase.cities.not_in_players, alert=True)
-        if Cities.get_game_status():
-            return await event.answer(phrase.cities.already_started, alert=True)
-        for pid in Cities.get_players():
-            await db.add_money(pid, config.cfg.PriceForCities)
-        if CitiesTimerTask:
-            CitiesTimerTask.cancel()
-        Cities.end_game()
-        return await event.edit("❌ Игра отменена.")
-    return None
+        if action == "cancel":
+            if event.sender_id not in Cities.get_players():
+                return await event.answer(
+                    phrase.cities.not_in_players, alert=True
+                )
+            if Cities.get_game_status():
+                return await event.answer(
+                    phrase.cities.already_started, alert=True
+                )
+            for pid in list(Cities.get_players()):
+                await db.add_money(pid, config.cfg.PriceForCities)
+            if CitiesTimerTask:
+                CitiesTimerTask.cancel()
+            Cities.end_game()
+            return await event.edit("❌ Игра отменена.")
+        return None
 
 
 @func.new_command(

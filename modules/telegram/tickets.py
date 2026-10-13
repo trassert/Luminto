@@ -1,8 +1,9 @@
+import asyncio
 from typing import TYPE_CHECKING
 
 from loguru import logger
 
-from .. import db, formatter, phrase, tickets
+from .. import db, floodwait, formatter, phrase, tickets
 from . import func
 
 if TYPE_CHECKING:
@@ -55,11 +56,17 @@ async def get_ticket(event: Message):
     arg = event.pattern_match.group(1).strip()
     if arg == "":
         return await event.reply(phrase.ticket.no_value)
-    ticket_info = await tickets.get(arg)
+
+    wait = floodwait.WaitTicket.request()
+    if wait is False:
+        return await event.reply(phrase.ticket.floodwait)
+    if wait:
+        await asyncio.sleep(wait)
+
+    ticket_info = await tickets.pop(arg)
     if ticket_info is None:
         return await event.reply(phrase.ticket.no_such)
     await db.add_money(event.sender_id, ticket_info["value"])
-    await tickets.delete(arg)
     return await event.reply(
         phrase.ticket.got.format(
             author=await func.get_name(ticket_info["author"]),

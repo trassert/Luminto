@@ -17,6 +17,13 @@ class InvalidPassword(Exception):
     pass
 
 
+class SentButUnconfirmed(ClientError):
+    """Команда отправлена, но подтверждение не получено.
+
+    Результат неизвестен — автоматический откат может привести к дюпу.
+    """
+
+
 class MinecraftClient:
     def __init__(self, host: str, port: int, password) -> None:
         self.host = host
@@ -88,26 +95,8 @@ class MinecraftClient:
             data += packet
         return data
 
-    async def _send_internal(self, message_type, message):
-        if not self._writer or self._writer.is_closing():
-            msg = "Writer is not available or connection is closed."
-            raise ClientError(msg)
-
-        packet_id = 0
-        body = (
-            struct.pack("<ii", packet_id, message_type)
-            + message.encode("utf8")
-            + b"\x00\x00"
-        )
-        body_length = len(body)
-
-        self._writer.write(struct.pack("<i", body_length) + body)
-        await self._writer.drain()
-
-        in_length_data = await self._read_data(4)
-        in_length = struct.unpack("<i", in_length_data)[0]
-        in_payload = await self._read_data(in_length)
-
+    @staticmethod
+    def _parse_response(in_payload: bytes) -> str:
         if len(in_payload) < 8:
             msg = "Uncorrect response from server: payload too short."
             raise ClientError(msg)
@@ -126,18 +115,44 @@ class MinecraftClient:
 
         return in_data.decode("utf8")
 
-    async def _send(self, message_type, message):
+    async def _send_internal(self, message_type, message, *, is_command=False):
+        if not self._writer or self._writer.is_closing():
+            msg = "Writer is not available or connection is closed."
+            raise ClientError(msg)
 
+        packet_id = 0
+        body = (
+            struct.pack("<ii", packet_id, message_type)
+            + message.encode("utf8")
+            + b"\x00\x00"
+        )
+        body_length = len(body)
+
+        self._writer.write(struct.pack("<i", body_length) + body)
+        try:
+            await self._writer.drain()
+
+            in_length_data = await self._read_data(4)
+            in_length = struct.unpack("<i", in_length_data)[0]
+            in_payload = await self._read_data(in_length)
+
+            return self._parse_response(in_payload)
+        except InvalidPassword:
+            raise
+        except Exception as e:
+            if is_command:
+                raise SentButUnconfirmed(message) from e
+            raise
+
+    async def _send(self, message_type, message, *, is_command=False):
         async with self._lock:
-            if not self._writer or self._writer.is_closing():
-                msg = "Writer is not available or connection is closed."
-                raise ClientError(msg)
-
-            return await self._send_internal(message_type, message)
+            return await self._send_internal(
+                message_type, message, is_command=is_command
+            )
 
     async def send(self, cmd):
         logger.info(f"RCON: {cmd}")
-        return await self._send(2, cmd)
+        return await self._send(2, cmd, is_command=True)
 
 
 Vanilla = MinecraftClient(
