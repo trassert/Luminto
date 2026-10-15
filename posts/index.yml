@@ -1,4 +1,4 @@
-expanded: true
+expanded: false
 label: Посты
 icon: icon-checklist
-order: 0
+order: -2
