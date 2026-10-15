@@ -104,7 +104,12 @@ async def start(event: Message):
         phrase.start.format(await func.get_name(event.sender_id)),
         silent=True,
     )
-    arg = event.pattern_match.group(1).strip().lower()
+    arg = event.pattern_match.group(1).strip()
+    if arg.lower().startswith("nick_"):
+        nick = arg[5:]
+        if nick:
+            await _link_nick(event, nick)
+        return
     if not arg.isdigit():
         return
     referral_id = int(arg)
@@ -442,7 +447,10 @@ async def get_balance(event: Message) -> Message:
     ],
 )
 async def link_nick(event: Message) -> Message:
-    nick = event.pattern_match.group(1).strip()
+    return await _link_nick(event, event.pattern_match.group(1).strip())
+
+
+async def _link_nick(event: Message, nick: str) -> Message:
     if formatter.is_valid_mc_nick(nick) is False:
         return await event.reply(phrase.nick.invalid)
 
