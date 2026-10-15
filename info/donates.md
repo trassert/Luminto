@@ -33,7 +33,7 @@ order: -3
 [!card layout="vertical" title="Префикс" text="Строчка перед ником. Видна в чате, табе и над головой. **Цена: 150** :icon-donate-rub:" target="blank" image="prefix.png"](https://t.me/trassert?text=%D0%A5%D0%BE%D1%87%D1%83%20%D0%BA%D1%83%D0%BF%D0%B8%D1%82%D1%8C%20%D0%BF%D1%80%D0%B5%D1%84%D0%B8%D0%BA%D1%81%20%22%D0%A2%D0%B5%D0%BA%D1%81%D1%82-%D0%BF%D1%80%D0%B5%D1%84%D0%B8%D0%BA%D1%81%D0%B0%22%20%D0%BD%D0%B0%20%D0%BD%D0%B8%D0%BA%20%D0%92%D0%B0%D1%88-%D0%BD%D0%B8%D0%BA)
 [!card layout="vertical" title="Суффикс" text="Строчка после ника. Видна в табе. **Цена: 100** :icon-donate-rub:" target="blank" image="suffix.png"](https://t.me/trassert?text=%D0%A5%D0%BE%D1%87%D1%83%20%D0%BA%D1%83%D0%BF%D0%B8%D1%82%D1%8C%20%D1%81%D1%83%D1%84%D1%84%D0%B8%D0%BA%D1%81%20%22%D0%A2%D0%B5%D0%BA%D1%81%D1%82-%D1%81%D1%83%D1%84%D1%84%D0%B8%D0%BA%D1%81%D0%B0%22%20%D0%BD%D0%B0%20%D0%BD%D0%B8%D0%BA%20%D0%92%D0%B0%D1%88-%D0%BD%D0%B8%D0%BA)
 
-### 👑 Аксессуары
+### 🎩 Аксессуары
 
 !!!
 **Аксессуары с пометкой "🎦" - анимированные.**
@@ -58,3 +58,17 @@ order: -3
 [!card layout="vertical" title="Зелёная шапка" text="**Цена: 50** :icon-donate-rub:" target="blank" image="../acs/greenhat.png"](https://t.me/trassert?text=%D0%A5%D0%BE%D1%87%D1%83%20%D0%BA%D1%83%D0%BF%D0%B8%D1%82%D1%8C%20%D0%B0%D0%BA%D1%81%D0%B5%D1%81%D1%81%D1%83%D0%B0%D1%80%20%22%D0%97%D0%B5%D0%BB%D1%91%D0%BD%D0%B0%D1%8F%20%D1%88%D0%B0%D0%BF%D0%BA%D0%B0%22%20%D0%BD%D0%B0%20%D0%BD%D0%B8%D0%BA%20%D0%92%D0%B0%D1%88-%D0%BD%D0%B8%D0%BA)
 [!card layout="vertical" title="Чёрная кепка" text="**Цена: 50** :icon-donate-rub:" target="blank" image="../acs/hat.png"](https://t.me/trassert?text=%D0%A5%D0%BE%D1%87%D1%83%20%D0%BA%D1%83%D0%BF%D0%B8%D1%82%D1%8C%20%D0%B0%D0%BA%D1%81%D0%B5%D1%81%D1%81%D1%83%D0%B0%D1%80%20%22%D0%A7%D1%91%D1%80%D0%BD%D0%B0%D1%8F%20%D0%BA%D0%B5%D0%BF%D0%BA%D0%B0%22%20%D0%BD%D0%B0%20%D0%BD%D0%B8%D0%BA%20%D0%92%D0%B0%D1%88-%D0%BD%D0%B8%D0%BA)
 [!card layout="vertical" title="Деловая шляпа" text="**Цена: 50** :icon-donate-rub:" target="blank" image="../acs/dohat.png"](https://t.me/trassert?text=%D0%A5%D0%BE%D1%87%D1%83%20%D0%BA%D1%83%D0%BF%D0%B8%D1%82%D1%8C%20%D0%B0%D0%BA%D1%81%D0%B5%D1%81%D1%81%D1%83%D0%B0%D1%80%20%22%D0%94%D0%B5%D0%BB%D0%BE%D0%B2%D0%B0%D1%8F%20%D1%88%D0%BB%D1%8F%D0%BF%D0%B0%22%20%D0%BD%D0%B0%20%D0%BD%D0%B8%D0%BA%20%D0%92%D0%B0%D1%88-%D0%BD%D0%B8%D0%BA)
+
+### 👑 VIP
+
+**Что даёт VIP:**
+- 🔍 Доступ к инспектору (`/co i`)
+- 🏷️ Префикс на сервере
+- 🚀 `/тп` **бесплатно**
+- 🤖 Доступ `/ии` в чате
+- 📝 Управление заметками (`+нот`, `-нот`)
+- 🎨 Цвета и форматирование в наковальне
+- ↩️ Команда `/back`
+- ⭐ Приоритетная поддержка на форуме и в техподдержке
+
+[!card title="VIP" text="**Цена: 100** :icon-donate-rub: / месяц" target="blank" image=vip.png](https://t.me/trassert?text=Хочу%20купить%20VIP)
