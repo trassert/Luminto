@@ -6,7 +6,7 @@ from loguru import logger
 from telethon import events
 from telethon.tl.functions.users import GetFullUserRequest
 
-from .. import nicks, phrase, roles
+from .. import formatter, nicks, phrase, roles
 from .client import client
 
 if TYPE_CHECKING:
@@ -56,6 +56,9 @@ async def get_name(id, push=False, minecraft=False, log=False) -> str | None:
 async def get_id(str: str) -> int:
     if str[-1] == ",":
         str = str[:-1]
+    if not str.startswith("@") and formatter.is_valid_mc_nick(str):
+        if (user_id := await nicks.get_byname(str)) is not None:
+            return user_id
     if bool(re.fullmatch(r"@\d+", str)):
         str = str[1:]
         check = await get_name(str)
@@ -64,13 +67,8 @@ async def get_id(str: str) -> int:
             logger.warning(msg + f" ID: {str}")
             raise ValueError(msg)
         return int(str)
-    try:
-        user = await client(GetFullUserRequest(str))
-        return user.full_user.id
-    except Exception:
-        if (user_id := await nicks.get_byname(str)) is not None:
-            return user_id
-        raise
+    user = await client(GetFullUserRequest(str))
+    return user.full_user.id
 
 
 def get_reply_message_id(event):
