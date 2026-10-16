@@ -57,11 +57,9 @@ async def get_id(str: str) -> int:
     if str[-1] == ",":
         str = str[:-1]
     if (
-        not str.startswith("@")
-    ) and (
-        formatter.is_valid_mc_nick(str)
-    ) and (
-        (user_id := await nicks.get_byname(str)) is not None
+        (not str.startswith("@"))
+        and (formatter.is_valid_mc_nick(str))
+        and ((user_id := await nicks.get_byname(str)) is not None)
     ):
         return user_id
     if bool(re.fullmatch(r"@\d+", str)):
