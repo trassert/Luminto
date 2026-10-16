@@ -10,7 +10,7 @@
 <img src="https://img.shields.io/github/commit-activity/m/trassert/Luminto?color=c78aff&label=commits&style=for-the-badge" alt="Commits">
 </p>
 
-[**Чат сервера**](https://t.me/lumintomc) | [**Канал сервера**](https://t.me/lumintoch) | [**Форум сервера**](https://t.me/lumintoforum)
+[**Чат сервера**](https://t.me/lumintomc) | [**Канал сервера**](https://t.me/lumintoch)
 
 ## Функционал бота
 

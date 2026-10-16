@@ -867,18 +867,6 @@ class rules:
     base = "👮 : **[Правила сервера](https://lumintomc.ru/wiki/rules/list)**"
 
 
-class forum:
-    done_id = 5237699328843200968
-    already_closed = "❌ : Тема уже закрыта!"
-    closed = "✅ : **Тема закрыта.**\nПричина: {reason}"
-    not_author = (
-        "⚠️ : Только автор темы и администратор может использовать эту команду."
-    )
-    topic_no_id = "⚠️ : Не могу получить ID темы."
-    topic_no_name = "⚠️ : Укажите название темы: `+топик Название`"
-    topic_created = "✅ : Тема создана: **[{title}]({link})**"
-
-
 class average:
     no_numbers = "⚠️ : Пожалуйста, введите хотя бы одно число."
     ok = "✅ : Среднее число: **{}**"
