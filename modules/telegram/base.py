@@ -461,20 +461,7 @@ async def _link_nick(event: Message, nick: str) -> Message:
         return await event.reply(phrase.nick.taken)
 
     if current_linked_nick is not None:
-        return await event.reply(
-            phrase.nick.already_have.format(
-                price=formatter.value_to_str(
-                    config.cfg.PriceForChangeNick, phrase.currency
-                ),
-            ),
-            buttons=[
-                [
-                    Button.inline(
-                        "✅ Сменить", f"nick.{nick}.{event.sender_id}".encode()
-                    )
-                ]
-            ],
-        )
+        return await event.reply(phrase.nick.already_have)
 
     try:
         async with mcrcon.Vanilla as rcon:

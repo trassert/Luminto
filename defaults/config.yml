@@ -35,7 +35,6 @@ DescriptionsMaxLen: 300
 DaysToStatesRemove: 7
 
 # Цены
-PriceForChangeNick: 25
 PriceForCasino: 5
 PriceForCities: 5
 PriceForNewState: 25

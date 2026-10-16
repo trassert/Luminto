@@ -383,49 +383,6 @@ async def casino_callback(event: events.CallbackQuery.Event):
     )
 
 
-@func.new_callback("nick")
-async def nick_callback(event: events.CallbackQuery.Event):
-    data = event.data.decode("utf-8").split(".")
-    sender_id = event.sender_id
-
-    if not _ensure_owner(sender_id, data[2]):
-        return await event.answer(phrase.not_for_you)
-
-    old_nick = await nicks.get_byid(sender_id)
-    if not formatter.is_valid_mc_nick(data[1]):
-        return await event.answer(phrase.nick.invalid, alert=True)
-    new_nick = data[1]
-    if old_nick == new_nick:
-        return await event.answer(phrase.nick.already_you, alert=True)
-
-    balance_check = await _check_and_deduct_balance(
-        sender_id,
-        config.cfg.PriceForChangeNick,
-    )
-    if balance_check is not True:
-        return await event.answer(balance_check, alert=True)
-
-    try:
-        async with mcrcon.Vanilla as rcon:
-            await rcon.send(f"nwl remove name {old_nick}")
-            await rcon.send(f"nwl add name {new_nick}")
-    except Exception:
-        logger.error("Внутренняя ошибка при управлении белым списком")
-        return await event.answer(phrase.nick.error, alert=True)
-
-    await nicks.link(sender_id, new_nick)
-    user_name = await func.get_name(sender_id)
-    return await event.reply(
-        phrase.nick.buy_nick.format(
-            user=user_name,
-            price=formatter.value_to_str(
-                config.cfg.PriceForChangeNick,
-                phrase.currency,
-            ),
-        ),
-    )
-
-
 @func.new_callback("cityadd")
 async def cityadd_callback(event: events.CallbackQuery.Event):
     data = event.data.decode("utf-8").split(".")

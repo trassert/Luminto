@@ -106,6 +106,44 @@ async def del_staff(event: Message):
     )
 
 
+@func.new_command(r"/сменитьник(.*)", min_role=roles.ADMIN)
+async def change_nick(event: Message):
+    args = event.pattern_match.group(1).strip().split()
+    if len(args) < 2:
+        return await event.reply(phrase.nick.change_use)
+
+    nick, tag = args[0], args[1]
+    if not formatter.is_valid_mc_nick(nick):
+        return await event.reply(phrase.nick.invalid)
+
+    try:
+        user_id = await func.get_id(tag)
+    except Exception:
+        return await event.reply(phrase.money.no_people)
+
+    taken_by = await nicks.get_byname(nick)
+    if taken_by is not None and taken_by != user_id:
+        return await event.reply(phrase.nick.taken)
+
+    old_nick = await nicks.get_byid(user_id)
+    try:
+        async with mcrcon.Vanilla as rcon:
+            if old_nick is not None:
+                await rcon.send(f"nwl remove name {old_nick}")
+            await rcon.send(f"nwl add name {nick}")
+    except Exception:
+        logger.error("RCON: Ошибка при смене ника")
+        return await event.reply(phrase.nick.error)
+
+    await nicks.link(user_id, nick)
+    return await event.reply(
+        phrase.nick.changed.format(
+            user=await func.get_name(user_id),
+            nick=nick,
+        ),
+    )
+
+
 @func.new_command(r"/чсб(.*)", min_role=roles.ADMIN)
 async def add_bot_blacklist(event: Message):
     args = event.pattern_match.group(1).strip()
