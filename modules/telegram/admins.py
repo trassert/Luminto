@@ -2,7 +2,6 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from loguru import logger
-from telethon.tl.functions.users import GetFullUserRequest
 
 from .. import db, formatter, mcrcon, nicks, pathes, phrase, roles
 from . import func
@@ -19,12 +18,12 @@ async def add_balance(event: Message):
     args = event.pattern_match.group(1).strip().split()
     try:
         tag = args[1]
-        user = await client(GetFullUserRequest(tag))
+        user_id = await func.get_id(tag)
     except IndexError:
         return await event.reply(
             phrase.money.no_people + phrase.money.change_balance_use,
         )
-    except ValueError:
+    except Exception:
         return await event.reply(
             phrase.money.no_such_people + phrase.money.change_balance_use,
         )
@@ -38,8 +37,8 @@ async def add_balance(event: Message):
         return await event.reply(
             phrase.money.nan_count + phrase.money.change_balance_use,
         )
-    old = await db.get_money(user.full_user.id)
-    await db.add_money(user.full_user.id, new)
+    old = await db.get_money(user_id)
+    await db.add_money(user_id, new)
     await event.reply(
         phrase.money.add_money.format(name=tag, old=old, new=old + new),
     )

@@ -64,8 +64,13 @@ async def get_id(str: str) -> int:
             logger.warning(msg + f" ID: {str}")
             raise ValueError(msg)
         return int(str)
-    user = await client(GetFullUserRequest(str))
-    return user.full_user.id
+    try:
+        user = await client(GetFullUserRequest(str))
+        return user.full_user.id
+    except Exception:
+        if (user_id := await nicks.get_byname(str)) is not None:
+            return user_id
+        raise
 
 
 def get_reply_message_id(event):
