@@ -108,16 +108,15 @@ async def del_staff(event: Message):
 @func.new_command(r"/сменитьник(.*)", min_role=roles.ADMIN)
 async def change_nick(event: Message):
     args = event.pattern_match.group(1).strip().split()
-    if len(args) < 2:
+    if not args:
         return await event.reply(phrase.nick.change_use)
 
-    nick, tag = args[0], args[1]
+    nick = args[0]
     if not formatter.is_valid_mc_nick(nick):
         return await event.reply(phrase.nick.invalid)
 
-    try:
-        user_id = await func.get_id(tag)
-    except Exception:
+    user_id = await func.swap_resolve_recipient(event, args)
+    if user_id is None:
         return await event.reply(phrase.money.no_people)
 
     taken_by = await nicks.get_byname(nick)
