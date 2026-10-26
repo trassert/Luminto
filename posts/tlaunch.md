@@ -39,7 +39,6 @@ _Ссылки кликабельны_
 
 Лаунчер              | Лицензия                   | Для ОС
 ---                  | ---                        | ---
-[X Minecraft Launcher](https://xmcl.app/ru/) | [!badge Не нужна|success] | Linux,Windows,Mac
 [PineconeMC](https://pineconemc.com/) | [!badge Не нужна|success]  | Linux,Windows,Mac
 [16Launcher](https://16-launcher.ru/) | [!badge Не нужна|success]  | Linux,Windows,Mac
 [Prism Launcher](https://prismlauncher.org/) | [!badge Нужна|warning]  | Linux,Windows,Mac
