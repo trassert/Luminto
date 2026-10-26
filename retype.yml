@@ -1,7 +1,7 @@
 input: .
 output: build
 
-url: https://wiki.lumintomc.ru # Use your website address here
+url: wiki.lumintomc.ru # Use your website address here
 
 start:
   # Uncomment the next line to try Retype Pro features
