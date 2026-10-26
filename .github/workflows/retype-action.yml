@@ -19,8 +19,8 @@ jobs:
       - name: Build Retype documentation
         id: retype-build
         uses: retypeapp/action-build@latest
-        with:
-          license: ${{ secrets.RETYPE_LICENSE_KEY }}
+        #with:
+        #  license: ${{ secrets.RETYPE_LICENSE_KEY }}
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4

@@ -5,7 +5,7 @@ url: https://wiki.lumintomc.ru # Use your website address here
 
 start:
   # Uncomment the next line to try Retype Pro features
-  pro: true
+  # pro: true
 
 branding:
   title: Luminto
