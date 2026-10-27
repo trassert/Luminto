@@ -1,4 +1,4 @@
-# 📖 Команды бота - [@luminto_chatbot](https://t.me/luminto_chatbot)
+## 📖 Команды бота - [@luminto_chatbot](https://t.me/luminto_chatbot)
 
 ---
 
