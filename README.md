@@ -14,7 +14,7 @@
 
 ## Функционал бота
 
-[**Команды описаны тут**](https://github.com/trassert/Luminto/wiki)
+[**Команды описаны тут**](https://wiki.lumintomc.ru/info/bot_commands/)
 
 ## Примечания (установка)
 
