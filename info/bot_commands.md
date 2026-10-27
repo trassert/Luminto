@@ -1,10 +1,10 @@
 ---
 label: Команды бота
-icon: icon-command-palette
+icon: command-palette
 order: -5
 ---
 
-# 📖 Команды бота - [@luminto_chatbot](https://t.me/luminto_chatbot)
+## 📖 Команды бота - [@luminto_chatbot](https://t.me/luminto_chatbot)
 
 ---
 
