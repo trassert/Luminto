@@ -175,7 +175,9 @@ class money:
 
 
 class help:
-    comm = "🤖 : [Помощь по командам](https://wiki.lumintomc.ru/info/bot_commands)"
+    comm = (
+        "🤖 : [Помощь по командам](https://wiki.lumintomc.ru/info/bot_commands)"
+    )
 
 
 class server:
