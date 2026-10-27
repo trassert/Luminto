@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <meta name="turbo-cache-control" content="no-cache" data-turbo-track="reload" data-track-token="4.6.0.846435573640">
+
+    <!-- See retype.com -->
+    <meta name="generator" content="Retype 4.6.0">
+
+    <!-- Primary Meta Tags -->
+    <title>&#128214; Команды бота - @luminto_chatbot</title>
+    <meta name="title" content="📖 Команды бота - @luminto_chatbot">
+    <meta name="description" content="Раздел">
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://wiki.lumintomc.ru/info/bot_commands/">
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="https://wiki.lumintomc.ru/sitemap.xml">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://wiki.lumintomc.ru/info/bot_commands/">
+    <meta property="og:title" content="📖 Команды бота - @luminto_chatbot">
+    <meta property="og:description" content="Раздел">
+    <meta property="og:site_name" content="Luminto">
+    <meta property="og:locale" content="en_US">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://wiki.lumintomc.ru/info/bot_commands/">
+    <meta name="twitter:title" content="📖 Команды бота - @luminto_chatbot">
+    <meta name="twitter:description" content="Раздел">
+
+    <!-- Alternate Markdown -->
+    <link rel="alternate" type="text/markdown" href="https://wiki.lumintomc.ru/info/bot_commands.md">
+
+    <script data-cfasync="false">(function(){var cl=document.documentElement.classList,ls=localStorage.getItem("retype_scheme"),hd=cl.contains("dark"),hl=cl.contains("light"),wm=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;if(ls==="dark"||(!ls&&wm&&!hd&&!hl)){cl.remove("light");cl.add("dark")}else if(ls==="light"||(!ls&&!wm&&!hd&&!hl)){cl.remove("dark");cl.add("light")}})();</script>
+
+    <link href="../../resources/css/retype.css?v=4.6.0.846435573640" rel="stylesheet">
+
+    <script data-cfasync="false" src="../../resources/js/config.js?v=4.6.0.846435573640" data-turbo-eval="false" defer></script>
+    <script data-cfasync="false" src="../../resources/js/retype.js?v=4.6.0" data-turbo-eval="false" defer></script>
+    <script id="lunr-js" data-cfasync="false" src="../../resources/js/lunr.js?v=4.6.0.846435573640" data-turbo-eval="false" defer></script>
+</head>
+<body>
+    <div id="retype-app" class="relative text-base antialiased text-base-text bg-base-bg font-body">
+    <div class="absolute bottom-0 left-0" style="top: 5rem; right: 50%"></div>
+
+    <header id="retype-header" class="sticky top-0 z-30 flex w-full h-16 bg-header-bg border-b border-header-border md:h-20">
+        <div class="container relative flex items-center justify-between pr-6 grow md:justify-start">
+            <!-- Mobile menu button skeleton -->
+            <button v-cloak class="skeleton retype-mobile-menu-button flex items-center justify-center shrink-0 overflow-hidden dark:text-white focus:outline-hidden rounded-full w-10 h-10 ml-3.5 md:hidden"><svg xmlns="http://www.w3.org/2000/svg" class="mb-px shrink-0" width="24" height="24" viewBox="0 0 24 24" role="presentation" style="margin-bottom: 0px;"><g fill="currentColor"><path d="M2 4h20v2H2zM2 11h20v2H2zM2 18h20v2H2z"></path></g></svg></button>
+            <div v-cloak id="retype-sidebar-left-toggle-button"></div>
+    
+            <!-- Logo -->
+            <div class="flex items-center justify-between h-full py-2 md:w-75">
+                <div class="flex items-center px-2 md:px-6">
+                    <a id="retype-branding-logo" href="https://wiki.lumintomc.ru/" class="flex items-center leading-snug text-2xl">
+                        <span class="dark:text-white font-bold line-clamp-1 md:line-clamp-2">Luminto</span>
+                    </a><span id="retype-branding-label" class="inline-flex mt-1 px-2 py-1 ml-4 text-xs font-medium leading-none items-center rounded-md bg-branding-label-bg text-branding-label-text ring-1 ring-branding-label-border ring-inset md:inline-block">Wiki</span>
+                </div>
+    
+                <span class="hidden h-8 border-r md:inline-block border-base-border"></span>
+            </div>
+    
+            <div class="flex justify-between md:grow">
+                <!-- Top Nav -->
+                <nav id="retype-header-nav" class="hidden md:flex">
+                    <ul class="flex flex-col mb-4 md:pl-16 md:mb-0 md:flex-row md:items-center">
+                        <li class="mr-6">
+                            <a class="py-2 md:mb-0 inline-flex items-center text-sm whitespace-nowrap transition-colors duration-200 ease-linear md:text-header-text font-header-text hover:text-header-text-hover" href="https://t.me/lumintomc">Телеграм-чат</a>
+                        </li>
+    
+                    </ul>
+                </nav>
+    
+                <div v-cloak class="flex justify-end grow">
+                    <div id="retype-mobile-search-button"></div>
+                    <doc-search-desktop></doc-search-desktop>
+    
+                    <doc-theme-switch class="lg:ml-2"></doc-theme-switch>
+                    <doc-history></doc-history>
+                </div>
+            </div>
+        </div>
+    </header>
+
+
+    <div id="retype-container" class="container relative flex bg-white">
+        <!-- Sidebar Skeleton -->
+        <div v-cloak class="fixed flex flex-col shrink-0 duration-300 ease-in-out bg-sidebar-left-bg border-sidebar-left-border sidebar top-20 w-75 border-r h-screen md:sticky transition-transform skeleton">
+        
+            <div class="flex items-center h-16 px-6">
+                <input id="retype-filter-input-mock" class="w-full h-10 pl-8 px-3 py-2 transition-colors duration-200 ease-linear bg-filter-bg border border-filter-border rounded-lg shadow-none md:text-sm hover:border-filter-border-hover focus:outline-hidden focus:border-filter-border-focus placeholder-filter-placeholder" type="text">
+            </div>
+        
+            <div class="pl-6 mt-1 mb-4">
+                <div class="w-32 h-3 mb-4 bg-skeleton-bg rounded-full loading"></div>
+                <div class="w-48 h-3 mb-4 bg-skeleton-bg rounded-full loading"></div>
+                <div class="w-40 h-3 mb-4 bg-skeleton-bg rounded-full loading"></div>
+                <div class="w-32 h-3 mb-4 bg-skeleton-bg rounded-full loading"></div>
+                <div class="w-48 h-3 mb-4 bg-skeleton-bg rounded-full loading"></div>
+                <div class="w-40 h-3 mb-4 bg-skeleton-bg rounded-full loading"></div>
+            </div>
+        
+            <div class="shrink-0 mt-auto bg-transparent dark:border-base-border">
+                <a class="flex items-center justify-center flex-nowrap h-16 text-gray-350 dark:text-dark-400 hover:text-gray-600 dark:hover:text-dark-300 transition-colors duration-150 ease-in docs-powered-by" target="_blank" href="https://retype.com/" rel="noopener">
+                    <span class="text-xs whitespace-nowrap">Powered by</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="ml-2" fill="currentColor" width="96" height="20" overflow="visible"><path d="M0 0v20h13.59V0H0zm11.15 17.54H2.44V2.46h8.71v15.08zM15.8 20h2.44V4.67L15.8 2.22zM20.45 6.89V20h2.44V9.34z"/><g><path d="M40.16 8.44c0 1.49-.59 2.45-1.75 2.88l2.34 3.32h-2.53l-2.04-2.96h-1.43v2.96h-2.06V5.36h3.5c1.43 0 2.46.24 3.07.73s.9 1.27.9 2.35zm-2.48 1.1c.26-.23.38-.59.38-1.09 0-.5-.13-.84-.4-1.03s-.73-.28-1.39-.28h-1.54v2.75h1.5c.72 0 1.2-.12 1.45-.35zM51.56 5.36V7.2h-4.59v1.91h4.13v1.76h-4.13v1.92h4.74v1.83h-6.79V5.36h6.64zM60.09 7.15v7.48h-2.06V7.15h-2.61V5.36h7.28v1.79h-2.61zM70.81 14.64h-2.06v-3.66l-3.19-5.61h2.23l1.99 3.45 1.99-3.45H74l-3.19 5.61v3.66zM83.99 6.19c.65.55.97 1.4.97 2.55s-.33 1.98-1 2.51-1.68.8-3.04.8h-1.23v2.59h-2.06V5.36h3.26c1.42 0 2.45.28 3.1.83zm-1.51 3.65c.25-.28.37-.69.37-1.22s-.16-.92-.48-1.14c-.32-.23-.82-.34-1.5-.34H79.7v3.12h1.38c.68 0 1.15-.14 1.4-.42zM95.85 5.36V7.2h-4.59v1.91h4.13v1.76h-4.13v1.92H96v1.83h-6.79V5.36h6.64z"/></g></svg>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Sidebar component -->
+        <doc-sidebar v-cloak>
+            <template #sidebar-footer>
+                <div class="shrink-0 mt-auto border-t md:bg-transparent md:border-none dark:border-base-border">
+        
+                    <div class="py-3 px-6 md:hidden border-b dark:border-base-border">
+                        <nav>
+                            <ul class="flex flex-wrap justify-center items-center">
+                                <li class="mr-6">
+                                    <a class="block py-1 inline-flex items-center text-sm whitespace-nowrap transition-colors duration-200 ease-linear md:text-header-text font-header-text hover:text-header-text-hover" href="https://t.me/lumintomc">Телеграм-чат</a>
+                                </li>
+        
+                            </ul>
+                        </nav>
+                    </div>
+        
+                    <a class="flex items-center justify-center flex-nowrap h-16 text-gray-350 dark:text-dark-400 hover:text-gray-600 dark:hover:text-dark-300 transition-colors duration-150 ease-in docs-powered-by" target="_blank" href="https://retype.com/" rel="noopener">
+                        <span class="text-xs whitespace-nowrap">Powered by</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="ml-2" fill="currentColor" width="96" height="20" overflow="visible"><path d="M0 0v20h13.59V0H0zm11.15 17.54H2.44V2.46h8.71v15.08zM15.8 20h2.44V4.67L15.8 2.22zM20.45 6.89V20h2.44V9.34z"/><g><path d="M40.16 8.44c0 1.49-.59 2.45-1.75 2.88l2.34 3.32h-2.53l-2.04-2.96h-1.43v2.96h-2.06V5.36h3.5c1.43 0 2.46.24 3.07.73s.9 1.27.9 2.35zm-2.48 1.1c.26-.23.38-.59.38-1.09 0-.5-.13-.84-.4-1.03s-.73-.28-1.39-.28h-1.54v2.75h1.5c.72 0 1.2-.12 1.45-.35zM51.56 5.36V7.2h-4.59v1.91h4.13v1.76h-4.13v1.92h4.74v1.83h-6.79V5.36h6.64zM60.09 7.15v7.48h-2.06V7.15h-2.61V5.36h7.28v1.79h-2.61zM70.81 14.64h-2.06v-3.66l-3.19-5.61h2.23l1.99 3.45 1.99-3.45H74l-3.19 5.61v3.66zM83.99 6.19c.65.55.97 1.4.97 2.55s-.33 1.98-1 2.51-1.68.8-3.04.8h-1.23v2.59h-2.06V5.36h3.26c1.42 0 2.45.28 3.1.83zm-1.51 3.65c.25-.28.37-.69.37-1.22s-.16-.92-.48-1.14c-.32-.23-.82-.34-1.5-.34H79.7v3.12h1.38c.68 0 1.15-.14 1.4-.42zM95.85 5.36V7.2h-4.59v1.91h4.13v1.76h-4.13v1.92H96v1.83h-6.79V5.36h6.64z"/></g></svg>
+                    </a>
+                </div>
+            </template>
+        </doc-sidebar>
+
+        <div class="grow min-w-0 bg-body-bg">
+            <!-- Render "toolbar" template here on api pages --><!-- Render page content -->
+<div class="flex">
+    <div id="retype-main" class="min-w-0 p-4 grow md:px-16">
+        <main class="relative pb-12 lg:pt-2">
+            <div class="relative retype-markdown" id="retype-content">
+                <!-- Rendered if sidebar right is enabled -->
+                <div id="retype-sidebar-right-toggle"></div>
+                <doc-page-actions></doc-page-actions>
+
+                <!-- Page content  -->
+<h1 id="-команды-бота---luminto_chatbot"><span class="docs-emoji">&#x1F4D6;</span> Команды бота - <a href="https://t.me/luminto_chatbot">@luminto_chatbot</a></h1>
+<hr>
+<h2 id="-содержание">🗂 Содержание</h2>
+<retype-table copy-text="| Раздел | Что внутри |
+|---|---|
+| [⭐ Уровни доступа](#-уровни-доступа) | Роли бота и что они могут |
+| [🔥 Основное](#-основное) | Профиль, ник, сервер, помощь |
+| [💎 Экономика](#-экономика) | Баланс, переводы, вывод, чеки, рефералы |
+| [🛒 Магазин и торговля](#-магазин-и-торговля) | Торговец, лоты, заказы |
+| [🏰 Государства](#-государства) | Создание, налоги, казна, дипломатия |
+| [🎮 Мини-игры](#-мини-игры) | Казино, Крокодил, Города, Шахта |
+| [📊 Статистика](#-статистика) | Топы, активность, казна |
+| [📝 Заметки](#-заметки) | Личные заметки |
+| [🎲 Развлечения](#-развлечения) | QR, среднее, MiniMessage, картинки |
+| [🛡 Модерация](#-модерация) | Ники, ЧС, whitelist, RCON |
+| [📣 Подписки](#-подписки) | Рассылки |">
+<div class="table-wrapper scrollbar overflow-hidden">
+<table class="comfortable">
+<thead>
+<tr>
+<th>Раздел</th>
+<th>Что внутри</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><doc-anchor-trigger to="#-%D1%83%D1%80%D0%BE%D0%B2%D0%BD%D0%B8-%D0%B4%D0%BE%D1%81%D1%82%D1%83%D0%BF%D0%B0"><span class="docs-emoji">&#x2B50;</span> Уровни доступа</doc-anchor-trigger></td>
+<td>Роли бота и что они могут</td>
+</tr>
+<tr>
+<td><doc-anchor-trigger to="#-%D0%BE%D1%81%D0%BD%D0%BE%D0%B2%D0%BD%D0%BE%D0%B5"><span class="docs-emoji">&#x1F525;</span> Основное</doc-anchor-trigger></td>
+<td>Профиль, ник, сервер, помощь</td>
+</tr>
+<tr>
+<td><doc-anchor-trigger to="#-%D1%8D%D0%BA%D0%BE%D0%BD%D0%BE%D0%BC%D0%B8%D0%BA%D0%B0"><span class="docs-emoji">&#x1F48E;</span> Экономика</doc-anchor-trigger></td>
+<td>Баланс, переводы, вывод, чеки, рефералы</td>
+</tr>
+<tr>
+<td><doc-anchor-trigger to="#-%D0%BC%D0%B0%D0%B3%D0%B0%D0%B7%D0%B8%D0%BD-%D0%B8-%D1%82%D0%BE%D1%80%D0%B3%D0%BE%D0%B2%D0%BB%D1%8F"><span class="docs-emoji">&#x1F6D2;</span> Магазин и торговля</doc-anchor-trigger></td>
+<td>Торговец, лоты, заказы</td>
+</tr>
+<tr>
+<td><doc-anchor-trigger to="#-%D0%B3%D0%BE%D1%81%D1%83%D0%B4%D0%B0%D1%80%D1%81%D1%82%D0%B2%D0%B0"><span class="docs-emoji">&#x1F3F0;</span> Государства</doc-anchor-trigger></td>
+<td>Создание, налоги, казна, дипломатия</td>
+</tr>
+<tr>
+<td><doc-anchor-trigger to="#-%D0%BC%D0%B8%D0%BD%D0%B8-%D0%B8%D0%B3%D1%80%D1%8B"><span class="docs-emoji">&#x1F3AE;</span> Мини-игры</doc-anchor-trigger></td>
+<td>Казино, Крокодил, Города, Шахта</td>
+</tr>
+<tr>
+<td><doc-anchor-trigger to="#-%D1%81%D1%82%D0%B0%D1%82%D0%B8%D1%81%D1%82%D0%B8%D0%BA%D0%B0"><span class="docs-emoji">&#x1F4CA;</span> Статистика</doc-anchor-trigger></td>
+<td>Топы, активность, казна</td>
+</tr>
+<tr>
+<td><doc-anchor-trigger to="#-%D0%B7%D0%B0%D0%BC%D0%B5%D1%82%D0%BA%D0%B8"><span class="docs-emoji">&#x1F4DD;</span> Заметки</doc-anchor-trigger></td>
+<td>Личные заметки</td>
+</tr>
+<tr>
+<td><doc-anchor-trigger to="#-%D1%80%D0%B0%D0%B7%D0%B2%D0%BB%D0%B5%D1%87%D0%B5%D0%BD%D0%B8%D1%8F"><span class="docs-emoji">&#x1F3B2;</span> Развлечения</doc-anchor-trigger></td>
+<td>QR, среднее, MiniMessage, картинки</td>
+</tr>
+<tr>
+<td><doc-anchor-trigger to="#-%D0%BC%D0%BE%D0%B4%D0%B5%D1%80%D0%B0%D1%86%D0%B8%D1%8F">🛡 Модерация</doc-anchor-trigger></td>
+<td>Ники, ЧС, whitelist, RCON</td>
+</tr>
+<tr>
+<td><doc-anchor-trigger to="#-%D0%BF%D0%BE%D0%B4%D0%BF%D0%B8%D1%81%D0%BA%D0%B8"><span class="docs-emoji">&#x1F4E3;</span> Подписки</doc-anchor-trigger></td>
+<td>Рассылки</td>
+</tr>
+</tbody>
+</table>
+</div>
+</retype-table>
+<hr>
+<h2 id="-уровни-доступа"><span class="docs-emoji">&#x2B50;</span> Уровни доступа</h2>
+<retype-table copy-text="| Уровень | Роль |
+|:---:|:---|:---|
+| `-1` | 🚫 Заблокированный |
+| `0` | 👤 Игрок |
+| `1` | ⭐ Вип |
+| `2` | 🔰 Мл. модер |
+| `3` | 🛡 Модер |
+| `4` | 🏅 Админ |
+| `5` | 👑 Создатель |">
+<div class="table-wrapper scrollbar overflow-hidden">
+<table class="comfortable">
+<thead>
+<tr>
+<th style="text-align: center;">Уровень</th>
+<th style="text-align: left;">Роль</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><code translate="no" v-pre>-1</code></td>
+<td style="text-align: left;"><span class="docs-emoji">&#x1F6AB;</span> Заблокированный</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code translate="no" v-pre>0</code></td>
+<td style="text-align: left;"><span class="docs-emoji">&#x1F464;</span> Игрок</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code translate="no" v-pre>1</code></td>
+<td style="text-align: left;"><span class="docs-emoji">&#x2B50;</span> Вип</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code translate="no" v-pre>2</code></td>
+<td style="text-align: left;"><span class="docs-emoji">&#x1F530;</span> Мл. модер</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code translate="no" v-pre>3</code></td>
+<td style="text-align: left;">🛡 Модер</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code translate="no" v-pre>4</code></td>
+<td style="text-align: left;"><span class="docs-emoji">&#x1F3C5;</span> Админ</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code translate="no" v-pre>5</code></td>
+<td style="text-align: left;"><span class="docs-emoji">&#x1F451;</span> Создатель</td>
+</tr>
+</tbody>
+</table>
+</div>
+</retype-table>
+<p>Если роли не хватает, бот ответит:
+<code translate="no" v-pre>⭐️ : Для использования этой команды необходим доступ &lt;N&gt; - &lt;Название&gt;</code>.</p>
+<hr>
+<h2 id="-основное"><span class="docs-emoji">&#x1F525;</span> Основное</h2>
+<h3 id="-информация-о-себе"><span class="docs-emoji">&#x1F464;</span> Информация о себе</h3>
+<h4 id="profile"><code translate="no" v-pre>/profile</code></h4>
+<p>Полная карточка игрока: Minecraft-ник, баланс, роль, государство, время в игре и сообщения за день/неделю/месяц/всё время.<br />
+Алиасы: <code translate="no" v-pre>/профиль</code>, <code translate="no" v-pre>/обо мне</code>, <code translate="no" v-pre>/я</code>, <code translate="no" v-pre>/i</code>, <code translate="no" v-pre>/myprofile</code></p>
+<h4 id="profile-юзер"><code translate="no" v-pre>/profile @юзер</code></h4>
+<p>Профиль <strong>другого</strong> человека. Принимает <code translate="no" v-pre>@юзернейм</code>, <code translate="no" v-pre>@id</code> или Minecraft-ник.
+Можно ответить командой на любое сообщение — покажется профиль автора.<br />
+Алиас: <code translate="no" v-pre>/профиль @юзер</code></p>
+<h4 id="nick"><code translate="no" v-pre>/nick</code></h4>
+<p>Показывает привязанный Minecraft-ник.<br />
+Алиасы: <code translate="no" v-pre>/ник</code>, <code translate="no" v-pre>/ник @юзер</code>, <code translate="no" v-pre>/ник</code> (ответом на сообщение)</p>
+<h3 id="-привязка-ника"><span class="docs-emoji">&#x1F517;</span> Привязка ника</h3>
+<h4 id="привязать-ник"><code translate="no" v-pre>/привязать &lt;ник&gt;</code></h4>
+<p>Привязывает Minecraft-ник к Telegram-аккаунту. Зачисляет бонус аметистов, добавляет в whitelist и автоматически одобряет заявку в чат.<br />
+Алиасы: <code translate="no" v-pre>/linknick &lt;ник&gt;</code>, <code translate="no" v-pre>/новый ник &lt;ник&gt;</code>, <code translate="no" v-pre>/линкник &lt;ник&gt;</code>, <code translate="no" v-pre>привязать &lt;ник&gt;</code></p>
+<h3 id="-сервер"><span class="docs-emoji">&#x1F310;</span> Сервер</h3>
+<h4 id="ip"><code translate="no" v-pre>/ip</code></h4>
+<p>Адрес сервера (два домена + Bedrock-порт <code translate="no" v-pre>19132</code>).<br />
+Алиасы: <code translate="no" v-pre>/хост</code>, <code translate="no" v-pre>/host</code>, <code translate="no" v-pre>/айпи</code></p>
+<h4 id="online"><code translate="no" v-pre>/online</code></h4>
+<p>Список игроков онлайн (через RCON <code translate="no" v-pre>list</code>).<br />
+Алиасы: <code translate="no" v-pre>/онлайн</code>, <code translate="no" v-pre>онлайн</code>, <code translate="no" v-pre>online</code></p>
+<h4 id="map"><code translate="no" v-pre>/map</code></h4>
+<p>Ссылка на интерактивную онлайн-карту сервера.<br />
+Алиасы: <code translate="no" v-pre>/мап</code>, <code translate="no" v-pre>/карта</code></p>
+<h4 id="серв"><code translate="no" v-pre>/серв</code></h4>
+<p>Системная информация о хосте бота (CPU, RAM, нагрузка).<br />
+Алиасы: <code translate="no" v-pre>/сервер</code>, <code translate="no" v-pre>/server</code></p>
+<h4 id="time"><code translate="no" v-pre>/time</code></h4>
+<p>Текущее московское время.<br />
+Алиасы: <code translate="no" v-pre>/время</code>, <code translate="no" v-pre>/мск</code>, <code translate="no" v-pre>/msk</code></p>
+<h3 id="-прочее"><span class="docs-emoji">&#x1F916;</span> Прочее</h3>
+<h4 id="help"><code translate="no" v-pre>/help</code></h4>
+<p>Ссылка на вики с командами.<br />
+Алиасы: <code translate="no" v-pre>/помощь</code>, <code translate="no" v-pre>/команды</code>, <code translate="no" v-pre>/commands</code>, <code translate="no" v-pre>команды</code>, <code translate="no" v-pre>бот помощь</code></p>
+<h4 id="start"><code translate="no" v-pre>/start</code></h4>
+<p>Приветственное сообщение. С параметром <code translate="no" v-pre>nick_&lt;ник&gt;</code> запускает привязку, с числом — активация реферала.<br />
+Алиас: <code translate="no" v-pre>/старт</code></p>
+<h4 id="пинг"><code translate="no" v-pre>/пинг</code></h4>
+<p>Задержка ответа бота. С аргументом <code translate="no" v-pre>all</code> — ещё минимальный, средний и максимальный пинг игроков на сервере.<br />
+Алиасы: <code translate="no" v-pre>/ping</code>, <code translate="no" v-pre>пинг</code></p>
+<h4 id="vote"><code translate="no" v-pre>/vote</code></h4>
+<p>Ссылки на мониторинги для голосования и буста.<br />
+Алиасы: <code translate="no" v-pre>/голос</code>, <code translate="no" v-pre>/голосование</code>, <code translate="no" v-pre>/проголосовать</code></p>
+<h4 id="rules"><code translate="no" v-pre>/rules</code></h4>
+<p>Ссылка на правила сервера.<br />
+Алиасы: <code translate="no" v-pre>/правила</code>, <code translate="no" v-pre>/правилачата</code>, <code translate="no" v-pre>/правила сервера</code>, <code translate="no" v-pre>правила</code></p>
+<h4 id="игрок-ник"><code translate="no" v-pre>/игрок &lt;ник&gt;</code></h4>
+<p>Ищет Telegram-профиль, роль и государство по Minecraft-нику.<br />
+Алиасы: <code translate="no" v-pre>/нпоиск &lt;ник&gt;</code>, <code translate="no" v-pre>/пник &lt;ник&gt;</code>, <code translate="no" v-pre>/поискпонику &lt;ник&gt;</code>, <code translate="no" v-pre>игрок &lt;ник&gt;</code></p>
+<hr>
+<h2 id="-экономика"><span class="docs-emoji">&#x1F48E;</span> Экономика</h2>
+<h3 id="-баланс"><span class="docs-emoji">&#x1F4B0;</span> Баланс</h3>
+<h4 id="баланс"><code translate="no" v-pre>/баланс</code></h4>
+<p>Показывает ваш баланс.<br />
+Алиасы: <code translate="no" v-pre>/аметисты</code>, <code translate="no" v-pre>/wallet</code>, <code translate="no" v-pre>/мой баланс</code>, <code translate="no" v-pre>баланс</code></p>
+<h3 id="-переводы"><span class="docs-emoji">&#x2194;&#xFE0F;</span> Переводы</h3>
+<h4 id="скинуть-сумма-юзер"><code translate="no" v-pre>/скинуть &lt;сумма&gt; &lt;@юзер&gt;</code></h4>
+<p>Переводит аметисты другому игроку. Вместо суммы можно написать <code translate="no" v-pre>все</code>.
+Получателя можно указать тегом или ответом на его сообщение.<br />
+Алиасы: <code translate="no" v-pre>/кинуть</code>, <code translate="no" v-pre>/дать</code>, <code translate="no" v-pre>/перевести</code>, <code translate="no" v-pre>перевести</code></p>
+<h3 id="-вывод-в-игру"><span class="docs-emoji">&#x1F3E7;</span> Вывод в игру</h3>
+<h4 id="вывести-сумма"><code translate="no" v-pre>/вывести &lt;сумма&gt;</code></h4>
+<p>Выводит аметисты на игровой сервер командой <code translate="no" v-pre>invgive amethyst_shard</code>. Действует дневной лимит.<br />
+Алиасы: <code translate="no" v-pre>/вывод</code>, <code translate="no" v-pre>/вмайн</code>, <code translate="no" v-pre>/в майн</code>, <code translate="no" v-pre>/вмаин</code>, <code translate="no" v-pre>/в маин</code>, <code translate="no" v-pre>вывести</code></p>
+<h3 id="-чеки">🎟 Чеки</h3>
+<h4 id="чек-сумма"><code translate="no" v-pre>+чек &lt;сумма&gt;</code></h4>
+<p>Создаёт чек на N аметистов (списывает их с баланса). <strong>Только в личных сообщениях.</strong><br />
+Алиас: <code translate="no" v-pre>+ticket &lt;сумма&gt;</code></p>
+<h4 id="чек-id"><code translate="no" v-pre>/чек &lt;id&gt;</code></h4>
+<p>Активирует чек по его ID и зачисляет аметисты.<br />
+Алиасы: <code translate="no" v-pre>/ticket</code>, <code translate="no" v-pre>/активировать</code>, <code translate="no" v-pre>активировать</code>, <code translate="no" v-pre>/activate</code></p>
+<h3 id="-рефералы"><span class="docs-emoji">&#x1F381;</span> Рефералы</h3>
+<h4 id="рефка"><code translate="no" v-pre>/рефка</code></h4>
+<p>Ваш реферальный код и ссылка <code translate="no" v-pre>t.me/luminto_chatbot?start=&lt;id&gt;</code>, а также список приглашённых.<br />
+Алиасы: <code translate="no" v-pre>/рефкод</code>, <code translate="no" v-pre>/моярефка</code>, <code translate="no" v-pre>/мойрефкод</code>, <code translate="no" v-pre>/реферальныйкод</code>, <code translate="no" v-pre>/реферальный код</code>, <code translate="no" v-pre>/refcode</code>, <code translate="no" v-pre>/reflink</code>, <code translate="no" v-pre>/рефссылка</code></p>
+<h4 id="топреф"><code translate="no" v-pre>/топреф</code></h4>
+<p>Топ пригласивших (до 10 мест).<br />
+Алиасы: <code translate="no" v-pre>/топрефералов</code>, <code translate="no" v-pre>/топрефералы</code>, <code translate="no" v-pre>/топ рефералы</code>, <code translate="no" v-pre>/топ реф</code>, <code translate="no" v-pre>/топ рефералов</code>, <code translate="no" v-pre>/рефералы топ</code></p>
+<hr>
+<h2 id="-магазин-и-торговля"><span class="docs-emoji">&#x1F6D2;</span> Магазин и торговля</h2>
+<h4 id="shop"><code translate="no" v-pre>/shop</code></h4>
+<p>Витрина Странствующего торговца: 5 товаров, обновляются по таймеру.<br />
+Алиасы: <code translate="no" v-pre>/шоп</code>, <code translate="no" v-pre>/магазин</code>, <code translate="no" v-pre>магазин</code>, <code translate="no" v-pre>shop</code>, <code translate="no" v-pre>шоп</code></p>
+<h4 id="товар-предмет"><code translate="no" v-pre>+товар &lt;предмет&gt;</code></h4>
+<p>Выставляет предмет на продажу (диалог в ЛС: количество и цена), затем публикует лот в торговый топик.</p>
+<h4 id="заказ-предмет"><code translate="no" v-pre>+заказ &lt;предмет&gt;</code></h4>
+<p>Публикует предложение «У меня есть этот предмет, могу продать» — для тех, кто ищет покупателя.</p>
+<h4 id="logshop-ник--мин-роль-2"><code translate="no" v-pre>/logshop &lt;ник&gt;</code> <span class="docs-emoji">&#x1F530;</span> <em>мин. роль: 2</em></h4>
+<p>История покупок игрока с пагинацией.<br />
+Алиасы: <code translate="no" v-pre>/логшоп</code>, <code translate="no" v-pre>/покупки</code></p>
+<h4 id="logshopstats--мин-роль-2"><code translate="no" v-pre>/logshopstats</code> <span class="docs-emoji">&#x1F530;</span> <em>мин. роль: 2</em></h4>
+<p>Сводная статистика по логам магазина.<br />
+Алиас: <code translate="no" v-pre>/статистикапокупок</code></p>
+<hr>
+<h2 id="-государства"><span class="docs-emoji">&#x1F3F0;</span> Государства</h2>
+<div class="flex mb-6">
+    <div class="shrink-0 w-1.5 rounded-tl-lg rounded-bl-lg bg-callout-info"></div>
+    <div class="flex w-full py-4 border border-l-0 rounded-tr-lg rounded-br-lg doc-callout bg-callout-base-bg border-callout-base-border" role="alert">
+        <div class="flex items-center ml-4 h-7">
+            <svg xmlns="http://www.w3.org/2000/svg" class="block text-callout-info" width="22" height="22" viewBox="0 0 24 24" role="presentation">
+                <g fill="currentColor"><g>
+                    <path d="M12 1C5.93 1 1 5.93 1 12s4.93 11 11 11 11-4.93 11-11S18.07 1 12 1zm0 20c-4.96 0-9-4.04-9-9s4.04-9 9-9 9 4.04 9 9-4.04 9-9 9z"></path>
+                    <path d="M12 11c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1s1-.45 1-1v-4c0-.55-.45-1-1-1zM12.01 7c-.56 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"></path>
+                    <path fill="none" d="M0 0h24v24H0z"></path>
+                </g></g>
+            </svg>
+        </div>
+        <div class="pr-5 ml-3 w-full">
+<p>Команды с префиксом <code translate="no" v-pre>/г</code> — сокращение от <code translate="no" v-pre>/государство</code>.</p>
+        </div>
+    </div>
+</div>
+<h3 id="-обзор"><span class="docs-emoji">&#x1F4DC;</span> Обзор</h3>
+<h4 id="states"><code translate="no" v-pre>/states</code></h4>
+<p>Список всех государств с числом жителей.<br />
+Алиасы: <code translate="no" v-pre>/госва</code>, <code translate="no" v-pre>/государства</code>, <code translate="no" v-pre>государства</code>, <code translate="no" v-pre>список госв</code></p>
+<h4 id="госво-название"><code translate="no" v-pre>/госво &lt;название&gt;</code></h4>
+<p>Подробная карточка государства: тип, казна, глава, заместитель, координаты, налоги, описание и состав (до 50 человек). Если прикреплена картинка государства — придёт с ней.<br />
+Алиасы: <code translate="no" v-pre>/state</code>, <code translate="no" v-pre>/государство</code>; без аргумента — ваше государство</p>
+<h3 id="-создание-и-вступление">🏗 Создание и вступление</h3>
+<h4 id="создать-госво-название"><code translate="no" v-pre>/создать госво &lt;название&gt;</code></h4>
+<p>Создаёт государство (цена зависит от настроек). Требуется подтверждение.<br />
+Алиасы: <code translate="no" v-pre>+госво &lt;название&gt;</code>, <code translate="no" v-pre>+государство &lt;название&gt;</code></p>
+<h4 id="вступить-название"><code translate="no" v-pre>/вступить &lt;название&gt;</code></h4>
+<p>Вступает в государство. Если вход платный — нужно его оплатить.<br />
+Алиасы: <code translate="no" v-pre>вступить</code>, <code translate="no" v-pre>/г вступить</code>, <code translate="no" v-pre>/г войти</code></p>
+<h4 id="ливнуть"><code translate="no" v-pre>/ливнуть</code></h4>
+<p>Покидает государство. Если вы глава — главенство перейдёт заместителю (нужен назначенный зам).<br />
+Алиасы: <code translate="no" v-pre>/покинуть госво</code>, <code translate="no" v-pre>/покинуть государство</code>, <code translate="no" v-pre>выйти из государства</code>, <code translate="no" v-pre>выйти из госва</code>, <code translate="no" v-pre>/г покинуть</code>, <code translate="no" v-pre>/г выйти</code></p>
+<h4 id="уничтожить-госво"><code translate="no" v-pre>/уничтожить госво</code></h4>
+<p>Распускает государство. Доступно только главе, требует подтверждения. Казна возвращается главе.<br />
+Алиасы: <code translate="no" v-pre>/удалить госво</code>, <code translate="no" v-pre>/удалить государство</code>, <code translate="no" v-pre>уничтожить государство</code>, <code translate="no" v-pre>удалить государство</code>, <code translate="no" v-pre>/г уничтожить</code>, <code translate="no" v-pre>/г удалить</code></p>
+<h3 id="-управление"><span class="docs-emoji">&#x2699;&#xFE0F;</span> Управление</h3>
+<h4 id="г-описание-текст"><code translate="no" v-pre>/г описание &lt;текст&gt;</code></h4>
+<p>Меняет описание (до 300 символов).<br />
+Алиасы: <code translate="no" v-pre>/о госве</code>, <code translate="no" v-pre>/г о госве</code></p>
+<h4 id="г-корды-x-y-z"><code translate="no" v-pre>/г корды &lt;x&gt; &lt;y&gt; &lt;z&gt;</code></h4>
+<p>Задаёт координаты государства.<br />
+Алиас: <code translate="no" v-pre>/г координаты</code></p>
+<h4 id="г-входы-режим"><code translate="no" v-pre>/г входы &lt;режим&gt;</code></h4>
+<p>Настройка входа: <code translate="no" v-pre>да</code> — свободный, <code translate="no" v-pre>нет</code> — закрытый, число — платный вход.<br />
+Алиас: <code translate="no" v-pre>/г вступления</code></p>
+<h4 id="г-название-новое"><code translate="no" v-pre>/г название &lt;новое&gt;</code></h4>
+<p>Переименовывает государство (платно). Требуется подтверждение.<br />
+Алиасы: <code translate="no" v-pre>/г нейм</code>, <code translate="no" v-pre>/г name</code>, <code translate="no" v-pre>/г переназвать</code>, <code translate="no" v-pre>/название госва</code></p>
+<h4 id="г-pic"><code translate="no" v-pre>/г pic</code></h4>
+<p>Устанавливает картинку государства: прикрепите фото к команде.<br />
+Алиасы: <code translate="no" v-pre>/г картинка</code>, <code translate="no" v-pre>/г фото</code></p>
+<h4 id="г-кик-юзер"><code translate="no" v-pre>/г кик &lt;@юзер&gt;</code></h4>
+<p>Исключает игрока из государства. Цель можно указать тегом или ответом на сообщение.<br />
+Алиасы: <code translate="no" v-pre>/г кикнуть</code>, <code translate="no" v-pre>/г изгнать</code>, <code translate="no" v-pre>/г выгнать</code>, <code translate="no" v-pre>/выгнать</code></p>
+<h4 id="назначить-зама-юзер"><code translate="no" v-pre>/назначить зама &lt;@юзер&gt;</code></h4>
+<p>Назначает заместителя главы из числа жителей.<br />
+Алиасы: <code translate="no" v-pre>/г назначить зама</code>, <code translate="no" v-pre>/назначить заместителя</code>, <code translate="no" v-pre>/г назначить заместителя</code></p>
+<h4 id="убрать-зама-юзер"><code translate="no" v-pre>/убрать зама &lt;@юзер&gt;</code></h4>
+<p>Снимает заместителя.<br />
+Алиасы: <code translate="no" v-pre>/г убрать зама</code>, <code translate="no" v-pre>/убрать заместителя</code>, <code translate="no" v-pre>/г убрать заместителя</code></p>
+<h4 id="г-передать-юзер"><code translate="no" v-pre>/г передать &lt;@юзер&gt;</code></h4>
+<p>Передаёт главенство другому игроку. Требуется подтверждение.</p>
+<h3 id="-казна-и-налоги"><span class="docs-emoji">&#x1F4B8;</span> Казна и налоги</h3>
+<h4 id="пополнить-казну-сумма"><code translate="no" v-pre>/пополнить казну &lt;сумма&gt;</code></h4>
+<p>Пополняет казну. Можно указать <code translate="no" v-pre>все</code>, чтобы внести весь баланс.<br />
+Алиасы: <code translate="no" v-pre>/г пополнить</code>, <code translate="no" v-pre>+казна</code>, <code translate="no" v-pre>г пополнить</code></p>
+<h4 id="забрать-из-казны-сумма"><code translate="no" v-pre>/забрать из казны &lt;сумма&gt;</code></h4>
+<p>Снимает деньги из казны (только глава/зам). Можно указать <code translate="no" v-pre>все</code>.<br />
+Алиасы: <code translate="no" v-pre>/г снять</code>, <code translate="no" v-pre>-казна</code>, <code translate="no" v-pre>г снять</code></p>
+<h4 id="г-налог-сумма"><code translate="no" v-pre>/г налог &lt;сумма&gt;</code></h4>
+<p>Устанавливает налог на жителя. <code translate="no" v-pre>0</code> — отключает налог.</p>
+<h4 id="г-собратьналог"><code translate="no" v-pre>/г собратьналог</code></h4>
+<p>Вручную собирает налог с жителей.<br />
+Алиасы: <code translate="no" v-pre>/г собратьналоги</code>, <code translate="no" v-pre>/госво собратьналоги</code>, <code translate="no" v-pre>/госво собратьналог</code>, <code translate="no" v-pre>/collecttax</code></p>
+<h4 id="г-периодналогов-дни"><code translate="no" v-pre>/г периодналогов &lt;дни&gt;</code></h4>
+<p>Задаёт период сбора налогов (по умолчанию 7 дней).</p>
+<h4 id="г-неуплата-режим"><code translate="no" v-pre>/г неуплата &lt;режим&gt;</code></h4>
+<p>Что делать с неплательщиками: <code translate="no" v-pre>ничего</code> или <code translate="no" v-pre>кик</code>.</p>
+<h3 id="-дипломатия"><span class="docs-emoji">&#x1F30D;</span> Дипломатия</h3>
+<h4 id="г-конгресс"><code translate="no" v-pre>/г конгресс</code></h4>
+<p>Подаёт заявку на международное признание.<br />
+Алиас: <code translate="no" v-pre>/г заявка</code></p>
+<h4 id="г-признать-название"><code translate="no" v-pre>/г признать &lt;название&gt;</code></h4>
+<p>Голосует за признание другого государства (голосует только глава).</p>
+<h4 id="г-статус-название"><code translate="no" v-pre>/г статус &lt;название&gt;</code></h4>
+<p>Статус признания: голоса, казна, титул, список проголосовавших.</p>
+<h4 id="г-запретить-въезд-юзер"><code translate="no" v-pre>/г запретить въезд &lt;@юзер&gt;</code></h4>
+<p>Банит игрока на вход в государство (также исключает его из состава).</p>
+<h4 id="г-разрешить-въезд-юзер"><code translate="no" v-pre>/г разрешить въезд &lt;@юзер&gt;</code></h4>
+<p>Снимает запрет на въезд.</p>
+<h4 id="г-банлист"><code translate="no" v-pre>/г банлист</code></h4>
+<p>Список игроков, которым запрещён въезд.</p>
+<hr>
+<h2 id="-мини-игры"><span class="docs-emoji">&#x1F3AE;</span> Мини-игры</h2>
+<div class="flex mb-6">
+    <div class="shrink-0 w-1.5 rounded-tl-lg rounded-bl-lg bg-callout-info"></div>
+    <div class="flex w-full py-4 border border-l-0 rounded-tr-lg rounded-br-lg doc-callout bg-callout-base-bg border-callout-base-border" role="alert">
+        <div class="flex items-center ml-4 h-7">
+            <svg xmlns="http://www.w3.org/2000/svg" class="block text-callout-info" width="22" height="22" viewBox="0 0 24 24" role="presentation">
+                <g fill="currentColor"><g>
+                    <path d="M12 1C5.93 1 1 5.93 1 12s4.93 11 11 11 11-4.93 11-11S18.07 1 12 1zm0 20c-4.96 0-9-4.04-9-9s4.04-9 9-9 9 4.04 9 9-4.04 9-9 9z"></path>
+                    <path d="M12 11c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1s1-.45 1-1v-4c0-.55-.45-1-1-1zM12.01 7c-.56 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"></path>
+                    <path fill="none" d="M0 0h24v24H0z"></path>
+                </g></g>
+            </svg>
+        </div>
+        <div class="pr-5 ml-3 w-full">
+<p>Мини-игры работают только в <strong>игровом топике</strong> чата сервера.</p>
+        </div>
+    </div>
+</div>
+<h3 id="-казино"><span class="docs-emoji">&#x1F3B0;</span> Казино</h3>
+<h4 id="казино"><code translate="no" v-pre>/казино</code></h4>
+<p>Запускает автомат «<span class="docs-emoji">&#x1F3B0;</span>» за фиксированную цену. Три одинаковых — крупный выигрыш, два — возврат ставки.<br />
+Алиас: <code translate="no" v-pre>/casino</code></p>
+<h3 id="-крокодил"><span class="docs-emoji">&#x1F40A;</span> Крокодил</h3>
+<h4 id="крокодил"><code translate="no" v-pre>/крокодил</code></h4>
+<p>Запускает игру «Крокодил»: игроки угадывают слово по подсказкам.<br />
+Алиасы: <code translate="no" v-pre>/crocodile</code>, <code translate="no" v-pre>старт крокодил</code></p>
+<h4 id="ставка-сумма"><code translate="no" v-pre>/ставка &lt;сумма&gt;</code></h4>
+<p>Ставка на следующую победу в «Крокодиле». Без аргумента — минимальная ставка.<br />
+Алиас: <code translate="no" v-pre>/крокоставка</code></p>
+<h4 id="подсказка"><code translate="no" v-pre>/подсказка</code></h4>
+<p>Предлагает подсказку к текущему слову (отправляется на модерацию).</p>
+<h3 id="-города">🏙 Города</h3>
+<h4 id="города"><code translate="no" v-pre>/города</code></h4>
+<p>Запускает игру «Города». Нужно минимум 2 игрока; вход платный.<br />
+Алиасы: <code translate="no" v-pre>/города старт</code>, <code translate="no" v-pre>/cities start</code>, <code translate="no" v-pre>/миниигра города</code>, <code translate="no" v-pre>/minigame cities</code>, <code translate="no" v-pre>/cities</code></p>
+<h4 id="город-название"><code translate="no" v-pre>+город &lt;название&gt;</code></h4>
+<p>Предлагает новый город для базы игры (одобряет администратор).</p>
+<h4 id="города-список"><code translate="no" v-pre>+города &lt;список&gt;</code></h4>
+<p>Массовая отправка городов на проверку (через пробел или с новой строки).</p>
+<h4 id="-город-название--мин-роль-4"><code translate="no" v-pre>-город &lt;название&gt;</code> <span class="docs-emoji">&#x1F3C5;</span> <em>мин. роль: 4</em></h4>
+<p>Удаляет город из базы.</p>
+<h3 id="-шахта">⛏ Шахта</h3>
+<h4 id="шахта"><code translate="no" v-pre>/шахта</code></h4>
+<p>Спуск в шахту: серия кнопок «Продолжить / Уйти». Каждый шаг — шанс найти аметисты, получить бонус или погибнуть. Нужно состоять в государстве.<br />
+Алиасы: <code translate="no" v-pre>/майнить</code>, <code translate="no" v-pre>/копать</code>, <code translate="no" v-pre>/mine</code>, <code translate="no" v-pre>/г шахта</code></p>
+<hr>
+<h2 id="-статистика"><span class="docs-emoji">&#x1F4CA;</span> Статистика</h2>
+<h4 id="топ-соо-дни"><code translate="no" v-pre>/топ соо [дни]</code></h4>
+<p>Топ самых активных в чате. Если указать период ≥7 дней или <code translate="no" v-pre>весь</code> — придёт график.<br />
+Алиасы: <code translate="no" v-pre>/топ сообщений</code>, <code translate="no" v-pre>/топ в чате</code>, <code translate="no" v-pre>/актив сервера</code>, <code translate="no" v-pre>/мчат</code>, <code translate="no" v-pre>/мстат</code></p>
+<h4 id="топ-игроков-n"><code translate="no" v-pre>/топ игроков [N]</code></h4>
+<p>Топ по времени в игре на сервере (от 3 до 30 мест).<br />
+Алиасы: <code translate="no" v-pre>/топигроков</code>, <code translate="no" v-pre>/topplayers</code>, <code translate="no" v-pre>/playtimetop</code>, <code translate="no" v-pre>/bestplayers</code>, <code translate="no" v-pre>/toppt</code></p>
+<h4 id="топ-шахтёров"><code translate="no" v-pre>/топ шахтёров</code></h4>
+<p>Топ добычи аметистов в шахте.<br />
+Алиасы: <code translate="no" v-pre>/топ шахтеров</code>, <code translate="no" v-pre>/топ шахта</code>, <code translate="no" v-pre>/topmine</code>, <code translate="no" v-pre>/minetop</code>, <code translate="no" v-pre>/bestminers</code></p>
+<h4 id="топ-крокодил"><code translate="no" v-pre>/топ крокодил</code></h4>
+<p>Топ побед в «Крокодиле».<br />
+Алиасы: <code translate="no" v-pre>/топ слова</code>, <code translate="no" v-pre>/стат крокодил</code>, <code translate="no" v-pre>/стат слова</code>, <code translate="no" v-pre>топ крокодила</code></p>
+<h4 id="банк"><code translate="no" v-pre>/банк</code></h4>
+<p>Сколько аметистов всего в обороте (сумма всех балансов).</p>
+<h4 id="toptreasury"><code translate="no" v-pre>/toptreasury</code></h4>
+<p>Топ государств по казне.<br />
+Алиасы: <code translate="no" v-pre>/топказна</code>, <code translate="no" v-pre>/топ казна</code>, <code translate="no" v-pre>/казна топ</code>, <code translate="no" v-pre>/казтоп</code>, <code translate="no" v-pre>/ктоп</code>, <code translate="no" v-pre>казна топ</code>, <code translate="no" v-pre>казтоп</code></p>
+<hr>
+<h2 id="-заметки"><span class="docs-emoji">&#x1F4DD;</span> Заметки</h2>
+<div class="flex mb-6">
+    <div class="shrink-0 w-1.5 rounded-tl-lg rounded-bl-lg bg-callout-info"></div>
+    <div class="flex w-full py-4 border border-l-0 rounded-tr-lg rounded-br-lg doc-callout bg-callout-base-bg border-callout-base-border" role="alert">
+        <div class="flex items-center ml-4 h-7">
+            <svg xmlns="http://www.w3.org/2000/svg" class="block text-callout-info" width="22" height="22" viewBox="0 0 24 24" role="presentation">
+                <g fill="currentColor"><g>
+                    <path d="M12 1C5.93 1 1 5.93 1 12s4.93 11 11 11 11-4.93 11-11S18.07 1 12 1zm0 20c-4.96 0-9-4.04-9-9s4.04-9 9-9 9 4.04 9 9-4.04 9-9 9z"></path>
+                    <path d="M12 11c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1s1-.45 1-1v-4c0-.55-.45-1-1-1zM12.01 7c-.56 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"></path>
+                    <path fill="none" d="M0 0h24v24H0z"></path>
+                </g></g>
+            </svg>
+        </div>
+        <div class="pr-5 ml-3 w-full">
+<p>Заметки создаются в личку боту и доступны через точку: <code translate="no" v-pre>.имя</code></p>
+        </div>
+    </div>
+</div>
+<h4 id="note-имя--мин-роль-1"><code translate="no" v-pre>+note &lt;имя&gt;</code> <span class="docs-emoji">&#x2B50;</span> <em>мин. роль: 1</em></h4>
+<p>Создаёт заметку. Первая строка — имя, следующие строки — текст.<br />
+Алиас: <code translate="no" v-pre>+нот</code></p>
+<h4 id="имя"><code translate="no" v-pre>.имя</code></h4>
+<p>Выводит заметку. Работает и ответом на сообщение.</p>
+<h4 id="notes"><code translate="no" v-pre>/notes</code></h4>
+<p>Список всех заметок (нумерованный).<br />
+Алиас: <code translate="no" v-pre>/ноты</code></p>
+<h4 id="моиноты--мин-роль-1"><code translate="no" v-pre>/моиноты</code> <span class="docs-emoji">&#x2B50;</span> <em>мин. роль: 1</em></h4>
+<p>Только ваши заметки.<br />
+Алиас: <code translate="no" v-pre>/mynotes</code></p>
+<h4 id="-нот-имя--мин-роль-1"><code translate="no" v-pre>-нот &lt;имя&gt;</code> <span class="docs-emoji">&#x2B50;</span> <em>мин. роль: 1</em></h4>
+<p>Удаляет заметку. Чужие может удалять только админ.<br />
+Алиасы: <code translate="no" v-pre>-note</code>, <code translate="no" v-pre>-text</code></p>
+<hr>
+<h2 id="-развлечения"><span class="docs-emoji">&#x1F3B2;</span> Развлечения</h2>
+<h4 id="qr-данные"><code translate="no" v-pre>/qr &lt;данные&gt;</code></h4>
+<p>Генерирует PNG с QR-кодом (до 1000 символов).</p>
+<h4 id="qr"><code translate="no" v-pre>/qr</code></h4>
+<p>Справка по команде <code translate="no" v-pre>/qr</code>.</p>
+<h4 id="среднее-числа"><code translate="no" v-pre>/среднее &lt;числа&gt;</code></h4>
+<p>Считает среднее арифметическое. Через пробел, можно с запятой.</p>
+<h4 id="minimessage-текст"><code translate="no" v-pre>/minimessage &lt;текст&gt;</code></h4>
+<p>Рендерит MiniMessage-разметку в PNG-картинку.</p>
+<h4 id="картинка"><code translate="no" v-pre>/картинка</code></h4>
+<p>Случайная картинка из коллекции (с антифлудом).<br />
+Алиасы: <code translate="no" v-pre>/randompic</code>, <code translate="no" v-pre>/рандомпик</code></p>
+<h4 id="сайт-домен"><code translate="no" v-pre>/сайт &lt;домен&gt;</code></h4>
+<p>Проверяет доступность домена с разных нод.</p>
+<h4 id="ai-вопрос--мин-роль-1"><code translate="no" v-pre>/ai &lt;вопрос&gt;</code> <span class="docs-emoji">&#x2B50;</span> <em>мин. роль: 1</em></h4>
+<p>Вопрос нейросети «Люме». Работает только в основном чате.<br />
+Алиас: <code translate="no" v-pre>/ии</code></p>
+<hr>
+<h2 id="-модерация">🛡 Модерация</h2>
+<h3 id="-управление-ролями"><span class="docs-emoji">&#x1F451;</span> Управление ролями</h3>
+<h4 id="staff-юзер--роль-5"><code translate="no" v-pre>+staff &lt;@юзер&gt;</code> <span class="docs-emoji">&#x1F451;</span> <em>роль: 5</em></h4>
+<p>Повышает роль игрока на +1.<br />
+Алиас: <code translate="no" v-pre>+стафф</code></p>
+<h4 id="-staff-юзер--роль-5"><code translate="no" v-pre>-staff &lt;@юзер&gt;</code> <span class="docs-emoji">&#x1F451;</span> <em>роль: 5</em></h4>
+<p>Понижает роль на −1.<br />
+Алиас: <code translate="no" v-pre>-стафф</code></p>
+<h3 id="-чёрный-список-бота"><span class="docs-emoji">&#x1F528;</span> Чёрный список бота</h3>
+<h4 id="чсб-юзер-причина--роль-4"><code translate="no" v-pre>/чсб &lt;@юзер&gt; &lt;причина&gt;</code> <span class="docs-emoji">&#x1F3C5;</span> <em>роль: 4</em></h4>
+<p>Блокирует пользователя в боте. Можно ответом на сообщение + причина.</p>
+<h4 id="-чсб-юзер--роль-4"><code translate="no" v-pre>-чсб &lt;@юзер&gt;</code> <span class="docs-emoji">&#x1F3C5;</span> <em>роль: 4</em></h4>
+<p>Снимает блокировку.</p>
+<h3 id="-ники"><span class="docs-emoji">&#x1F3AB;</span> Ники</h3>
+<h4 id="сменитьник-ник-юзер--роль-4"><code translate="no" v-pre>/сменитьник &lt;ник&gt; &lt;@юзер&gt;</code> <span class="docs-emoji">&#x1F3C5;</span> <em>роль: 4</em></h4>
+<p>Меняет привязанный Minecraft-ник игроку.</p>
+<h4 id="непривязанные--мин-роль-2"><code translate="no" v-pre>/непривязанные</code> <span class="docs-emoji">&#x1F530;</span> <em>мин. роль: 2</em></h4>
+<p>Нумерованный список участников чата без привязанного Minecraft-ника. Длинный список разбивается на несколько сообщений.</p>
+<h3 id="-whitelist"><span class="docs-emoji">&#x1F4DC;</span> Whitelist</h3>
+<h4 id="wl-ник--мин-роль-1"><code translate="no" v-pre>+wl &lt;ник&gt;</code> <span class="docs-emoji">&#x2B50;</span> <em>мин. роль: 1</em></h4>
+<p>Добавляет ник в whitelist сервера.</p>
+<h4 id="-wl-ник--мин-роль-1"><code translate="no" v-pre>-wl &lt;ник&gt;</code> <span class="docs-emoji">&#x2B50;</span> <em>мин. роль: 1</em></h4>
+<p>Удаляет ник из whitelist.<br />
+Алиас: <code translate="no" v-pre>-вт</code></p>
+<h3 id="-аметисты"><span class="docs-emoji">&#x1F48E;</span> Аметисты</h3>
+<h4 id="выдать-сумма-юзер--роль-4"><code translate="no" v-pre>/выдать &lt;сумма&gt; &lt;@юзер&gt;</code> <span class="docs-emoji">&#x1F3C5;</span> <em>роль: 4</em></h4>
+<p>Выдаёт аметисты игроку.</p>
+<h4 id="изменить-баланс-сумма-юзер--роль-4"><code translate="no" v-pre>/изменить баланс &lt;сумма&gt; &lt;@юзер&gt;</code> <span class="docs-emoji">&#x1F3C5;</span> <em>роль: 4</em></h4>
+<p>Начисляет (или списывает) аметисты, показывая старый и новый баланс.<br />
+Алиас: <code translate="no" v-pre>/change balance</code></p>
+<h3 id="-служебные"><span class="docs-emoji">&#x2699;&#xFE0F;</span> Служебные</h3>
+<h4 id="команда--роль-4"><code translate="no" v-pre>//&lt;команда&gt;</code> <span class="docs-emoji">&#x1F3C5;</span> <em>роль: 4</em></h4>
+<p>Выполняет любую команду на сервере через RCON. Ответ приходит в блоке кода.<br />
+Пример: <code translate="no" v-pre>//list</code></p>
+<h4 id="pic--роль-4"><code translate="no" v-pre>+pic</code> <span class="docs-emoji">&#x1F3C5;</span> <em>роль: 4</em></h4>
+<p>Сохраняет картинку из сообщения или ответа в коллекцию бота.</p>
+<h4 id="gethint--роль-4-только-в-лс"><code translate="no" v-pre>/gethint</code> <span class="docs-emoji">&#x1F3C5;</span> <em>роль: 4, только в ЛС</em></h4>
+<p>Показывает последнюю подсказку к слову «Крокодила», ожидающую модерации.</p>
+<h4 id="newhint-в-лс"><code translate="no" v-pre>/newhint</code> (в ЛС)</h4>
+<p>Предложить подсказку к слову (уходит админам на модерацию).<br />
+Алиас: <code translate="no" v-pre>/addhint</code></p>
+<hr>
+<h2 id="-подписки"><span class="docs-emoji">&#x1F4E3;</span> Подписки</h2>
+<h4 id="обновление-текст--роль-4"><code translate="no" v-pre>+обновление &lt;текст&gt;</code> <span class="docs-emoji">&#x1F3C5;</span> <em>роль: 4</em></h4>
+<p>Рассылка текста всем подписчикам с индикатором прогресса.</p>
+<h4 id="обновления"><code translate="no" v-pre>+обновления</code></h4>
+<p>Подписаться на рассылку обновлений.</p>
+<h4 id="отписаться"><code translate="no" v-pre>/отписаться</code></h4>
+<p>Отписаться от рассылки.</p>
+<hr>
+<h2 id="ℹ-замечания"><span class="docs-emoji">&#x2139;&#xFE0F;</span> Замечания</h2>
+<ul>
+<li><strong>Топики.</strong> Мини-игры (<code translate="no" v-pre>/казино</code>, <code translate="no" v-pre>/крокодил</code>, <code translate="no" v-pre>/города</code>, <code translate="no" v-pre>/шахта</code>) требуют, чтобы сообщение было в игровом топике — иначе бот попросит перейти туда.</li>
+<li><strong>Личные сообщения.</strong> <code translate="no" v-pre>+чек</code>, <code translate="no" v-pre>+note</code>, <code translate="no" v-pre>/newhint</code> и диалоги торговли работают только в ЛС.</li>
+<li><strong>Привязка обязательна</strong> для большинства игровых функций. Без ника бот попросит сначала выполнить <code translate="no" v-pre>/привязать &lt;ник&gt;</code>.</li>
+<li><strong>Ответ на сообщение</strong> работает как указание получателя во многих командах: <code translate="no" v-pre>/ник</code>, <code translate="no" v-pre>/г кик</code>, <code translate="no" v-pre>/г передать</code>, <code translate="no" v-pre>/назначить зама</code>, <code translate="no" v-pre>/чсб</code>, <code translate="no" v-pre>/скинуть</code>.</li>
+</ul>
+
+                
+                <!-- Required only on API pages -->
+                <doc-toolbar-member-filter-no-results></doc-toolbar-member-filter-no-results>
+            </div>
+            <footer id="retype-content-footer" class="clear-both">
+            
+                <nav id="retype-nextprev" class="print:hidden flex mt-14">
+                    <div class="w-1/2">
+                        <a class="px-5 py-4 h-full flex items-center break-normal font-medium text-body-link border border-base-border hover:border-base-border-hover rounded-l-lg transition-colors duration-150 relative hover:z-5" href="../../info/earn/">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="mr-3" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" overflow="visible"><path d="M19 11H7.41l5.29-5.29a.996.996 0 10-1.41-1.41l-7 7a1 1 0 000 1.42l7 7a1.024 1.024 0 001.42-.01.996.996 0 000-1.41L7.41 13H19c.55 0 1-.45 1-1s-.45-1-1-1z" /><path fill="none" d="M0 0h24v24H0z" /></svg>
+                            <span>
+                                <span class="block text-xs font-normal text-base-text-muted">Previous</span>
+                                <span class="block mt-1">Получение валюты</span>
+                            </span>
+                        </a>
+                    </div>
+            
+                    <div class="w-1/2">
+                        <a class="px-5 py-4 -mx-px h-full flex items-center justify-end break-normal font-medium text-body-link border border-base-border hover:border-base-border-hover rounded-r-lg transition-colors duration-150 relative hover:z-5" href="../../posts/tlaunch/">
+                            <span>
+                                <span class="block text-xs font-normal text-right text-base-text-muted">Next</span>
+                                <span class="block mt-1">TL</span>
+                            </span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="ml-3" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" overflow="visible"><path d="M19.92 12.38a1 1 0 00-.22-1.09l-7-7a.996.996 0 10-1.41 1.41l5.3 5.3H5c-.55 0-1 .45-1 1s.45 1 1 1h11.59l-5.29 5.29a.996.996 0 000 1.41c.19.2.44.3.7.3s.51-.1.71-.29l7-7c.09-.09.16-.21.21-.33z" /><path fill="none" d="M0 0h24v24H0z" /></svg>
+                        </a>
+                    </div>
+                </nav>
+            </footer>
+        </main>
+
+        <div id="retype-page-footer" class="print:border-none border-t border-base-border pt-6 mb-8">
+            <footer class="flex flex-wrap items-center justify-between print:justify-center">
+                <div id="retype-footer-links" class="print:hidden">
+                    <ul class="flex flex-wrap items-center text-sm">
+                    </ul>
+                </div>
+                <div id="retype-copyright" class="print:justify-center py-2 text-footer-text font-footer-link text-sm leading-relaxed"><p>© Copyright by trassert (2026). All rights reserved.</p></div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Rendered if sidebar right is enabled -->
+    <!-- Sidebar right skeleton-->
+    <div v-cloak class="fixed top-0 bottom-0 right-0 translate-x-full bg-sidebar-right-bg border-sidebar-right-border lg:sticky lg:border-l lg:shrink-0 lg:pt-6 lg:translate-x-0 sm:w-1/2 lg:w-64 lg:z-0 md:w-104 sidebar-right skeleton">
+        <div class="pl-5">
+            <div class="w-32 h-3 mb-4 bg-skeleton-bg rounded-full loading"></div>
+            <div class="w-48 h-3 mb-4 bg-skeleton-bg rounded-full loading"></div>
+            <div class="w-40 h-3 mb-4 bg-skeleton-bg rounded-full loading"></div>
+        </div>
+    </div>
+
+    <!-- User should be able to hide sidebar right -->
+    <doc-sidebar-right v-cloak></doc-sidebar-right>
+</div>
+
+        </div>
+    </div>
+
+    <doc-search-mobile></doc-search-mobile>
+    <doc-back-to-top></doc-back-to-top>
+</div>
+
+
+    <div id="retype-overlay-target"></div>
+
+        <script data-cfasync="false">window.__DOCS__ = { "title": "Команды бота", level: 2, icon: "file", hasPrism: false, hasInstagram: false, hasMermaid: false, hasMath: false, tocDepth: 23, "md": "/info/bot_commands.md" }</script>
+</body>
+</html>
