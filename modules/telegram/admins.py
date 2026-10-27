@@ -315,11 +315,14 @@ async def unlinked_players(event: Message):
         async for user in client.iter_participants(config.chats.chat)
         if not user.bot and await nicks.get_byid(user.id) is None
     ]
+    unlinked = [f"{i}. {name}" for i, name in enumerate(unlinked, 1)]
     if not unlinked:
         return await event.reply(phrase.perms.unlinked_empty)
 
     chunks, chunk = [], ""
-    limit = 4096 - len(phrase.perms.unlinked.format(count="", text=""))
+    limit = 4096 - len(
+        phrase.perms.unlinked.format(count=len(unlinked), text=""),
+    )
     for name in unlinked:
         if len(chunk) + len(name) + 1 > limit:
             chunks.append(chunk)
