@@ -129,11 +129,36 @@ async def start(event: Message):
 
 
 @func.new_command(
-    [r"/обо мне$", r"/я$", r"/i$", r"/profile", r"/профиль$", r"/myprofile"],
+    [
+        r"/обо мне$()",
+        r"/я$()",
+        r"/i$()",
+        r"/profile(.*)",
+        r"/профиль(.*)",
+        r"/myprofile$()",
+    ],
 )
 async def profile(event: Message) -> Message:
     """Выводит детальную информацию об игроке, его роли, государстве и статистике."""
+    arg = event.pattern_match.group(1).strip()
     user_id = event.sender_id
+    if arg:
+        try:
+            user_id = await func.get_id(arg)
+        except Exception:
+            user_id = None
+    elif reply_id := func.get_reply_message_id(event):
+        user_id = await func.get_author_by_msgid(event.chat_id, reply_id)
+    if user_id is None:
+        return await event.reply(phrase.money.no_people)
+    try:
+        entity = await client.get_entity(user_id)
+    except Exception:
+        return await event.reply(phrase.money.no_such_people)
+    if not isinstance(entity, types.User):
+        return await event.reply(phrase.money.no_such_people)
+    if entity.bot:
+        return await event.reply(phrase.money.bot)
     minecraft_nick = await nicks.get_byid(user_id)
     role = (
         await roles.get_role(minecraft_nick)
