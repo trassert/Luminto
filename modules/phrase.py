@@ -654,7 +654,7 @@ class chataction:
         "    Онлайн - **/online**\n"
         "    Карта сервера - **/map**\n"
         "    **[Остальные команды](https://github.com/trassert/Luminto/wiki)**\n"
-        "    **[Правила](https://lumintomc.ru/wiki/rules/list)**\n"
+        "    **[Правила](https://wiki.lumintomc.ru/rules/list)**\n"
         "\n"
         "Есть вопросы?\n"
         "1. Можешь задать их в **нашу поддержку**:\n"
@@ -866,7 +866,7 @@ class mailing:
 
 
 class rules:
-    base = "👮 : **[Правила сервера](https://lumintomc.ru/wiki/rules/list)**"
+    base = "👮 : **[Правила сервера](https://wiki.lumintomc.ru/rules/list)**"
 
 
 class average:
