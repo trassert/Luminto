@@ -20,5 +20,5 @@ order: -1
 - Игроков с лаунчеров, предоставляющих Java на Android
 
 ### Поддержка при столкновении с ошибками НЕ оказывается:
-- Игрокам с TLauncher, KLauncher - [причина](https://lumintomc.ru/wiki/posts/tlaunch)
+- Игрокам с TLauncher, KLauncher - [причина](./posts/tlaunch.md)
 - Игрокам с OptiFine - [причина](https://forum.quiltmc.org/t/why-you-shouldnt-use-optifine/78)
