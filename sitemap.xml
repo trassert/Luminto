@@ -2,15 +2,19 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://wiki.lumintomc.ru/</loc>
-    <lastmod>2026-04-06T23:41:46Z</lastmod>
-  </url>
-  <url>
-    <loc>https://wiki.lumintomc.ru/rules/base/</loc>
-    <lastmod>2026-04-07T16:52:31Z</lastmod>
+    <lastmod>2026-10-27T16:41:24Z</lastmod>
   </url>
   <url>
     <loc>https://wiki.lumintomc.ru/rules/list/</loc>
     <lastmod>2026-10-26T23:09:05Z</lastmod>
+  </url>
+  <url>
+    <loc>https://wiki.lumintomc.ru/info/versions/</loc>
+    <lastmod>2026-10-27T16:41:24Z</lastmod>
+  </url>
+  <url>
+    <loc>https://wiki.lumintomc.ru/rules/base/</loc>
+    <lastmod>2026-04-07T16:52:31Z</lastmod>
   </url>
   <url>
     <loc>https://wiki.lumintomc.ru/rules/appeal/</loc>
@@ -23,10 +27,6 @@
   <url>
     <loc>https://wiki.lumintomc.ru/info/enchants/</loc>
     <lastmod>2026-10-14T23:47:59Z</lastmod>
-  </url>
-  <url>
-    <loc>https://wiki.lumintomc.ru/info/versions/</loc>
-    <lastmod>2026-10-15T18:04:23Z</lastmod>
   </url>
   <url>
     <loc>https://wiki.lumintomc.ru/info/donates/</loc>
