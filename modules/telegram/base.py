@@ -170,10 +170,10 @@ async def profile(event: Message) -> Message:
         state_info = f"**{state_author}, Глава**"
     elif state_deputy := await states_helper.if_deputy(user_id):
         state_info = f"**{state_deputy}, Заместитель**"
+    elif state_player := await states_helper.if_player(user_id):
+        state_info = f"**{state_player}, Участник**"
     else:
-        state_info = (
-            await states_helper.if_player(user_id)
-        ) or "Не состоит в государстве"
+        state_info = "Не состоит в государстве"
 
     nick = minecraft_nick or "Не привязан"
 
