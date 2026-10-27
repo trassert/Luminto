@@ -46,7 +46,7 @@ class ai:
         "• Экономика: валюта — аметисты (зарабатываются в играх и тратятся на внутриигровые товары)\n"
         "• Мини-игры: Крокодил, Города, Шахта и др. (участие приносит аметисты)\n"
         "• Государства: игроки могут создавать, вступать и взаимодействовать с другими государствами\n"
-        "• Команды: https://github.com/trassert/Luminto/wiki\n\n"
+        "• Команды: https://wiki.lumintomc.ru/info/bot_commands\n\n"
         # --- ПОВЕДЕНИЕ ПРИ НЕЗНАНИИ ---
         "Если ты не знаешь ответа — направляй игрока в техподдержку: https://t.me/lumintoch?direct\n"
         "Никаких таблиц, графиков или сложных структур в ответах не используй."
@@ -175,7 +175,7 @@ class money:
 
 
 class help:
-    comm = "🤖 : [Помощь по командам](https://github.com/trassert/Luminto/wiki)"
+    comm = "🤖 : [Помощь по командам](https://wiki.lumintomc.ru/info/bot_commands)"
 
 
 class server:
@@ -653,7 +653,7 @@ class chataction:
         "    Айпи - **/ip**\n"
         "    Онлайн - **/online**\n"
         "    Карта сервера - **/map**\n"
-        "    **[Остальные команды](https://github.com/trassert/Luminto/wiki)**\n"
+        "    **[Остальные команды](https://wiki.lumintomc.ru/info/bot_commands)**\n"
         "    **[Правила](https://wiki.lumintomc.ru/rules/list)**\n"
         "\n"
         "Есть вопросы?\n"
