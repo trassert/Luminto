@@ -21,11 +21,11 @@ async def average(event: Message) -> Message:
             ),
         )
         if not numbers:
-            return await event.reply(phrase.average_no_numbers)
+            return await event.reply(phrase.average.no_numbers)
         average_value = round(sum(numbers) / len(numbers), 2)
         return await event.reply(phrase.average.ok.format(average_value))
     except ValueError:
-        return await event.reply(phrase.average_no_numbers)
+        return await event.reply(phrase.average.no_numbers)
 
 
 @func.new_command(r"/qr (.+)")

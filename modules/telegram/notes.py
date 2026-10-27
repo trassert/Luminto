@@ -62,30 +62,24 @@ async def get_note(event: Message):
     )
 
 
+def _numbered(names: list[str]) -> str:
+    return "\n".join(f"{n}. {name}" for n, name in enumerate(names, 1))
+
+
 @func.new_command([r"/notes$", r"/ноты$"])
 async def get_all_notes(event: Message):
     allnotes = notes.get_all()
-    if allnotes == []:
+    if not allnotes:
         return await event.reply(phrase.notes.empty)
-    text = ""
-    n = 1
-    for name in allnotes:
-        text += f"{n}. {name}\n"
-        n += 1
-    return await event.reply(phrase.notes.alltext.format(text))
+    return await event.reply(phrase.notes.alltext.format(_numbered(allnotes)))
 
 
 @func.new_command([r"/моиноты$", r"/mynotes$"], min_role=1)
 async def get_my_notes(event: Message):
     info = await notes.get_by_author(event.sender_id)
-    if info == []:
+    if not info:
         return await event.reply(phrase.notes.my_notes_empty)
-    text = ""
-    n = 1
-    for name in info:
-        text += f"{n}. {name}\n"
-        n += 1
-    return await event.reply(phrase.notes.my_notes.format(text))
+    return await event.reply(phrase.notes.my_notes.format(_numbered(info)))
 
 
 @func.new_command(
@@ -109,4 +103,4 @@ async def del_note(event: Message):
 
 @func.new_command([r"\-text$", r"\-нот$", r"\-note$"], min_role=1)
 async def del_note_notext(event: Message):
-    return await event.reply(phrase.note.noname)
+    return await event.reply(phrase.notes.noname)

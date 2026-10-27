@@ -630,6 +630,28 @@ async def check_info_by_nick_empty(event: Message) -> Message:
     return await event.reply(phrase.nick.empty)
 
 
+async def _request_city(word: str, user_id: int) -> str:
+    """Отправляет создателю заявку на добавление города. Возвращает имя автора."""
+    user_name = await func.get_name(user_id)
+    await client.send_message(
+        config.tokens.bot.creator,
+        phrase.cities.request.format(user=user_name, word=word),
+        buttons=[
+            [
+                Button.inline(
+                    "✅ Добавить",
+                    f"cityadd.yes.{word}.{user_id}".encode(),
+                ),
+                Button.inline(
+                    "❌ Отклонить",
+                    f"cityadd.no.{word}.{user_id}".encode(),
+                ),
+            ]
+        ],
+    )
+    return user_name
+
+
 @func.new_command(r"\+город (.+)")
 async def cities_request(event: Message) -> Message:
     """Отправляет запрос администратору на добавление нового города."""
@@ -641,24 +663,8 @@ async def cities_request(event: Message) -> Message:
         if word in (await aiof.read()).splitlines():
             return await event.reply(phrase.cities.in_blacklist)
 
-    user_name = await func.get_name(event.sender_id)
     try:
-        await client.send_message(
-            config.tokens.bot.creator,
-            phrase.cities.request.format(user=user_name, word=word),
-            buttons=[
-                [
-                    Button.inline(
-                        "✅ Добавить",
-                        f"cityadd.yes.{word}.{event.sender_id}".encode(),
-                    ),
-                    Button.inline(
-                        "❌ Отклонить",
-                        f"cityadd.no.{word}.{event.sender_id}".encode(),
-                    ),
-                ]
-            ],
-        )
+        await _request_city(word, event.sender_id)
     except tgerrors.ButtonDataInvalidError:
         return await event.reply(phrase.cities.long)
     return await event.reply(phrase.cities.set.format(word=word))
@@ -696,28 +702,10 @@ async def cities_requests(event: Message) -> Message:
 
     await status_msg.edit("\n".join(output))
 
-    user_name = await func.get_name(event.sender_id)
     for word in pending:
-        try:
-            await client.send_message(
-                config.tokens.bot.creator,
-                phrase.cities.request.format(user=user_name, word=word),
-                buttons=[
-                    [
-                        Button.inline(
-                            "✅ Добавить",
-                            f"cityadd.yes.{word}.{event.sender_id}".encode(),
-                        ),
-                        Button.inline(
-                            "❌ Отклонить",
-                            f"cityadd.no.{word}.{event.sender_id}".encode(),
-                        ),
-                    ]
-                ],
-            )
+        with contextlib.suppress(Exception):
+            await _request_city(word, event.sender_id)
             await asyncio.sleep(0.3)
-        except Exception:
-            pass
     return None
 
 

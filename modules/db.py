@@ -148,15 +148,15 @@ class Statistic:
             await files.save_json_async(filepath, stats, sort_keys=True)
             return 0
         stats = await files.load_json_async(filepath)
-        if all_days:
-            return sum(stats.values()) or 0
+        if all_days or self.days <= 0:
+            return stats if data else sum(stats.values())
         start_date = datetime.now() - timedelta(days=self.days)
         filtered = {
             date: value
             for date, value in stats.items()
             if datetime.strptime(date, "%Y.%m.%d") >= start_date
         }
-        return filtered if data else sum(filtered.values()) or 0
+        return filtered if data else sum(filtered.values())
 
     async def get_all(self, all_days=False):
         data = {}
@@ -213,16 +213,14 @@ class Statistic:
         for json_file in pathes.stats.iterdir():
             if json_file.suffix != ".json":
                 continue
-            filepath = json_file
             try:
-                data = await files.load_json_async(filepath)
+                data = await files.load_json_async(json_file)
                 for date, count in data.items():
                     totals[date] += count
             except Exception:
                 logger.error(f"Ошибка при чтении файла - {json_file.name}")
-                continue
         if self.days <= 0:
-            return dict(sorted(totals.items(), key=lambda item: item[0]))
+            return dict(sorted(totals.items()))
         start_date = datetime.now() - timedelta(days=self.days)
         return {
             date: value
@@ -527,28 +525,27 @@ async def mailing_get():
     return [x for x in users if x not in unsub_set]
 
 
-async def mailing_addsub(id: int) -> bool:
+async def _set_subscription(id: int, subscribe: bool) -> bool:
     if not isinstance(id, int):
         msg = f"Int expected, got {type(id).__name__}"
         raise TypeError(msg)
-    data = await files.load_json_async(pathes.mailing)
-    if id not in data["unsub"]:
-        return False
-    data["unsub"].remove(id)
-    await files.save_json_async(pathes.mailing, data)
-    return True
+
+    def _updater(data: dict) -> bool:
+        unsub = data["unsub"]
+        if subscribe == (id not in unsub):
+            return False
+        unsub.remove(id) if subscribe else unsub.append(id)
+        return True
+
+    return await files.update_json_async(pathes.mailing, _updater)
+
+
+async def mailing_addsub(id: int) -> bool:
+    return await _set_subscription(id, subscribe=True)
 
 
 async def mailing_rmsub(id: int) -> bool:
-    if not isinstance(id, int):
-        msg = f"Int expected, got {type(id).__name__}"
-        raise TypeError(msg)
-    data = await files.load_json_async(pathes.mailing)
-    if id in data["unsub"]:
-        return False
-    data["unsub"].append(id)
-    await files.save_json_async(pathes.mailing, data)
-    return True
+    return await _set_subscription(id, subscribe=False)
 
 
 async def get_votes(player: str) -> int:
@@ -559,11 +556,11 @@ async def get_votes(player: str) -> int:
 
 async def add_votes(player: str, count: int = 1) -> None:
     player = str(player)
-    data = await files.load_json_async(pathes.votes)
-    data[player] = data.get(player, 0) + count
-    if data[player] == config.cfg.Advancements.Votes:
-        pass
-    await files.save_json_async(pathes.votes, data)
+
+    def _updater(data: dict) -> None:
+        data[player] = data.get(player, 0) + count
+
+    await files.update_json_async(pathes.votes, _updater)
 
 
 async def get_crocodile_word() -> str:
