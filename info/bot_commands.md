@@ -4,10 +4,6 @@ icon: command-palette
 order: -5
 ---
 
-## 📖 Команды бота - [@luminto_chatbot](https://t.me/luminto_chatbot)
-
----
-
 ## 🗂 Содержание
 
 | Раздел | Что внутри |
