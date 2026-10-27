@@ -133,8 +133,8 @@ async def start(event: Message):
         r"/обо мне$()",
         r"/я$()",
         r"/i$()",
-        r"/profile(.*)",
-        r"/профиль(.*)",
+        r"/profile(?:@\w+)?(.*)",
+        r"/профиль(?:@\w+)?(.*)",
         r"/myprofile$()",
     ],
 )
@@ -158,7 +158,7 @@ async def profile(event: Message) -> Message:
     if not isinstance(entity, types.User):
         return await event.reply(phrase.money.no_such_people)
     if entity.bot:
-        return await event.reply(phrase.money.bot)
+        return await event.reply(phrase.money.no_people)
     minecraft_nick = await nicks.get_byid(user_id)
     role = (
         await roles.get_role(minecraft_nick)

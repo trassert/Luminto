@@ -308,7 +308,7 @@ async def save_pic(event: Message):
     return await event.reply(phrase.pic.no_pic)
 
 
-@func.new_command(r"/непривязанные$", min_role=roles.INTERN)
+@func.new_command(r"/непривязанные(?:@\w+)?$", min_role=roles.INTERN)
 async def unlinked_players(event: Message):
     unlinked = [
         await func.get_name(user.id)
