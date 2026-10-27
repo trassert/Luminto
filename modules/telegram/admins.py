@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
-from .. import db, formatter, mcrcon, nicks, pathes, phrase, roles
+from .. import config, db, formatter, mcrcon, nicks, pathes, phrase, roles
 from . import func
 from .client import client
 
@@ -306,3 +306,29 @@ async def save_pic(event: Message):
             return await event.reply(phrase.pic.error)
 
     return await event.reply(phrase.pic.no_pic)
+
+
+@func.new_command(r"/непривязанные$", min_role=roles.INTERN)
+async def unlinked_players(event: Message):
+    unlinked = [
+        await func.get_name(user.id)
+        async for user in client.iter_participants(config.chats.chat)
+        if not user.bot and await nicks.get_byid(user.id) is None
+    ]
+    if not unlinked:
+        return await event.reply(phrase.perms.unlinked_empty)
+
+    chunks, chunk = [], ""
+    limit = 4096 - len(phrase.perms.unlinked.format(count="", text=""))
+    for name in unlinked:
+        if len(chunk) + len(name) + 1 > limit:
+            chunks.append(chunk)
+            chunk = ""
+        chunk += name + "\n"
+    chunks.append(chunk)
+
+    for chunk in chunks:
+        await event.reply(
+            phrase.perms.unlinked.format(count=len(unlinked), text=chunk),
+        )
+    return None

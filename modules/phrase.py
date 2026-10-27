@@ -265,6 +265,8 @@ class perms:
     no_minecraft = "❌ : У пользователя не привязан Minecraft-ник."
     max_role = "❌ : У пользователя уже максимальная роль."
     min_role = "❌ : У пользователя уже минимальная роль."
+    unlinked = "📝 : Игроки без Minecraft-ника ({count}):\n\n{text}"
+    unlinked_empty = "✅ : Все игроки чата привязали Minecraft-ник!"
 
 
 class no:
