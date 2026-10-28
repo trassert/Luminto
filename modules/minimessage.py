@@ -61,6 +61,7 @@ DECORATIONS = {
     "i": "italic",
     "underlined": "underlined",
     "underline": "underlined",
+    "u": "underlined",
     "strikethrough": "strikethrough",
     "strike": "strikethrough",
     "st": "strikethrough",
