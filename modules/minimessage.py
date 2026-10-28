@@ -534,9 +534,9 @@ class Renderer:
                 dr.rectangle(
                     [
                         round(x) + dx,
-                        baseline + dx,
+                        baseline + dx + s,
                         round(x + adv) + dx + s - 1,
-                        baseline + dx + s - 1,
+                        baseline + dx + s + s - 1,
                     ],
                     fill=(*color, 255),
                 )
