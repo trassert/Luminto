@@ -6,7 +6,7 @@
 
 ## Правила
 
-- [Предисловие и Важные соглашения](https://wiki.lumintomc.ru/rules/base.md): Принцип наказаний:
+- [Предисловие и Важные соглашения](https://wiki.lumintomc.ru/rules/base.md): Принципы наказаний:
 - [Свод правил сервера](https://wiki.lumintomc.ru/rules/list.md): Администрация оставляет за собой право изменять наказания в зависимости от контекста ситуации и тяжести проступка.
 - [Как подать апелляцию](https://wiki.lumintomc.ru/rules/appeal.md): Чат в Telegram: @lumintomc
 
