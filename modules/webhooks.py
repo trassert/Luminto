@@ -9,7 +9,7 @@ import aiohttp.web
 import orjson
 from loguru import logger
 
-from . import config, db, formatter, log, nicks, phrase, roles
+from . import config, db, files, formatter, log, nicks, pathes, phrase, roles
 from .telegram import func
 from .telegram.client import client
 
@@ -71,8 +71,18 @@ async def github(request: aiohttp.web.Request) -> aiohttp.web.Response:
             )
 
         if event == "star" and action != "deleted":
-            logger.info(f"Звезда! Репо {repo_name}")
             sender = data["sender"]
+            try:
+                starred = await files.load_json_async(pathes.ghstars)
+            except Exception:
+                starred = {}
+            logins = starred.setdefault(repo["full_name"], [])
+            if sender["login"] in logins:
+                logger.info(f"Повторная звезда от {sender['login']}")
+                return aiohttp.web.Response(text="ok")
+            logins.append(sender["login"])
+            await files.save_json_async(pathes.ghstars, starred)
+            logger.info(f"Звезда! Репо {repo_name}")
             await send(
                 phrase.github.star.format(
                     repo=repo_name,
