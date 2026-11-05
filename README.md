@@ -6,7 +6,6 @@
 <img src="https://img.shields.io/badge/Ruff-FFC131?style=for-the-badge&logo=ruff&logoColor=white" alt="Badge">
 <img src="https://img.shields.io/badge/Uv-FFC131?style=for-the-badge&logo=astral&logoColor=white" alt="Badge">
 <img src="https://img.shields.io/badge/Aiohttp-blue?style=for-the-badge&logo=aiohttp&logoColor=white" alt="Badge">
-<img src="https://img.shields.io/endpoint?url=https://ghloc.vercel.app/api/trassert/Luminto/badge?style=flat&logoColor=white&color=c78aff&style=for-the-badge" alt="Lines">
 <img src="https://img.shields.io/github/commit-activity/m/trassert/Luminto?color=c78aff&label=commits&style=for-the-badge" alt="Commits">
 </p>
 
