@@ -1,4 +1,3 @@
-import asyncio
 import contextlib
 
 from aiogram import Router, exceptions, types
@@ -12,8 +11,6 @@ from .client import client, dp
 logger.info(f"Загружен модуль {__name__}!")
 
 router = Router(name="actions")
-
-WELCOME_DELAY = 5
 
 
 @client.on(events.ChatAction(chats=config.chats.chat))
@@ -64,45 +61,19 @@ async def chat_action(event: events.ChatAction.Event):
             ),
         )
 
-    if event.user_joined or event.user_added:
-        if formatter.check_zalgo(user_name) > 50:
-            with contextlib.suppress(Exception):
-                await client.edit_permissions(
-                    config.chats.chat,
-                    event.user_id,
-                    send_messages=False,
-                )
-            return await client.send_message(
-                config.chats.chat,
-                phrase.chataction.zalgo.format(user_name),
-                silent=False,
-            )
-
-        if not db.hellomsg_check(event.user_id):
-            return None
-
-        await asyncio.sleep(WELCOME_DELAY)
-
-        try:
-            perms = await client.get_permissions(
+    if (event.user_joined or event.user_added) and (
+        formatter.check_zalgo(user_name) > 50
+    ):
+        with contextlib.suppress(Exception):
+            await client.edit_permissions(
                 config.chats.chat,
                 event.user_id,
+                send_messages=False,
             )
-            if perms.is_banned or perms.has_left:
-                logger.info(
-                    f"Пользователь {event.user_id} забанен или вышел до приветствия.",
-                )
-                return None
-        except Exception as e:
-            logger.info(
-                f"Пользователь {event.user_id} отсутствует в чате или ошибка проверки: {e}",
-            )
-            return None
-
         return await client.send_message(
             config.chats.chat,
-            phrase.chataction.hello.format(user_name),
-            link_preview=False,
+            phrase.chataction.zalgo.format(user_name),
+            silent=False,
         )
 
     return None

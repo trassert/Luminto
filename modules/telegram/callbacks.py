@@ -653,27 +653,3 @@ async def hint_callback(event: events.CallbackQuery.Event):
                 ),
                 buttons=None,
             )
-
-
-@func.new_callback("test")
-async def simple_antibot(event: events.CallbackQuery.Event):
-    data = event.data.decode("utf-8").split(".")
-    if str(event.sender_id) != data[1]:
-        return await event.answer(phrase.not_for_you, alert=True)
-    await client.edit_permissions(
-        config.chats.chat,
-        event.sender_id,
-        send_messages=True,
-    )
-    await event.answer(phrase.chataction.test_passed)
-    await event.delete()
-    if not db.hellomsg_check(event.sender_id):
-        return logger.info(
-            f"{event.sender_id} вступил, но приветствие уже было.",
-        )
-
-    return await client.send_message(
-        config.chats.chat,
-        phrase.chataction.hello.format(await func.get_name(event.sender_id)),
-        link_preview=False,
-    )

@@ -506,18 +506,6 @@ class CitiesGame:
         return self.data.get("id", 0)
 
 
-def hellomsg_check(input_id):
-    id_str = str(input_id)
-    ids_list = files.load_json_sync(pathes.hellomsg)
-    if not isinstance(ids_list, list):
-        ids_list = []
-    if id_str in ids_list:
-        return False
-    ids_list.append(id_str)
-    files.save_json_sync(pathes.hellomsg, ids_list, indent=True)
-    return True
-
-
 async def mailing_get():
     users = (await nicks.get_all()).values()
     data = await files.load_json_async(pathes.mailing)
