@@ -128,7 +128,7 @@ class AI:
                             "content": await self._call_tool(call),
                         }
                     )
-                 resp = await self.client.chat.completions.create(
+                resp = await self.client.chat.completions.create(
                     model=self.model,
                     messages=self.history,
                     temperature=1,
