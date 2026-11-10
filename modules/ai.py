@@ -150,7 +150,12 @@ class AI:
             if full:
                 self.add_to_history("assistant", full)
                 try:
-                    await files.save_json_async(self.history_file, self.history)
+                    clean_history = [
+                        m
+                        for m in self.history
+                        if m.get("role") in VALID_ROLES and m.get("content")
+                    ]
+                    await files.save_json_async(self.history_file, clean_history)
                 except Exception as e:
                     logger.error(f"Ошибка сохранения истории: {e}")
 
