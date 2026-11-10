@@ -37,26 +37,22 @@ async def ai_handler(event: Message):
         )
     except Exception:
         full_name = "Неопознанный персонаж"
-    text = ""
+    full_text = ""
     last_edit_len = 0
     async for chunk in ai.Ai.generate_response(full_name, req):
-        text += chunk
-        if len(text) > 4000:
-            message = await event.reply(text)
-            last_edit_len = len(text)
-            text = ""
+        full_text += chunk
+        if len(full_text) > 4000:
+            with contextlib.suppress(MessageNotModifiedError):
+                await message.edit(full_text[:4000])
+            message = await event.reply(full_text[4000:])
+            full_text = full_text[4000:]
+            last_edit_len = len(full_text)
             continue
-        if not message:
-            message = await event.reply(text)
-            last_edit_len = len(text)
-            continue
-        if len(text) - last_edit_len >= 200:
-            try:
-                await message.edit(text)
-                last_edit_len = len(text)
-            except MessageNotModifiedError:
-                pass
-    if message and len(text) > last_edit_len:
+        if len(full_text) - last_edit_len >= 200:
+            with contextlib.suppress(MessageNotModifiedError):
+                await message.edit(full_text)
+                last_edit_len = len(full_text)
+    if message and len(full_text) > last_edit_len:
         with contextlib.suppress(MessageNotModifiedError):
-            await message.edit(text)
+            await message.edit(full_text)
     return None
