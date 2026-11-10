@@ -1,5 +1,5 @@
-from collections.abc import AsyncGenerator
 import json
+from collections.abc import AsyncGenerator
 
 import httpx
 from groq import AsyncGroq
@@ -9,7 +9,11 @@ from . import config, files, pathes, phrase
 
 logger.info(f"Загружен модуль {__name__}!")
 CPT, VALID_ROLES = 3, {"system", "user", "assistant"}
-WIKI_BASE, LLMS_URL = "https://wiki.lumintomc.ru", "https://wiki.lumintomc.ru/llms.txt"
+WIKI_BASE, LLMS_URL = (
+    "https://wiki.lumintomc.ru",
+    "https://wiki.lumintomc.ru/llms.txt",
+)
+
 
 class AI:
     def __init__(
@@ -22,10 +26,15 @@ class AI:
         model=config.cfg.AiModel,
     ):
         self.model, self.system_prompt = model, system_prompt
-        self.max_history_tokens, self.history_file = max_history_tokens, history_file
+        self.max_history_tokens, self.history_file = (
+            max_history_tokens,
+            history_file,
+        )
         self.client = AsyncGroq(
             api_key=api_key,
-            http_client=httpx.AsyncClient(proxy=proxy_str) if proxy_str else None,
+            http_client=httpx.AsyncClient(proxy=proxy_str)
+            if proxy_str
+            else None,
         )
         self.history = None
 
@@ -33,16 +42,20 @@ class AI:
         return len(s) // CPT if s else 0
 
     def add_to_history(self, role, content):
-        self.history.append({
-            "role": "assistant" if role == "assistant" else "user",
-            "content": content,
-        })
+        self.history.append(
+            {
+                "role": "assistant" if role == "assistant" else "user",
+                "content": content,
+            }
+        )
         start = 1 if self.history[0].get("role") == "system" else 0
         total = sum(self._tokens(m.get("content", "")) for m in self.history)
         while total > self.max_history_tokens and len(self.history) > start + 1:
             total -= self._tokens(self.history.pop(start).get("content", ""))
         if total > self.max_history_tokens:
-            logger.warning("История слишком большая. Очищаю до системного промпта.")
+            logger.warning(
+                "История слишком большая. Очищаю до системного промпта."
+            )
             self.history = self.history[:start]
 
     async def _load(self):
@@ -108,11 +121,13 @@ class AI:
             if msg.tool_calls:
                 self.history.append(msg.model_dump(exclude_none=True))
                 for call in msg.tool_calls:
-                    self.history.append({
-                        "role": "tool",
-                        "tool_call_id": call.id,
-                        "content": await self._call_tool(call),
-                    })
+                    self.history.append(
+                        {
+                            "role": "tool",
+                            "tool_call_id": call.id,
+                            "content": await self._call_tool(call),
+                        }
+                    )
                 resp = await self.client.chat.completions.create(
                     model=self.model,
                     messages=self.history,
