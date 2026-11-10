@@ -21,20 +21,26 @@ def href(url: str) -> str:
 
 class ai:
     tools = [
-        {"type": "function", "function": {
-            "name": "get_wiki_index",
-            "description": "Карта вики: список страниц и ссылки на их .md-версии. Вызывай первым.",
-            "parameters": {"type": "object", "properties": {}},
-        }},
-        {"type": "function", "function": {
-            "name": "read_wiki_page",
-            "description": "Читает .md-страницу вики по ссылке из индекса.",
-            "parameters": {
-                "type": "object",
-                "properties": {"url": {"type": "string"}},
-                "required": ["url"],
+        {
+            "type": "function",
+            "function": {
+                "name": "get_wiki_index",
+                "description": "Карта вики: список страниц и ссылки на их .md-версии. Вызывай первым.",
+                "parameters": {"type": "object", "properties": {}},
             },
-        }},
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "read_wiki_page",
+                "description": "Читает .md-страницу вики по ссылке из индекса.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {"url": {"type": "string"}},
+                    "required": ["url"],
+                },
+            },
+        },
     ]
     not_in_chat = "💬 : Ии доступен только в чате."
     wait = f"{wait_emoji} : Генерирую.."
