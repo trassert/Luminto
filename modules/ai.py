@@ -128,13 +128,15 @@ class AI:
                             "content": await self._call_tool(call),
                         }
                     )
-                resp = await self.client.chat.completions.create(
+                 resp = await self.client.chat.completions.create(
                     model=self.model,
                     messages=self.history,
                     temperature=1,
                     max_completion_tokens=2048,
                     top_p=1,
                     stream=True,
+                    tools=phrase.ai.tools,
+                    tool_choice="auto",
                 )
             async for chunk in resp:
                 if c := chunk.choices[0].delta.content:
