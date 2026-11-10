@@ -114,7 +114,7 @@ class AI:
                 max_completion_tokens=2048,
                 top_p=1,
                 stream=False,
-                tools=WIKI_TOOLS,
+                tools=phrase.ai.tools,
                 tool_choice="auto",
             )
             msg = resp.choices[0].message
