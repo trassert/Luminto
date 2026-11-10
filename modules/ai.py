@@ -116,6 +116,7 @@ class AI:
                 stream=False,
                 tools=phrase.ai.tools,
                 tool_choice="auto",
+                reasoning_effort="none",
             )
             msg = resp.choices[0].message
             if msg.tool_calls:
@@ -135,8 +136,6 @@ class AI:
                     max_completion_tokens=2048,
                     top_p=1,
                     stream=True,
-                    tools=phrase.ai.tools,
-                    tool_choice="auto",
                 )
             async for chunk in resp:
                 if c := chunk.choices[0].delta.content:
