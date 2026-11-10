@@ -129,6 +129,9 @@ class AI:
                             "content": await self._call_tool(call),
                         }
                     )
+                self.history.append(
+                    {"role": "user", "content": "Ответь на основе полученных данных."}
+                )
                 resp = await self.client.chat.completions.create(
                     model=self.model,
                     messages=self.history,
@@ -136,6 +139,8 @@ class AI:
                     max_completion_tokens=2048,
                     top_p=1,
                     stream=True,
+                    tools=phrase.ai.tools,
+                    tool_choice="auto",
                 )
             async for chunk in resp:
                 if c := chunk.choices[0].delta.content:
@@ -155,12 +160,9 @@ class AI:
                         for m in self.history
                         if m.get("role") in VALID_ROLES and m.get("content")
                     ]
-                    await files.save_json_async(
-                        self.history_file, clean_history
-                    )
+                    await files.save_json_async(self.history_file, clean_history)
                 except Exception as e:
                     logger.error(f"Ошибка сохранения истории: {e}")
-
 
 Ai = AI(
     proxy_str=config.tokens.ai.proxy.string
