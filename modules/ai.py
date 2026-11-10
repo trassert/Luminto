@@ -116,7 +116,7 @@ class AI:
                 stream=False,
                 tools=phrase.ai.tools,
                 tool_choice="auto",
-                reasoning_effort="none",
+                reasoning_effort="low",
             )
             msg = resp.choices[0].message
             if msg.tool_calls:
