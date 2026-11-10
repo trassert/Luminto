@@ -1,4 +1,5 @@
 from collections.abc import AsyncGenerator
+import json
 
 import httpx
 from groq import AsyncGroq
@@ -8,7 +9,7 @@ from . import config, files, pathes, phrase
 
 logger.info(f"Загружен модуль {__name__}!")
 CPT, VALID_ROLES = 3, {"system", "user", "assistant"}
-
+WIKI_BASE, LLMS_URL = "https://wiki.lumintomc.ru", "https://wiki.lumintomc.ru/llms.txt"
 
 class AI:
     def __init__(
@@ -21,15 +22,10 @@ class AI:
         model=config.cfg.AiModel,
     ):
         self.model, self.system_prompt = model, system_prompt
-        self.max_history_tokens, self.history_file = (
-            max_history_tokens,
-            history_file,
-        )
+        self.max_history_tokens, self.history_file = max_history_tokens, history_file
         self.client = AsyncGroq(
             api_key=api_key,
-            http_client=httpx.AsyncClient(proxy=proxy_str)
-            if proxy_str
-            else None,
+            http_client=httpx.AsyncClient(proxy=proxy_str) if proxy_str else None,
         )
         self.history = None
 
@@ -37,21 +33,16 @@ class AI:
         return len(s) // CPT if s else 0
 
     def add_to_history(self, role, content):
-        self.history.append(
-            {
-                "role": "assistant" if role == "assistant" else "user",
-                "content": content,
-            },
-        )
-        sys = self.history[0].get("role") == "system"
-        start = 1 if sys else 0
+        self.history.append({
+            "role": "assistant" if role == "assistant" else "user",
+            "content": content,
+        })
+        start = 1 if self.history[0].get("role") == "system" else 0
         total = sum(self._tokens(m.get("content", "")) for m in self.history)
         while total > self.max_history_tokens and len(self.history) > start + 1:
             total -= self._tokens(self.history.pop(start).get("content", ""))
         if total > self.max_history_tokens:
-            logger.warning(
-                "История слишком большая. Очищаю до системного промпта.",
-            )
+            logger.warning("История слишком большая. Очищаю до системного промпта.")
             self.history = self.history[:start]
 
     async def _load(self):
@@ -80,6 +71,24 @@ class AI:
             h.insert(0, {"role": "system", "content": self.system_prompt})
         return h
 
+    async def _wiki_index(self) -> str:
+        async with httpx.AsyncClient(timeout=10) as c:
+            return (await c.get(LLMS_URL)).text
+
+    async def _read_wiki_page(self, url: str) -> str:
+        if not url.startswith(WIKI_BASE):
+            return "Можно читать только страницы этой вики."
+        async with httpx.AsyncClient(timeout=10) as c:
+            return (await c.get(url)).text
+
+    async def _call_tool(self, call) -> str:
+        args = json.loads(call.function.arguments or "{}")
+        if call.function.name == "get_wiki_index":
+            return await self._wiki_index()
+        if call.function.name == "read_wiki_page":
+            return await self._read_wiki_page(args["url"])
+        return "Неизвестный инструмент."
+
     async def generate_response(self, user, prompt) -> AsyncGenerator[str]:
         self.history = self.history or await self._load()
         self.add_to_history(user, prompt)
@@ -91,10 +100,27 @@ class AI:
                 temperature=1,
                 max_completion_tokens=2048,
                 top_p=1,
-                stream=True,
-                stop=None,
-                tools=[{"type": "browser_search"}],
+                stream=False,
+                tools=WIKI_TOOLS,
+                tool_choice="auto",
             )
+            msg = resp.choices[0].message
+            if msg.tool_calls:
+                self.history.append(msg.model_dump(exclude_none=True))
+                for call in msg.tool_calls:
+                    self.history.append({
+                        "role": "tool",
+                        "tool_call_id": call.id,
+                        "content": await self._call_tool(call),
+                    })
+                resp = await self.client.chat.completions.create(
+                    model=self.model,
+                    messages=self.history,
+                    temperature=1,
+                    max_completion_tokens=2048,
+                    top_p=1,
+                    stream=True,
+                )
             async for chunk in resp:
                 if c := chunk.choices[0].delta.content:
                     full += c
