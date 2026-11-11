@@ -35,7 +35,8 @@ async def ai_handler(event: Message):
     except Exception:
         full_name = "Неопознанный персонаж"
     max_len, edit_step = config.cfg.Ai.TgMaxMessageLen, config.cfg.Ai.TgEditStep
-    full_text = last_edit_len = 0
+    full_text = ""
+    last_edit_len = 0
     async for chunk in ai.Ai.generate_response(full_name, req):
         full_text += chunk
         if len(full_text) > max_len:  # переполнение — остаток в новое сообщение
