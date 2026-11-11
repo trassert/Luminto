@@ -8,72 +8,61 @@ from loguru import logger
 from . import config, files, pathes, phrase
 
 logger.info(f"Загружен модуль {__name__}!")
-CPT, VALID_ROLES = 3, {"system", "user", "assistant"}
-WIKI_BASE, LLMS_URL = (
-    "https://wiki.lumintomc.ru",
-    "https://wiki.lumintomc.ru/llms.txt",
-)
+VALID_ROLES = {"system", "user", "assistant"}
 
 
 class AI:
-    def __init__(
-        self,
-        api_key=config.tokens.ai.token,
-        max_history_tokens=5000,
-        history_file=pathes.ai,
-        system_prompt=phrase.ai.prompt,
-        proxy_str="",
-        model=config.cfg.AiModel,
-    ):
-        self.model, self.system_prompt = model, system_prompt
-        self.max_history_tokens, self.history_file = (
-            max_history_tokens,
-            history_file,
+    def __init__(self):
+        ai_cfg = config.cfg.Ai
+        self.model = ai_cfg.Model
+        self.max_history_tokens = ai_cfg.MaxHistoryTokens
+        self.max_completion_tokens = ai_cfg.MaxCompletionTokens
+        self.reasoning_effort = ai_cfg.ReasoningEffort
+        self.wiki_timeout = ai_cfg.WikiTimeout
+        self.cpt = ai_cfg.CharsPerToken
+        self.wiki_base = ai_cfg.WikiBaseUrl
+        self.wiki_llms_url = ai_cfg.WikiLlmsUrl
+        proxy_str = (
+            config.tokens.ai.proxy.proxy_str
+            if config.tokens.ai.proxy.enabled
+            else None
         )
         self.client = AsyncGroq(
-            api_key=api_key,
-            http_client=httpx.AsyncClient(proxy=proxy_str)
-            if proxy_str
-            else None,
+            api_key=config.tokens.ai.token,
+            http_client=httpx.AsyncClient(proxy=proxy_str) if proxy_str else None,
         )
+        self.history_file = pathes.ai
+        self.system_prompt = phrase.ai.prompt
         self.history = None
 
     def _tokens(self, s):
-        return len(s) // CPT if s else 0
+        return len(s) // self.cpt if s else 0
 
     def add_to_history(self, role, content):
         self.history.append(
-            {
-                "role": "assistant" if role == "assistant" else "user",
-                "content": content,
-            }
+            {"role": "assistant" if role == "assistant" else "user", "content": content}
         )
         start = 1 if self.history[0].get("role") == "system" else 0
         total = sum(self._tokens(m.get("content", "")) for m in self.history)
         while total > self.max_history_tokens and len(self.history) > start + 1:
             total -= self._tokens(self.history.pop(start).get("content", ""))
         if total > self.max_history_tokens:
-            logger.warning(
-                "История слишком большая. Очищаю до системного промпта."
-            )
+            logger.warning("История слишком большая. Очищаю до системного промпта.")
             self.history = self.history[:start]
 
     async def _load(self):
-        self.history_file.parent.mkdir(parents=True, exist_ok=True)
         try:
             data = (
                 await files.load_json_async(self.history_file)
                 if self.history_file.exists()
                 else []
             )
-            if not isinstance(data, list):
-                data = []
         except Exception as e:
             logger.error(f"Ошибка загрузки истории: {e}. Создаю новую.")
             data = []
         h = [
             {"role": m["role"], "content": m["content"]}
-            for m in data
+            for m in (data if isinstance(data, list) else [])
             if isinstance(m, dict)
             and m.get("role") in VALID_ROLES
             and m.get("content")
@@ -84,42 +73,57 @@ class AI:
             h.insert(0, {"role": "system", "content": self.system_prompt})
         return h
 
-    async def _wiki_index(self) -> str:
-        async with httpx.AsyncClient(timeout=10) as c:
-            return (await c.get(LLMS_URL)).text
+    async def _save(self):
+        clean = [
+            m
+            for m in self.history
+            if m.get("role") in VALID_ROLES and m.get("content")
+        ]
+        await files.save_json_async(self.history_file, clean)
 
-    async def _read_wiki_page(self, url: str) -> str:
-        if not url.startswith(WIKI_BASE):
-            return "Можно читать только страницы этой вики."
-        async with httpx.AsyncClient(timeout=10) as c:
+    async def _wiki_get(self, url: str) -> str:
+        async with httpx.AsyncClient(timeout=self.wiki_timeout) as c:
             return (await c.get(url)).text
 
     async def _call_tool(self, call) -> str:
-        args = json.loads(call.function.arguments or "{}")
-        if call.function.name == "get_wiki_index":
-            return await self._wiki_index()
-        if call.function.name == "read_wiki_page":
-            return await self._read_wiki_page(args["url"])
-        return "Неизвестный инструмент."
+        name = call.function.name
+        if name == "get_wiki_index":
+            return await self._wiki_get(self.wiki_llms_url)
+        if name == "read_wiki_page":
+            try:
+                args = json.loads(call.function.arguments or "{}")
+                url = str(args.get("url", ""))
+            except json.JSONDecodeError:
+                return "Некорректные аргументы инструмента."
+            if not url.startswith(self.wiki_base):
+                return "Можно читать только страницы этой вики."
+            return await self._wiki_get(url)
+        return f"Неизвестный инструмент: {name}"
+
+    async def _chat(self, stream: bool):
+        return await self.client.chat.completions.create(
+            model=self.model,
+            messages=self.history,
+            temperature=1,
+            top_p=1,
+            max_completion_tokens=self.max_completion_tokens,
+            tools=phrase.ai.tools,
+            tool_choice="auto",
+            reasoning_effort=self.reasoning_effort,
+            stream=stream,
+        )
 
     async def generate_response(self, user, prompt) -> AsyncGenerator[str]:
         self.history = self.history or await self._load()
         self.add_to_history(user, prompt)
         full = ""
         try:
-            resp = await self.client.chat.completions.create(
-                model=self.model,
-                messages=self.history,
-                temperature=1,
-                max_completion_tokens=2048,
-                top_p=1,
-                stream=False,
-                tools=phrase.ai.tools,
-                tool_choice="auto",
-                reasoning_effort="low",
-            )
+            resp = await self._chat(stream=False)
             msg = resp.choices[0].message
             if msg.tool_calls:
+                # в history обязаны остаться assistant-сообщение с tool_calls
+                # и ответ role=tool на КАЖДЫЙ вызов, иначе Groq отклоняет
+                # запрос ("tool call verification failed")
                 self.history.append(msg.model_dump(exclude_none=True))
                 for call in msg.tool_calls:
                     self.history.append(
@@ -129,49 +133,23 @@ class AI:
                             "content": await self._call_tool(call),
                         }
                     )
-                self.history.append(
-                    {
-                        "role": "user",
-                        "content": "Ответь на основе полученных данных.",
-                    }
-                )
-                resp = await self.client.chat.completions.create(
-                    model=self.model,
-                    messages=self.history,
-                    temperature=1,
-                    max_completion_tokens=2048,
-                    top_p=1,
-                    stream=True,
-                    tools=phrase.ai.tools,
-                    tool_choice="auto",
-                )
+                resp = await self._chat(stream=True)
             async for chunk in resp:
-                if c := chunk.choices[0].delta.content:
-                    full += c
-                    yield c
-        except Exception as e:
-            logger.error(f"Ошибка генерации ответа от Groq: {e}")
-            if self.history[-1].get("role") == "user":
-                self.history.pop()
-            raise
+                choice = chunk.choices[0] if chunk.choices else None
+                if choice and choice.delta.content:
+                    full += choice.delta.content
+                    yield choice.delta.content
+            if not full:
+                logger.warning("Пустой ответ модели.")
         finally:
             if full:
                 self.add_to_history("assistant", full)
                 try:
-                    clean_history = [
-                        m
-                        for m in self.history
-                        if m.get("role") in VALID_ROLES and m.get("content")
-                    ]
-                    await files.save_json_async(
-                        self.history_file, clean_history
-                    )
+                    await self._save()
                 except Exception as e:
                     logger.error(f"Ошибка сохранения истории: {e}")
+            elif self.history[-1].get("role") == "user":
+                self.history.pop()  # не храним запрос без ответа
 
 
-Ai = AI(
-    proxy_str=config.tokens.ai.proxy.string
-    if config.tokens.ai.proxy.enabled
-    else None,
-)
+Ai = AI()
