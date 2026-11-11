@@ -1,4 +1,14 @@
-AiModel: "openai/gpt-oss-120b"
+Ai:
+  Model: "openai/gpt-oss-120b"
+  MaxHistoryTokens: 5000
+  MaxCompletionTokens: 2048
+  ReasoningEffort: "low"
+  WikiTimeout: 10
+  CharsPerToken: 3
+  WikiBaseUrl: "https://wiki.lumintomc.ru"
+  WikiLlmsUrl: "https://wiki.lumintomc.ru/llms.txt"
+  TgMaxMessageLen: 4000
+  TgEditStep: 200
 UseIPv6: false
 EthernetChannel: 1000 #Mbit/s
 
