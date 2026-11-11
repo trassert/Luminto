@@ -29,7 +29,9 @@ class AI:
         )
         self.client = AsyncGroq(
             api_key=config.tokens.ai.token,
-            http_client=httpx.AsyncClient(proxy=proxy_str) if proxy_str else None,
+            http_client=httpx.AsyncClient(proxy=proxy_str)
+            if proxy_str
+            else None,
         )
         self.history_file = pathes.ai
         self.system_prompt = phrase.ai.prompt
@@ -40,14 +42,19 @@ class AI:
 
     def add_to_history(self, role, content):
         self.history.append(
-            {"role": "assistant" if role == "assistant" else "user", "content": content}
+            {
+                "role": "assistant" if role == "assistant" else "user",
+                "content": content,
+            }
         )
         start = 1 if self.history[0].get("role") == "system" else 0
         total = sum(self._tokens(m.get("content", "")) for m in self.history)
         while total > self.max_history_tokens and len(self.history) > start + 1:
             total -= self._tokens(self.history.pop(start).get("content", ""))
         if total > self.max_history_tokens:
-            logger.warning("История слишком большая. Очищаю до системного промпта.")
+            logger.warning(
+                "История слишком большая. Очищаю до системного промпта."
+            )
             self.history = self.history[:start]
 
     async def _load(self):
