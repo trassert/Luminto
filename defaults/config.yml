@@ -1,6 +1,7 @@
 Ai:
   Model: "auto"
   MaxCompletionTokens: 2048
+  MaxHistoryTokens: 32000
   WikiTimeout: 10
   CharsPerToken: 3
   WikiBaseUrl: "https://wiki.lumintomc.ru"
