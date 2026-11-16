@@ -2,8 +2,8 @@ import json
 from collections.abc import AsyncGenerator
 
 import httpx
-from groq import AsyncGroq
 from loguru import logger
+from openai import AsyncOpenAI
 
 from . import config, files, pathes, phrase
 
@@ -17,7 +17,6 @@ class AI:
         self.model = ai_cfg.Model
         self.max_history_tokens = ai_cfg.MaxHistoryTokens
         self.max_completion_tokens = ai_cfg.MaxCompletionTokens
-        self.reasoning_effort = ai_cfg.ReasoningEffort
         self.wiki_timeout = ai_cfg.WikiTimeout
         self.cpt = ai_cfg.CharsPerToken
         self.wiki_base = ai_cfg.WikiBaseUrl
@@ -27,8 +26,9 @@ class AI:
             if config.tokens.ai.proxy.enabled
             else None
         )
-        self.client = AsyncGroq(
+        self.client = AsyncOpenAI(
             api_key=config.tokens.ai.token,
+            base_url=config.tokens.ai.url,
             http_client=httpx.AsyncClient(proxy=proxy_str)
             if proxy_str
             else None,
@@ -116,7 +116,6 @@ class AI:
             max_completion_tokens=self.max_completion_tokens,
             tools=phrase.ai.tools,
             tool_choice="auto",
-            reasoning_effort=self.reasoning_effort,
             stream=stream,
         )
 
@@ -128,9 +127,6 @@ class AI:
             resp = await self._chat(stream=False)
             msg = resp.choices[0].message
             if msg.tool_calls:
-                # в history обязаны остаться assistant-сообщение с tool_calls
-                # и ответ role=tool на КАЖДЫЙ вызов, иначе Groq отклоняет
-                # запрос ("tool call verification failed")
                 self.history.append(msg.model_dump(exclude_none=True))
                 for call in msg.tool_calls:
                     self.history.append(
@@ -156,7 +152,7 @@ class AI:
                 except Exception as e:
                     logger.error(f"Ошибка сохранения истории: {e}")
             elif self.history[-1].get("role") == "user":
-                self.history.pop()  # не храним запрос без ответа
+                self.history.pop()
 
 
 Ai = AI()

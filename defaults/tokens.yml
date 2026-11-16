@@ -45,6 +45,7 @@ ai:
     enabled: false
     proxy_str: "socks5://user:password@ip:port"
   token: "token"
+  url: "https://api.openai.com/v1"
 
 #! For scripts
 
