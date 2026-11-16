@@ -2,9 +2,10 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
-from .. import chart, config, crocostat, db, formatter, mcrcon, pathes, phrase
+from .. import config, crocostat, db, formatter, mcrcon, pathes, phrase
 from . import func
 from .client import client
+lazy from .. import chart
 
 if TYPE_CHECKING:
     from telethon.tl.custom import Message

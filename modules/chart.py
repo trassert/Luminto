@@ -1,19 +1,15 @@
 import math
 from datetime import datetime
 
-import matplotlib.dates as mdates
-import matplotlib.pyplot as plt
-import seaborn as sns
 from loguru import logger
-from matplotlib import font_manager
+lazy import matplotlib.dates as mdates
+lazy import matplotlib.pyplot as plt
+lazy import seaborn as sns
+lazy from matplotlib import font_manager
 
 from . import pathes
 
 logger.info(f"Загружен модуль {__name__}!")
-
-
-font_properties = font_manager.FontEntry(fname=pathes.font, name="minecraft")
-font_manager.fontManager.ttflist.append(font_properties)
 
 
 def getsigint(num_points: int) -> int:
@@ -27,6 +23,11 @@ def getsigint(num_points: int) -> int:
 
 def create_plot(data_dict, output_file=pathes.chart) -> None:
     """Линейный график сообщений по датам."""
+    font_properties = font_manager.FontEntry(
+        fname=pathes.font, name="minecraft"
+    )
+    font_manager.fontManager.ttflist.append(font_properties)
+
     dates = [datetime.strptime(date, "%Y.%m.%d") for date in data_dict]
     values = list(data_dict.values())
 
