@@ -137,6 +137,9 @@ class AI:
                         }
                     )
                 resp = await self._chat(stream=True)
+            else:
+                resp = await self._chat(stream=True)
+
             async for chunk in resp:
                 choice = chunk.choices[0] if chunk.choices else None
                 if choice and choice.delta.content:
