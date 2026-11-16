@@ -34,22 +34,20 @@ async def ai_handler(event: Message):
         full_name = f"{user.first_name or ''} {user.last_name or ''}".strip()
     except Exception:
         full_name = "Неопознанный персонаж"
-    max_len, edit_step = config.cfg.Ai.TgMaxMessageLen, config.cfg.Ai.TgEditStep
+    max_len, edit_step = config.cfg.Ai.TgMaxMessageLen, 1000
     full_text = ""
     last_edit_len = 0
     async for chunk in ai.Ai.generate_response(full_name, req):
         full_text += chunk
-        if len(full_text) > max_len:  # переполнение — остаток в новое сообщение
-            with contextlib.suppress(MessageNotModifiedError):
-                await message.edit(full_text[:max_len])
-            message = await event.reply(full_text[max_len:])
-            full_text = full_text[max_len:]
-            last_edit_len = len(full_text)
-            continue
         if len(full_text) - last_edit_len >= edit_step:
             with contextlib.suppress(MessageNotModifiedError):
                 await message.edit(full_text)
                 last_edit_len = len(full_text)
+        if len(full_text) > max_len:
+            await message.edit(full_text[:max_len])
+            message = await event.reply(full_text[max_len:])
+            full_text = full_text[max_len:]
+            last_edit_len = 0
     if not full_text:
         return await message.edit(phrase.ai.empty)
     if len(full_text) > last_edit_len:

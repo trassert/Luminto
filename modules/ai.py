@@ -36,6 +36,7 @@ class AI:
         self.history_file = pathes.ai
         self.system_prompt = phrase.ai.prompt
         self.history = None
+        self.total_tokens = 0
 
     def _tokens(self, s):
         return len(s) // self.cpt if s else 0
@@ -47,15 +48,15 @@ class AI:
                 "content": content,
             }
         )
+        self.total_tokens += self._tokens(content)
         start = 1 if self.history[0].get("role") == "system" else 0
-        total = sum(self._tokens(m.get("content", "")) for m in self.history)
-        while total > self.max_history_tokens and len(self.history) > start + 1:
-            total -= self._tokens(self.history.pop(start).get("content", ""))
-        if total > self.max_history_tokens:
-            logger.warning(
-                "История слишком большая. Очищаю до системного промпта."
-            )
+        while self.total_tokens > self.max_history_tokens and len(self.history) > start + 1:
+            removed = self.history.pop(start)
+            self.total_tokens -= self._tokens(removed.get("content", ""))
+        if self.total_tokens > self.max_history_tokens:
+            logger.warning("История слишком большая. Очищаю до системного промпта.")
             self.history = self.history[:start]
+            self.total_tokens = sum(self._tokens(m.get("content", "")) for m in self.history)
 
     async def _load(self):
         try:
@@ -75,9 +76,11 @@ class AI:
             and m.get("content")
         ]
         if not h:
-            return [{"role": "system", "content": self.system_prompt}]
-        if h[0]["role"] != "system":
+            h = [{"role": "system", "content": self.system_prompt}]
+        elif h[0]["role"] != "system":
             h.insert(0, {"role": "system", "content": self.system_prompt})
+        
+        self.total_tokens = sum(self._tokens(m.get("content", "")) for m in h)
         return h
 
     async def _save(self):
