@@ -50,13 +50,20 @@ class AI:
         )
         self.total_tokens += self._tokens(content)
         start = 1 if self.history[0].get("role") == "system" else 0
-        while self.total_tokens > self.max_history_tokens and len(self.history) > start + 1:
+        while (
+            self.total_tokens > self.max_history_tokens
+            and len(self.history) > start + 1
+        ):
             removed = self.history.pop(start)
             self.total_tokens -= self._tokens(removed.get("content", ""))
         if self.total_tokens > self.max_history_tokens:
-            logger.warning("История слишком большая. Очищаю до системного промпта.")
+            logger.warning(
+                "История слишком большая. Очищаю до системного промпта."
+            )
             self.history = self.history[:start]
-            self.total_tokens = sum(self._tokens(m.get("content", "")) for m in self.history)
+            self.total_tokens = sum(
+                self._tokens(m.get("content", "")) for m in self.history
+            )
 
     async def _load(self):
         try:
@@ -79,7 +86,7 @@ class AI:
             h = [{"role": "system", "content": self.system_prompt}]
         elif h[0]["role"] != "system":
             h.insert(0, {"role": "system", "content": self.system_prompt})
-        
+
         self.total_tokens = sum(self._tokens(m.get("content", "")) for m in h)
         return h
 
