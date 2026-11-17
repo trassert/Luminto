@@ -31,8 +31,7 @@ def _resolve(filepath: Path) -> Path:
 
 
 def _safe_path(filepath: Path) -> Path:
-    """Проверяет, что путь не выходит за пределы каталогов данных.
-    """
+    """Проверяет, что путь не выходит за пределы каталогов данных."""
     resolved = _resolve(filepath)
     for root in _DATA_ROOTS:
         try:
