@@ -24,15 +24,10 @@ def ensure_parent(filepath: Path) -> None:
 
 
 def _safe_path(filepath: Path) -> Path:
-    if filepath.is_absolute() or ".." in filepath.parts:
-        raise ValueError(f"Недопустимый путь: {filepath!r}")  # noqa: TRY003
-    resolved = (_PROJECT_ROOT / filepath).resolve()  # lgtm[py/path-injection]
-    try:
-        resolved.relative_to(_PROJECT_ROOT)
-    except ValueError:
-        raise ValueError(  # noqa: TRY003
-            f"Путь выходит за пределы проекта: {filepath!r}"
-        ) from None
+    # Ensure relative to _PROJECT_ROOT, preventing directory traversal
+    resolved = (_PROJECT_ROOT / filepath).resolve()
+    if not str(resolved).startswith(str(_PROJECT_ROOT)):
+        raise ValueError(f"Недопустимый путь: {filepath!r}")
     return resolved
 
 

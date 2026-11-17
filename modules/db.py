@@ -143,11 +143,12 @@ class Statistic:
 
     async def get(self, nick, all_days=False, data=False):
         filepath = pathes.stats / f"{nick}.json"
-        if not filepath.exists():
+        try:
+            stats = await files.load_json_async(filepath)
+        except FileNotFoundError:
             stats = {datetime.now().strftime("%Y.%m.%d"): 0}
             await files.save_json_async(filepath, stats, sort_keys=True)
             return 0
-        stats = await files.load_json_async(filepath)
         if all_days or self.days <= 0:
             return stats if data else sum(stats.values())
         start_date = datetime.now() - timedelta(days=self.days)
@@ -192,21 +193,12 @@ class Statistic:
             raise ValueError(msg)
         now = date or datetime.now().strftime("%Y.%m.%d")
         filepath = pathes.stats / f"{target_nick}.json"
-        base_stats = pathes.stats.resolve()
-        resolved_filepath = filepath.resolve()
         try:
-            resolved_filepath.relative_to(base_stats)
-        except ValueError:
-            logger.warning(
-                f"Заблокирован выход за пределы каталога статистики: {target_nick!r}",
-            )
-            return
-        try:
-            stats = await files.load_json_async(resolved_filepath)
+            stats = await files.load_json_async(filepath)
         except FileNotFoundError:
             stats = {}
         stats[now] = stats.get(now, 0) + 1
-        await files.save_json_async(resolved_filepath, stats, sort_keys=True)
+        await files.save_json_async(filepath, stats, sort_keys=True)
 
     async def get_raw(self) -> dict[str, int]:
         totals = defaultdict(int)
