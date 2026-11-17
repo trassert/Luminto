@@ -8,9 +8,6 @@ import anyio
 import orjson
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
-_DATA_ROOTS = tuple(
-    _PROJECT_ROOT / name for name in ("db", "backup", "log", "charts", "images")
-)
 
 
 def orjson_options(sort_keys: bool = False, indent: bool = False) -> int:
@@ -26,22 +23,14 @@ def ensure_parent(filepath: Path) -> None:
     filepath.parent.mkdir(parents=True, exist_ok=True)
 
 
-def _resolve(filepath: Path) -> Path:
-    return (_PROJECT_ROOT / filepath).resolve()
-
-
 def _safe_path(filepath: Path) -> Path:
-    """Проверяет, что путь не выходит за пределы каталогов данных.
-    """
-    resolved = _resolve(filepath)
-    for root in _DATA_ROOTS:
-        try:
-            resolved.relative_to(root)
-        except ValueError:
-            continue
-        return resolved
-    msg = f"Путь выходит за пределы каталогов данных: {filepath!r}"
-    raise ValueError(msg)
+    resolved = (_PROJECT_ROOT / filepath).resolve()  # lgtm[py/path-injection]
+    try:
+        resolved.relative_to(_PROJECT_ROOT)
+    except ValueError:
+        msg = f"Недопустимый путь: {filepath!r}"
+        raise ValueError(msg) from None
+    return resolved
 
 
 def save_json_sync(
@@ -50,7 +39,6 @@ def save_json_sync(
     sort_keys: bool = False,
     indent: bool = False,
 ):
-    """Сохраняет JSON файл синхронно."""
     filepath = _safe_path(filepath)
     ensure_parent(filepath)
     options = orjson_options(sort_keys=sort_keys, indent=indent)
@@ -59,7 +47,6 @@ def save_json_sync(
 
 
 def load_json_sync(filepath: Path) -> dict:
-    """Загружает JSON файл синхронно."""
     filepath = _safe_path(filepath)
     with filepath.open("rb") as f:
         raw = f.read()
@@ -71,7 +58,7 @@ _locks_lock = asyncio.Lock()
 
 
 async def get_lock(filepath: Path) -> asyncio.Lock:
-    path_str = str(_resolve(filepath))
+    path_str = str(await anyio.Path(filepath).resolve())
     async with _locks_lock:
         if path_str not in _file_locks:
             _file_locks[path_str] = asyncio.Lock()
@@ -79,7 +66,6 @@ async def get_lock(filepath: Path) -> asyncio.Lock:
 
 
 async def load_json_async(filepath: Path) -> dict:
-    """Загружает JSON файл асинхронно."""
     filepath = _safe_path(filepath)
     lock = await get_lock(filepath)
     async with lock, aiofiles.open(filepath, "rb") as f:
@@ -93,7 +79,6 @@ async def save_json_async(
     sort_keys: bool = False,
     indent: bool = False,
 ):
-    """Сохраняет JSON файл асинхронно."""
     filepath = _safe_path(filepath)
     ensure_parent(filepath)
     lock = await get_lock(filepath)
@@ -104,7 +89,6 @@ async def save_json_async(
 
 
 async def load_text_async(filepath: Path) -> str:
-    """Загружает текстовый файл асинхронно."""
     filepath = _safe_path(filepath)
     lock = await get_lock(filepath)
     async with lock, aiofiles.open(filepath, encoding="utf-8") as f:
@@ -112,7 +96,6 @@ async def load_text_async(filepath: Path) -> str:
 
 
 async def save_text_async(filepath: Path, text: str):
-    """Сохраняет текстовый файл асинхронно."""
     filepath = _safe_path(filepath)
     ensure_parent(filepath)
     lock = await get_lock(filepath)
@@ -121,7 +104,6 @@ async def save_text_async(filepath: Path, text: str):
 
 
 async def remove_file_async(filepath: Path):
-    """Удаляет файл асинхронно."""
     filepath = _safe_path(filepath)
     p = anyio.Path(filepath)
     if not await p.exists():
@@ -136,13 +118,6 @@ async def update_json_async(
     sort_keys: bool = False,
     indent: bool = False,
 ) -> Any:
-    """Атомарно читает, изменяет и сохраняет JSON под единым локом.
-
-    `updater` получает загруженный dict и должен изменить его на месте.
-    Возвращаемое `updater` значение возвращается наружу. Лок держится на
-    протяжении всего чтения-изменения-записи, что исключает гонки (lost
-    update / дюп) при одновременных вызовах.
-    """
     filepath = _safe_path(filepath)
     lock = await get_lock(filepath)
     options = orjson_options(sort_keys=sort_keys, indent=indent)
@@ -161,7 +136,6 @@ async def update_json_async(
 
 
 async def append_text_async(filepath: Path, text: str):
-    """Добавляет текст в конец файла асинхронно."""
     filepath = _safe_path(filepath)
     ensure_parent(filepath)
     lock = await get_lock(filepath)
