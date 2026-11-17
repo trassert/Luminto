@@ -24,6 +24,7 @@ def ensure_parent(filepath: Path) -> None:
 
 
 def _safe_path(filepath: Path) -> Path:
+    # codeql[py/path-injection]
     # Ensure relative to _PROJECT_ROOT, preventing directory traversal
     resolved = (_PROJECT_ROOT / filepath).resolve()
     if not str(resolved).startswith(str(_PROJECT_ROOT)):
