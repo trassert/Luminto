@@ -7,6 +7,11 @@ import aiofiles
 import anyio
 import orjson
 
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent
+_DATA_ROOTS = tuple(
+    _PROJECT_ROOT / name for name in ("db", "backup", "log", "charts", "images")
+)
+
 
 def orjson_options(sort_keys: bool = False, indent: bool = False) -> int:
     opts = 0
@@ -21,6 +26,24 @@ def ensure_parent(filepath: Path) -> None:
     filepath.parent.mkdir(parents=True, exist_ok=True)
 
 
+def _resolve(filepath: Path) -> Path:
+    return (_PROJECT_ROOT / filepath).resolve()
+
+
+def _safe_path(filepath: Path) -> Path:
+    """Проверяет, что путь не выходит за пределы каталогов данных.
+    """
+    resolved = _resolve(filepath)
+    for root in _DATA_ROOTS:
+        try:
+            resolved.relative_to(root)
+        except ValueError:
+            continue
+        return resolved
+    msg = f"Путь выходит за пределы каталогов данных: {filepath!r}"
+    raise ValueError(msg)
+
+
 def save_json_sync(
     filepath: Path,
     data: dict,
@@ -28,6 +51,7 @@ def save_json_sync(
     indent: bool = False,
 ):
     """Сохраняет JSON файл синхронно."""
+    filepath = _safe_path(filepath)
     ensure_parent(filepath)
     options = orjson_options(sort_keys=sort_keys, indent=indent)
     with filepath.open("wb") as f:
@@ -36,6 +60,7 @@ def save_json_sync(
 
 def load_json_sync(filepath: Path) -> dict:
     """Загружает JSON файл синхронно."""
+    filepath = _safe_path(filepath)
     with filepath.open("rb") as f:
         raw = f.read()
     return orjson.loads(raw)
@@ -46,7 +71,7 @@ _locks_lock = asyncio.Lock()
 
 
 async def get_lock(filepath: Path) -> asyncio.Lock:
-    path_str = str(await anyio.Path(filepath).resolve())
+    path_str = str(_resolve(filepath))
     async with _locks_lock:
         if path_str not in _file_locks:
             _file_locks[path_str] = asyncio.Lock()
@@ -55,6 +80,7 @@ async def get_lock(filepath: Path) -> asyncio.Lock:
 
 async def load_json_async(filepath: Path) -> dict:
     """Загружает JSON файл асинхронно."""
+    filepath = _safe_path(filepath)
     lock = await get_lock(filepath)
     async with lock, aiofiles.open(filepath, "rb") as f:
         raw = await f.read()
@@ -68,6 +94,7 @@ async def save_json_async(
     indent: bool = False,
 ):
     """Сохраняет JSON файл асинхронно."""
+    filepath = _safe_path(filepath)
     ensure_parent(filepath)
     lock = await get_lock(filepath)
     options = orjson_options(sort_keys=sort_keys, indent=indent)
@@ -78,6 +105,7 @@ async def save_json_async(
 
 async def load_text_async(filepath: Path) -> str:
     """Загружает текстовый файл асинхронно."""
+    filepath = _safe_path(filepath)
     lock = await get_lock(filepath)
     async with lock, aiofiles.open(filepath, encoding="utf-8") as f:
         return await f.read()
@@ -85,6 +113,7 @@ async def load_text_async(filepath: Path) -> str:
 
 async def save_text_async(filepath: Path, text: str):
     """Сохраняет текстовый файл асинхронно."""
+    filepath = _safe_path(filepath)
     ensure_parent(filepath)
     lock = await get_lock(filepath)
     async with lock, aiofiles.open(filepath, "w", encoding="utf-8") as f:
@@ -93,6 +122,7 @@ async def save_text_async(filepath: Path, text: str):
 
 async def remove_file_async(filepath: Path):
     """Удаляет файл асинхронно."""
+    filepath = _safe_path(filepath)
     p = anyio.Path(filepath)
     if not await p.exists():
         return False
@@ -113,6 +143,7 @@ async def update_json_async(
     протяжении всего чтения-изменения-записи, что исключает гонки (lost
     update / дюп) при одновременных вызовах.
     """
+    filepath = _safe_path(filepath)
     lock = await get_lock(filepath)
     options = orjson_options(sort_keys=sort_keys, indent=indent)
     async with lock:
@@ -131,6 +162,7 @@ async def update_json_async(
 
 async def append_text_async(filepath: Path, text: str):
     """Добавляет текст в конец файла асинхронно."""
+    filepath = _safe_path(filepath)
     ensure_parent(filepath)
     lock = await get_lock(filepath)
     async with lock, aiofiles.open(filepath, "a", encoding="utf-8") as f:
