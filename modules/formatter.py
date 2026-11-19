@@ -5,6 +5,8 @@ from telethon import types
 from telethon.extensions import markdown
 lazy from pymorphy3 import MorphAnalyzer
 
+_morph = MorphAnalyzer()
+
 logger.info(f"Загружен модуль {__name__}!")
 
 
@@ -23,7 +25,7 @@ def value_to_str(number, noun) -> str:
     Возвращает:
         Строка с числом и склоненным существительным.
     """
-    p = MorphAnalyzer().parse(noun)[0]
+    p = _morph.parse(noun)[0]
 
     if str(number)[0] == "1" and len(str(number)) == 2:
         word = p.inflect({"gent", "plur"}).word

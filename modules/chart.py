@@ -21,18 +21,23 @@ def getsigint(num_points: int) -> int:
     )
 
 
+def _ensure_font() -> None:
+    if any(f.fname == pathes.font for f in font_manager.fontManager.ttflist):
+        return
+    font_manager.fontManager.ttflist.append(
+        font_manager.FontEntry(fname=pathes.font, name="minecraft")
+    )
+
+
 def create_plot(data_dict, output_file=pathes.chart) -> None:
     """Линейный график сообщений по датам."""
-    font_properties = font_manager.FontEntry(
-        fname=pathes.font, name="minecraft"
-    )
-    font_manager.fontManager.ttflist.append(font_properties)
+    _ensure_font()
 
     dates = [datetime.strptime(date, "%Y.%m.%d") for date in data_dict]
     values = list(data_dict.values())
 
     plt.rcParams["font.family"] = "sans-serif"
-    plt.rcParams["font.sans-serif"] = font_properties.name
+    plt.rcParams["font.sans-serif"] = "minecraft"
     prop = font_manager.FontProperties(fname=pathes.font)
     title_font = {
         "fontproperties": prop,

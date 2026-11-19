@@ -1,4 +1,5 @@
 import asyncio
+import weakref
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -28,7 +29,8 @@ def _safe_path(filepath: Path) -> Path:
     # Ensure relative to _PROJECT_ROOT, preventing directory traversal
     resolved = (_PROJECT_ROOT / filepath).resolve()
     if not str(resolved).startswith(str(_PROJECT_ROOT)):
-        raise ValueError(f"Недопустимый путь: {filepath!r}")
+        msg = f"Недопустимый путь: {filepath!r}"
+        raise ValueError(msg)
     return resolved
 
 
@@ -52,16 +54,18 @@ def load_json_sync(filepath: Path) -> dict:
     return orjson.loads(raw)
 
 
-_file_locks: dict[str, asyncio.Lock] = {}
+_file_locks: weakref.WeakValueDictionary[str, asyncio.Lock] = weakref.WeakValueDictionary()
 _locks_lock = asyncio.Lock()
 
 
 async def get_lock(filepath: Path) -> asyncio.Lock:
     path_str = str(await anyio.Path(filepath).resolve())
     async with _locks_lock:
-        if path_str not in _file_locks:
-            _file_locks[path_str] = asyncio.Lock()
-        return _file_locks[path_str]
+        lock = _file_locks.get(path_str)
+        if lock is None:
+            lock = asyncio.Lock()
+            _file_locks[path_str] = lock
+        return lock
 
 
 async def load_json_async(filepath: Path) -> dict:
