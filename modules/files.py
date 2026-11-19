@@ -54,7 +54,9 @@ def load_json_sync(filepath: Path) -> dict:
     return orjson.loads(raw)
 
 
-_file_locks: weakref.WeakValueDictionary[str, asyncio.Lock] = weakref.WeakValueDictionary()
+_file_locks: weakref.WeakValueDictionary[str, asyncio.Lock] = (
+    weakref.WeakValueDictionary()
+)
 _locks_lock = asyncio.Lock()
 
 
