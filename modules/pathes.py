@@ -35,7 +35,7 @@ tasks = Path("db") / "tasks.json"
 data = Path("db") / "data.json"
 ghstars = Path("db") / "ghstars.json"
 shopc = Path("db") / "shop" / "current.json"
-shop = Path("db") / "shop" / "all.json"
+shop = Path("configs") / "shop.yml"
 shopver = Path("db") / "shop" / "version.txt"
 
 # Директория cities

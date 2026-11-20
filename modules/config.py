@@ -17,3 +17,6 @@ chats = ConfigManager(
     pathes.config / "chats.yml",
     defaults=pathes.defaults / "chats.yml",
 )
+shop = ConfigManager(
+    pathes.config / "shop.yml"
+)

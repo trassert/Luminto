@@ -98,9 +98,9 @@ async def update() -> str | None:
         )
     except Exception:
         last_theme = None
-    all_themes = await files.load_json_async(pathes.shop)
+    all_themes = dict(config.shop)
     if not isinstance(all_themes, dict) or not all_themes:
-        logger.exception("Файл shop_all.json пуст или не содержит тем.")
+        logger.exception("Файл shop.yml пуст или не содержит тем.")
         return None
     theme_names = list(all_themes.keys())
     if last_theme in theme_names and len(theme_names) == 1:
