@@ -98,7 +98,7 @@ async def update() -> str | None:
         )
     except Exception:
         last_theme = None
-    all_themes = dict(config.shop)
+    all_themes = config.shop._data
     if not isinstance(all_themes, dict) or not all_themes:
         logger.exception("Файл shop.yml пуст или не содержит тем.")
         return None
