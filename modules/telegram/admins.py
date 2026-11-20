@@ -308,7 +308,7 @@ async def save_pic(event: Message):
     return await event.reply(phrase.pic.no_pic)
 
 
-@func.new_command(r"/shoptheme", min_role=4)
+@func.new_command(r"/themeshop", min_role=4)
 async def change_shop_theme(event: Message):
     new_theme = await shop.update()
     if not new_theme:
