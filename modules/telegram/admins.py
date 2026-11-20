@@ -313,7 +313,9 @@ async def change_shop_theme(event: Message):
     new_theme = await shop.update()
     if not new_theme:
         return await event.reply(phrase.shop.shop_theme_error)
-    return await event.reply(phrase.shop.shop_theme_changed.format(theme=new_theme))
+    return await event.reply(
+        phrase.shop.shop_theme_changed.format(theme=new_theme)
+    )
 
 
 @func.new_command(r"/непривязанные(?:@\w+)?$", min_role=roles.INTERN)
