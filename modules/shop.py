@@ -103,7 +103,7 @@ async def update(requested_theme: str | None = None) -> str | None:
         logger.exception("Файл shop.yml пуст или не содержит тем.")
         return None
     theme_names = list(all_themes.keys())
-    
+
     if requested_theme:
         if requested_theme in theme_names:
             new_theme = requested_theme
@@ -116,7 +116,7 @@ async def update(requested_theme: str | None = None) -> str | None:
             return None
         weights = config.cfg.ShopThemeWeights
         new_theme = _select_new_theme(theme_names, last_theme, weights)
-    
+
     if not new_theme:
         return None
     theme_items = all_themes.get(new_theme, {})
