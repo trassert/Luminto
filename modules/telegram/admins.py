@@ -308,10 +308,12 @@ async def save_pic(event: Message):
     return await event.reply(phrase.pic.no_pic)
 
 
-@func.new_command(r"/themeshop", min_role=4)
-async def change_shop_theme(event: Message):
-    new_theme = await shop.update()
+@func.new_command(r"/themeshop(?:\s+(?P<theme>.+))?$", min_role=4)
+async def change_shop_theme(event: Message, theme: str | None = None):
+    new_theme = await shop.update(requested_theme=theme)
     if not new_theme:
+        if theme:
+            return await event.reply(f"Тема '{theme}' не найдена.")
         return await event.reply(phrase.shop.shop_theme_error)
     return await event.reply(
         phrase.shop.shop_theme_changed.format(theme=new_theme)

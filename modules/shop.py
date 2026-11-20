@@ -89,7 +89,7 @@ def _validate_price(price: Any) -> int | None:
     return None
 
 
-async def update() -> str | None:
+async def update(requested_theme: str | None = None) -> str | None:
     """Обновляет магазин, возвращая новую тему."""
     try:
         shopc_data = await files.load_json_async(pathes.shopc)
@@ -103,11 +103,20 @@ async def update() -> str | None:
         logger.exception("Файл shop.yml пуст или не содержит тем.")
         return None
     theme_names = list(all_themes.keys())
-    if last_theme in theme_names and len(theme_names) == 1:
-        logger.exception("Нет доступных альтернативных тем в shop_all.json")
-        return None
-    weights = config.cfg.ShopThemeWeights
-    new_theme = _select_new_theme(theme_names, last_theme, weights)
+    
+    if requested_theme:
+        if requested_theme in theme_names:
+            new_theme = requested_theme
+        else:
+            logger.error(f"Тема {requested_theme} не найдена.")
+            return None
+    else:
+        if last_theme in theme_names and len(theme_names) == 1:
+            logger.exception("Нет доступных альтернативных тем в shop_all.json")
+            return None
+        weights = config.cfg.ShopThemeWeights
+        new_theme = _select_new_theme(theme_names, last_theme, weights)
+    
     if not new_theme:
         return None
     theme_items = all_themes.get(new_theme, {})
