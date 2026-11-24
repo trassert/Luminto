@@ -86,6 +86,9 @@ Flood:
   AI: 10
   Tickets: 5
 
+Webhooks:
+  GithubMessageDelay: 2
+
 Crocodile:
   MaxBet: 5
   MinBet: 1

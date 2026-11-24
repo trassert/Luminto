@@ -1,6 +1,7 @@
 import asyncio
 import hmac
 import ipaddress
+import time
 from hashlib import md5, sha1, sha256
 from urllib.parse import quote
 
@@ -14,6 +15,9 @@ from .telegram import func
 from .telegram.client import client
 
 logger.info(f"Загружен модуль {__name__}!")
+
+last_send_msg = 0.0
+send_lock = asyncio.Lock()
 
 
 def is_local_request(request: aiohttp.web.Request) -> bool:
@@ -62,6 +66,14 @@ async def github(request: aiohttp.web.Request) -> aiohttp.web.Response:
         is_private = repo["private"]
 
         async def send(text: str) -> None:
+            global last_send_msg
+            async with send_lock:
+                wait = config.cfg.Webhooks.GithubMessageDelay - (
+                    time.monotonic() - last_send_msg
+                )
+                if wait > 0:
+                    await asyncio.sleep(wait)
+                last_send_msg = time.monotonic()
             await client.send_message(
                 config.chats.chat,
                 text,
