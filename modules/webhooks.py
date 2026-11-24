@@ -141,6 +141,19 @@ async def github(request: aiohttp.web.Request) -> aiohttp.web.Response:
                     label=phrase.esc(label["name"]),
                 ),
             )
+        elif event == "issues" and action == "typed":
+            logger.info(f"Присвоен тип! Репо {repo_name}")
+            issue = data["issue"]
+            issue_type = data["type"]
+            await send(
+                phrase.github.issue_typed.format(
+                    issue=phrase.esc(issue["title"]),
+                    issue_url=phrase.href(issue["html_url"]),
+                    type_name=phrase.esc(
+                        phrase.github.issue_type_names.get(issue_type["name"], issue_type["name"])
+                    ),
+                ),
+            )
         elif event == "issues" and action == "opened":
             logger.info(f"Открыт топик! Репо {repo_name}")
             issue = data["issue"]

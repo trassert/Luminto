@@ -749,6 +749,14 @@ class github:
         "🗂 : Тип: <b>{type}</b>"
     )
     issue_labeled = '🏷 : Топику <b>«<a href="{issue_url}">{issue}</a>»</b> выдан тип - <b>{label}</b>'
+    issue_typed = (
+        '📋 : Топику <b>«<a href="{issue_url}">{issue}</a>»</b> присвоен тип - <b>{type_name}</b>'
+    )
+    issue_type_names = {
+        "Bug": "Ошибка",
+        "Feature": "Фича",
+        "Task": "Задача",
+    }
     issue_opened = (
         '💬 : Открыт новый топик <b>«<a href="{url}">{issue}</a>»</b>\n\n{body}'
     )
