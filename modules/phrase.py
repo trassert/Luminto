@@ -752,7 +752,7 @@ class github:
     issue_typed = '📋 : Топику <b>«<a href="{issue_url}">{issue}</a>»</b> присвоен тип - <b>{type_name}</b>'
     issue_type_names = {
         "Bug": "Ошибка",
-        "Feature": "Фича",
+        "Feature": "Улучшение",
         "Task": "Задача",
     }
     issue_opened = (
