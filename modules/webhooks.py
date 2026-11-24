@@ -150,7 +150,9 @@ async def github(request: aiohttp.web.Request) -> aiohttp.web.Response:
                     issue=phrase.esc(issue["title"]),
                     issue_url=phrase.href(issue["html_url"]),
                     type_name=phrase.esc(
-                        phrase.github.issue_type_names.get(issue_type["name"], issue_type["name"])
+                        phrase.github.issue_type_names.get(
+                            issue_type["name"], issue_type["name"]
+                        )
                     ),
                 ),
             )
